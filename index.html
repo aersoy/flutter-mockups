@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+  00 · Index · Flutter Purchase Planning Agent, Phase 1 mockups
+  ==============================================================
+  Navigation only. Opens each file in a new tab.
+
+  Session 22: rewritten as plain navigation. The demo guidance that used to sit here (the
+  configurability line, the collapses worth knowing, what is still open) lives in
+  `Tiered Solution/Demo Script.md` and the worklogs, not on a page in the mockup set.
+  E2 was renamed from "No Login Response Page" to "Response Page" when answering moved
+  behind a one-click sign-in.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchase Planning · Phase 1 Mockups</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  [x-cloak] { display: none !important; }
+</style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 min-h-screen" x-data="index()" x-cloak>
+<div class="max-w-5xl mx-auto px-6 py-10">
+
+  <header class="mb-8">
+    <p class="text-[11px] text-slate-500 uppercase tracking-wide">Flutter &middot; Purchase Planning Agent</p>
+    <h1 class="text-2xl font-semibold text-slate-900 mt-1">Phase 1 mockups</h1>
+  </header>
+
+  <template x-for="g in groups" :key="g.title">
+    <section class="mb-8">
+      <div class="flex items-baseline gap-2.5 mb-3">
+        <h2 class="text-[13px] font-semibold text-slate-900 uppercase tracking-wide" x-text="g.title"></h2>
+        <span class="text-[12px] text-slate-500" x-text="g.sub"></span>
+        <div class="flex-1 h-px bg-slate-300"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <template x-for="s in g.screens" :key="s.file">
+          <a :href="s.file" target="_blank"
+             class="group rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-indigo-300 hover:shadow-sm transition-all block">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 bg-slate-100 text-slate-500" x-text="s.code"></span>
+                  <span class="text-[14px] font-semibold text-slate-900 group-hover:text-indigo-700" x-text="s.title"></span>
+                </div>
+                <p class="text-[12px] text-slate-600 mt-1.5 leading-relaxed" x-text="s.desc"></p>
+              </div>
+              <span class="text-slate-300 group-hover:text-indigo-500 shrink-0 text-lg leading-none">&rarr;</span>
+            </div>
+          </a>
+        </template>
+      </div>
+    </section>
+  </template>
+</div>
+
+<script>
+function index() {
+  return {
+    groups: [
+      {
+        title: 'Procurement',
+        sub: 'in the platform',
+        screens: [
+          { code: 'P0',  file: 'P0 Purchasing Plans.html',          title: 'Purchasing plans',          desc: 'Every plan, one per quarter, and the next cycle ready to confirm.' },
+          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Review before scheduling',  desc: 'The next quarter\u2019s lines, reviewed and changed before the dates are set.' },
+          { code: '★',   file: 'Plan.html',                          title: 'The plan',                  desc: 'All Items, Progress, Review, Authorization, Tracking and Alignment.' },
+          { code: 'O2',  file: 'O2 Rules Configuration.html',       title: 'Procurement rules',         desc: 'Settings: sourcing methods, notice periods and the authorization ladder, per legal entity.' }
+        ]
+      },
+      {
+        title: 'Business owners',
+        sub: 'email, and the page an email button opens',
+        screens: [
+          { code: 'E1',  file: 'E1 Request Email.html',          title: 'The request email and workbook', desc: 'An owner\u2019s lines with a button for each answer; for large sets, the attached workbook and Ellie\u2019s reply when it comes back.' },
+          { code: 'E2',  file: 'E2 Response Page.html',          title: 'The response page',        desc: 'One-click Microsoft sign-in, then the owner\u2019s whole set, answered in place.' },
+          { code: 'E3',  file: 'E3 Consequence Reminder.html',   title: 'The consequence reminder', desc: 'The same line at three distances from its decision date.' },
+          { code: 'B2',  file: 'B2 Responding to a Line.html',   title: 'Responding to a line',     desc: 'One line in the platform, with its thread and history.' },
+          { code: '\u2192', file: 'Email Journey Walkthrough.html', title: 'The email journey',     desc: 'One cycle, one owner, one thread, step by step.' }
+        ]
+      }
+    ]
+  };
+}
+</script>
+</body>
+</html>

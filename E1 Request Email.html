@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<!--
+  E1 · The Request Email  (Flutter Purchase Planning Agent, Phase 1)
+  ==================================================================
+  Source: `Tiered Solution/Scope and Flow.md` → "Reaching Business Units Where They Already Are"
+          `Tiered Solution/Screen Inventory.md` → "E1. The request email"
+
+  SESSION 22 MODEL: light login. Answering happens signed in, with one click on a
+  Microsoft work account, because an unauthenticated answer is a security problem and
+  makes the audit trail disputable. Every line keeps its four answers as links in the
+  email: each is a deep link that goes through the one-click sign-in and lands on that
+  line with the answer preselected (E2). So answering stays two clicks, and every answer
+  is attributed to a signed-in person.
+
+  Two channels stay open without the platform, because they are authenticated elsewhere:
+  a plain reply, which the owner's own mail server has already authenticated, and, for
+  large sets, the attached workbook sent back to the thread. A cancel arriving either way
+  is confirmed with one click before it takes effect, because free text can be misread.
+
+  Constraints this mockup honours:
+    - Survives Outlook: tables, no flexbox-dependent layout in the real send.
+    - Internal mail, not a marketing send: no hero image, no banner, no full-width button.
+    - One thread per owner per cycle, never one per line (deterministic RFC 5322 root).
+    - No rule citations anywhere in the message (Session 22): the decision date is shown,
+      the notice period and procedure that produce it are not.
+
+  The sender domain shown is the Flutter one we intend to argue for; SPF and DKIM on
+  their side is the cost. Recorded in Scope and Flow, not on screen.
+
+  Session 24: E1b (the collection workbook) was merged into this file. The View switch
+  shows the Request email, the Workbook attached to it for large sets, and Ellie's reply
+  On return. Session 25: all three views follow the Owner set size switch. The 4-line set
+  is Marco Ferretti's, the 63-line set Alessandro Conti's, in every view. The workbook is
+  now attached to the 4-line email too, as an alternative to the links, so the Workbook
+  and On return views exist for both sizes. The page is centered and the width capped.
+
+  The workbook's own reasoning, carried from E1b: same columns as the platform grid;
+  versioned per owner per cycle and reconciled on return; structure protected (locked
+  details, open answer columns, dropdown vocabulary); Ellie replies in the thread on
+  receipt, which is the challenge loop; attribution from the owner's own mailbox; a
+  cancel in a cell is confirmed with one click before it takes effect.
+
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E1 · Request Email and Workbook</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .mailfont { font-family: 'Segoe UI', -apple-system, Calibri, sans-serif; }
+  [x-cloak] { display: none !important; }
+  .xl   { font-family: Calibri, 'IBM Plex Sans', sans-serif; font-size: 12px; }
+  /* Locked cells read as the sheet's own furniture; open cells invite typing. */
+  .locked { background: #f4f5f7; color: #4b5563; }
+  .open   { background: #ffffff; }
+  .xlgrid td, .xlgrid th { border-right: 1px solid #dfe1e5; border-bottom: 1px solid #dfe1e5; }
+  .scroll::-webkit-scrollbar { width: 9px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+</style>
+</head>
+
+<body class="bg-slate-200 text-slate-800 min-h-screen" x-data="requestEmail()" x-cloak>
+
+<!-- ══════════ Page chrome (this is the mockup's own frame, not the product) ══════════ -->
+<div class="max-w-[960px] mx-auto px-5 py-5">
+
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h1 class="text-lg font-semibold text-slate-900">E1 · The request email</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
+        <span class="text-[10px] text-slate-400 px-1.5">Owner set size</span>
+        <button @click="setSize('small')"
+                class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+                :class="size === 'small' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">4 lines</button>
+        <button @click="setSize('large')"
+                class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+                :class="size === 'large' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">63 lines</button>
+      </div>
+      <div class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
+        <span class="text-[10px] text-slate-400 px-1.5">View</span>
+        <template x-for="v in ['Request', 'Workbook', 'On return']" :key="v">
+          <button @click="setView(v)"
+                  class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+                  :class="view === v ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'"
+                  x-text="v"></button>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ REQUEST VIEW ══════════════════════════ -->
+  <template x-if="view === 'Request'">
+  <div>
+
+    <!-- ══════════════════ The mail client ══════════════════ -->
+    <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+
+      <!-- Fake Outlook chrome, so the mockup is judged as mail rather than as a page -->
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center gap-3">
+        <div class="flex gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+        </div>
+        <span class="text-[11px] text-slate-500" x-text="'Outlook · Inbox · ' + owner()"></span>
+      </div>
+
+      <!-- Header block -->
+      <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+        <h2 class="text-[17px] font-semibold text-slate-900 mailfont" x-text="subject()"></h2>
+        <div class="flex items-start gap-3 mt-3">
+          <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">PP</div>
+          <div class="min-w-0 text-[12px] leading-relaxed">
+            <div class="text-slate-800">
+              <span class="font-semibold">Purchase Planning</span>
+              <span class="mono text-slate-500">&lt;plan+7c41@procurement.flutter.com&gt;</span>
+            </div>
+            <div class="text-slate-500">
+              To: <span class="mono" x-text="email()"></span>
+              &nbsp;·&nbsp; Cc: <span class="mono">procurement.italia@sisal.it</span>
+            </div>
+            <div class="text-slate-400 text-[11px] mt-0.5">Tue 22 Sep 2026, 08:15 · sent on behalf of Procurement Italia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ Email body ══════════
+           Deliberately plain. Internal mail, written by a colleague, not a campaign. -->
+      <div class="scroll px-6 py-6 mailfont text-[13.5px] leading-[1.65] text-slate-800 max-h-[640px] overflow-y-auto">
+
+        <p x-text="'Ciao ' + owner().split(' ')[0] + ','"></p>
+
+        <p class="mt-3">
+          We are putting together the purchasing plan for <strong>Q1&ndash;Q2 2027</strong>.
+          You are the business owner for <strong x-text="lineCount() + ' contracts'"></strong> that expire in that window.
+          Please tell us what happens to each one by <strong>Friday 16 October</strong>.
+        </p>
+
+        <p class="mt-3" x-show="size === 'small'">
+          Answer each line with the links under it. Each one opens Purchase Planning, where you sign in
+          once with your Microsoft work account. If it is easier, reply to this email in your own words,
+          or fill in the attached workbook and send it back, and I will read it.
+        </p>
+
+        <!-- Large-set variant: the body stops working past a handful of lines, so
+             the message carries the summary and the workbook carries the detail. -->
+        <p class="mt-3" x-show="size === 'large'">
+          Because your set is large, I have attached a workbook with all 63 lines. Fill it in and
+          send it back to this message, or open the same set in Purchase Planning and work through it
+          there. The five lines closest to their deadline are listed below with their links.
+        </p>
+
+        <template x-if="true">
+          <div @click="setView('Workbook')" title="Open the workbook"
+               class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-emerald-300">
+            <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
+            <div class="min-w-0">
+              <div class="text-[12.5px] font-semibold text-slate-800" x-text="wbName()"></div>
+              <div class="text-[11px] text-slate-500" x-text="lineCount() + ' lines · ' + (size === 'small' ? '38 KB' : '184 KB') + ' · answer columns open, line details locked'"></div>
+            </div>
+          </div>
+        </template>
+
+
+        <!-- ══════════ Per-line blocks ══════════
+             One block per line. Each shows the four things an owner needs in order
+             to answer without looking anything up: what it is, who supplies it,
+             what it is worth, and when a decision is actually needed.
+             The decision date is the derived one, not the contract end date, because
+             that is the number the notice period makes binding. -->
+        <div class="mt-5 space-y-4">
+          <template x-for="(l, i) in shownLines()" :key="l.id">
+            <table class="w-full border border-slate-200 rounded-lg" style="border-collapse: separate; border-spacing: 0">
+              <tr>
+                <td class="px-4 pt-3 pb-2">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="text-[13px] font-semibold text-slate-900" x-text="l.title"></div>
+                      <div class="text-[11.5px] text-slate-500 mt-0.5">
+                        <span x-text="l.supplier"></span> ·
+                        <span x-text="l.entity"></span> ·
+                        <span class="mono" x-text="l.ref"></span>
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <div class="text-[13px] font-semibold text-slate-900" x-text="l.value"></div>
+                      <div class="text-[11px] text-slate-500" x-text="l.method"></div>
+                    </div>
+                  </div>
+
+                  <!-- The derived decision date. Computed from the rules, which are not cited here. -->
+                  <div class="mt-2.5 text-[11.5px] rounded px-2.5 py-1.5"
+                       :class="l.urgent ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-50 text-slate-600 border border-slate-200'">
+                    Contract ends <strong x-text="l.ends"></strong>.
+                    Decision needed by <strong x-text="l.decide"></strong>.
+                  </div>
+                  <!-- The four answers, each a deep link through the one-click sign-in to
+                       this line in E2 with the answer preselected. Session 27: plain text links
+                       separated by middots, not buttons, so the message reads as internal mail and
+                       survives Outlook without any bulletproof-button markup. -->
+                  <div class="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] font-medium">
+                    <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Confirm as planned</a>
+                    <span class="text-slate-300">&middot;</span>
+                    <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Needs changes</a>
+                    <span class="text-slate-300">&middot;</span>
+                    <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Not mine</a>
+                    <span class="text-slate-300">&middot;</span>
+                    <a href="E2%20Response%20Page.html" class="text-rose-700 underline underline-offset-2">Cancel</a>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </template>
+        </div>
+
+        <p class="mt-4 text-[12.5px] text-slate-600" x-show="size === 'large'">
+          The other 58 lines are in the workbook and in
+          <a href="E2%20Response%20Page.html" class="text-indigo-700 underline">Purchase Planning</a>.
+        </p>
+
+
+        <p class="mt-5">
+          If one of these is not yours, choose Not mine and tell me who to pass it to. You can also forward
+          this email to whoever knows the answer; they sign in with their own account.
+        </p>
+
+        <!-- Borrowed from Procurement's own plan-update request (attachments/PP_Email_template.docx):
+             the alignment-meeting offer and the closing line. The email still tells the renewal-
+             confirmation story, not that template's new-initiative one; only phrasing crossed over. -->
+        <p class="mt-3">
+          Should it help, we can set up a short alignment call to go through these together.
+          I remain at your disposal for any clarification.
+        </p>
+
+        <p class="mt-4 text-slate-600">
+          Grazie,<br>
+          Ellie · Purchase Planning Agent<br>
+          <span class="text-[12px] text-slate-500">on behalf of Procurement Italia · Flutter Southern Europe &amp; Africa</span>
+        </p>
+
+        <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">
+          You are receiving this because you are recorded as business owner for these contracts in the
+          FSEA purchasing plan. Replies to this message go to Procurement Italia and are attached to the
+          lines above.
+        </p>
+      </div>
+    </div>
+
+  </div>
+  </template>
+
+  <!-- ══════════════════════════ WORKBOOK VIEW ══════════════════════════ -->
+  <template x-if="view === 'Workbook'">
+    <div>
+
+      <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+
+        <!-- Excel-ish chrome -->
+        <div class="bg-[#217346] px-4 py-2 flex items-center justify-between">
+          <span class="text-white text-[12px] font-medium" x-text="wbName()"></span>
+          <span class="text-white/70 text-[11px]">Excel</span>
+        </div>
+
+        <!-- ── Instruction band. The sheet has to explain itself, because there is
+                no onboarding and no support call behind it. Kept to four lines. ── -->
+        <div class="bg-amber-50 border-b border-amber-200 px-4 py-3">
+          <div class="text-[12px] font-semibold text-amber-900">How to fill this in</div>
+          <ol class="text-[11.5px] text-amber-900/90 mt-1 space-y-0.5 list-decimal list-inside leading-relaxed">
+            <li>Only the four <strong>green</strong> columns are editable. Everything grey is locked.</li>
+            <li>Use the dropdowns. Free text in these columns cannot be read reliably.</li>
+            <li>Send the file back as a reply to the email it came with. Do not rename it.</li>
+            <li>To <strong>cancel</strong> a line, choose Cancel and give a reason. I will confirm it with you in the email thread before it takes effect.</li>
+          </ol>
+        </div>
+
+        <!-- Sheet tabs. Three, not one: the answers, the things not in the plan, and
+             the vocabulary. Owners with 60+ lines are spreadsheet people. -->
+        <div class="flex gap-0.5 px-3 pt-2 bg-slate-100 border-b border-slate-200">
+          <template x-for="s in sheets" :key="s">
+            <button @click="sheet = s"
+                    class="text-[11.5px] px-3 py-1.5 rounded-t-md border-t border-x transition-colors"
+                    :class="sheet === s ? 'bg-white border-slate-300 text-slate-900 font-medium' : 'bg-slate-50 border-transparent text-slate-500 hover:bg-white/60'"
+                    x-text="s"></button>
+          </template>
+        </div>
+
+        <!-- ══════════ Sheet: My lines ══════════ -->
+        <template x-if="sheet === 'My lines'">
+          <div class="scroll overflow-x-auto max-h-[560px]">
+            <table class="xl xlgrid w-full border-collapse" style="min-width: 1180px">
+
+              <!-- Column-group header: makes the locked/open split visible at a glance -->
+              <thead class="sticky top-0 z-10">
+                <tr>
+                  <th colspan="9" class="locked px-2 py-1.5 text-left text-[10.5px] font-semibold text-slate-500 uppercase tracking-wide bg-[#eceef1]">
+                    From the purchasing plan &mdash; locked
+                  </th>
+                  <th colspan="4" class="px-2 py-1.5 text-left text-[10.5px] font-semibold text-emerald-800 uppercase tracking-wide bg-[#e2f2e6]">
+                    Your answer &mdash; please complete
+                  </th>
+                </tr>
+                <tr class="bg-[#f4f5f7]">
+                  <template x-for="c in lockedCols" :key="c">
+                    <th class="locked px-2 py-1.5 text-left font-semibold text-[11px] whitespace-nowrap" x-text="c"></th>
+                  </template>
+                  <template x-for="c in openCols" :key="c.k">
+                    <th class="px-2 py-1.5 text-left font-semibold text-[11px] whitespace-nowrap bg-[#e2f2e6] text-emerald-900" x-text="c.k"></th>
+                  </template>
+                </tr>
+              </thead>
+
+              <tbody>
+                <template x-for="(r, i) in wbRows()" :key="size + i">
+                  <tr>
+                    <td class="locked px-2 py-1 mono text-[11px] whitespace-nowrap" x-text="r.ref"></td>
+                    <td class="locked px-2 py-1 whitespace-nowrap" x-text="r.entity"></td>
+                    <td class="locked px-2 py-1 whitespace-nowrap" x-text="r.bu"></td>
+                    <td class="locked px-2 py-1 whitespace-nowrap" x-text="r.cat"></td>
+                    <td class="locked px-2 py-1" x-text="r.desc"></td>
+                    <td class="locked px-2 py-1 whitespace-nowrap" x-text="r.supplier"></td>
+                    <td class="locked px-2 py-1 text-right whitespace-nowrap" x-text="r.value"></td>
+                    <td class="locked px-2 py-1 whitespace-nowrap" x-text="r.ends"></td>
+                    <!-- The derived date, carried into the sheet so the owner sees the
+                         same number the email showed them. -->
+                    <td class="locked px-2 py-1 whitespace-nowrap font-medium"
+                        :class="r.urgent ? 'text-amber-700' : ''" x-text="r.decide"></td>
+
+                    <!-- Open columns. Rendered as dropdown-looking cells. -->
+                    <td class="open px-1 py-0.5">
+                      <div class="flex items-center justify-between gap-1 px-1.5 py-1 rounded border"
+                           :class="r.still ? 'border-slate-200 bg-white' : 'border-dashed border-slate-300 bg-slate-50'">
+                        <span :class="r.still ? 'text-slate-800' : 'text-slate-300'" x-text="r.still || 'Select...'"></span>
+                        <span class="text-slate-400 text-[9px]">&#9662;</span>
+                      </div>
+                    </td>
+                    <td class="open px-1 py-0.5">
+                      <div class="flex items-center justify-between gap-1 px-1.5 py-1 rounded border"
+                           :class="r.route ? 'border-slate-200 bg-white' : 'border-dashed border-slate-300 bg-slate-50'">
+                        <span :class="r.route ? 'text-slate-800' : 'text-slate-300'" x-text="r.route || 'Select...'"></span>
+                        <span class="text-slate-400 text-[9px]">&#9662;</span>
+                      </div>
+                    </td>
+                    <td class="open px-1 py-0.5">
+                      <div class="px-1.5 py-1 rounded border border-slate-200 bg-white"
+                           :class="r.newValue ? 'text-slate-800' : 'text-slate-300'" x-text="r.newValue || ''"></div>
+                    </td>
+                    <td class="open px-1 py-0.5">
+                      <div class="px-1.5 py-1 rounded border border-slate-200 bg-white text-slate-700 truncate"
+                           :title="r.note" x-text="r.note"></div>
+                    </td>
+                  </tr>
+                </template>
+
+                <!-- Visible tail so the artifact reads as 63 lines, not 8 -->
+                <tr x-show="size === 'large'">
+                  <td colspan="13" class="px-2 py-2 text-center text-slate-400 text-[11px] bg-[#fafbfc]">
+                    ... 55 more lines
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <!-- ══════════ Sheet: Lines we are missing ══════════
+             The add-a-line capability, in the workbook. Same path as the platform:
+             both go to Procurement for review before joining the plan. -->
+        <template x-if="sheet === 'Lines we are missing'">
+          <div class="p-5">
+            <p class="text-[12.5px] text-slate-600 leading-relaxed max-w-2xl">
+              If you are running a contract that is not in your list, or you know about a need
+              coming up, add it here. Anything you add joins this quarter's plan, takes the same
+              freeze date, and counts toward your set.
+            </p>
+            <p class="text-[12px] text-slate-500 mt-2 max-w-2xl leading-relaxed">
+              You do not need to know the sourcing strategy or the deadline. I derive the decision
+              date from the contract end date and the value, and come back to you if anything is missing.
+            </p>
+
+            <table class="xl xlgrid w-full border-collapse mt-4" style="min-width: 900px">
+              <thead>
+                <tr class="bg-[#e2f2e6]">
+                  <template x-for="c in addCols" :key="c">
+                    <th class="px-2 py-1.5 text-left font-semibold text-[11px] text-emerald-900 whitespace-nowrap" x-text="c"></th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <tr x-show="size === 'large'">
+                  <td class="open px-2 py-1.5 text-slate-800">Contract already running</td>
+                  <td class="open px-2 py-1.5 text-slate-800">Incident response retainer</td>
+                  <td class="open px-2 py-1.5 text-slate-800">Swascan Srl</td>
+                  <td class="open px-2 py-1.5 text-slate-800">01/09/2025</td>
+                  <td class="open px-2 py-1.5 text-slate-800">31/08/2027</td>
+                  <td class="open px-2 py-1.5 text-slate-800 text-right">48.000</td>
+                  <td class="open px-2 py-1.5 text-slate-600">Never entered in the plan, signed locally</td>
+                </tr>
+                <template x-for="i in 5" :key="i">
+                  <tr>
+                    <template x-for="c in addCols" :key="c">
+                      <td class="open px-2 py-1.5">&nbsp;</td>
+                    </template>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+
+            <div class="mt-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3 text-[12px] text-indigo-900 leading-relaxed max-w-2xl">
+              A contract ending beyond this window is still worth telling us about. It goes into the
+              plan backlog with its own horizon, and I bring it into the cycle whose window it falls in.
+              That is how the plan stops being a snapshot of one quarter.
+            </div>
+          </div>
+        </template>
+
+        <!-- ══════════ Sheet: Vocabulary ══════════
+             The lookup sheet the dropdowns point at. Exists because their current
+             master carries thirteen spellings of Opex and Capex. -->
+        <template x-if="sheet === 'Vocabulary'">
+          <div class="p-5">
+            <p class="text-[12.5px] text-slate-600 leading-relaxed max-w-2xl">
+              The allowed values behind the dropdowns. Same vocabulary as the platform, so an
+              answer given here and an answer given on screen produce identical data.
+            </p>
+            <div class="grid grid-cols-2 gap-5 mt-4 max-w-3xl">
+              <template x-for="v in vocab" :key="v.k">
+                <div class="rounded-lg border border-slate-200 overflow-hidden">
+                  <div class="bg-[#e2f2e6] px-3 py-1.5 text-[11.5px] font-semibold text-emerald-900" x-text="v.k"></div>
+                  <ul class="divide-y divide-slate-100">
+                    <template x-for="o in v.opts" :key="o">
+                      <li class="px-3 py-1.5 text-[12px] text-slate-700" x-text="o"></li>
+                    </template>
+                  </ul>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- Version stamp footer. Visible in the artifact, not hidden in metadata. -->
+        <div class="border-t border-slate-200 bg-slate-50 px-4 py-2 flex items-center justify-between text-[11px] text-slate-500">
+          <span class="mono" x-text="'Issued to ' + email() + ' · cycle 2027H1 · v1'"></span>
+          <span>Freeze: 16 Oct 2026</span>
+        </div>
+      </div>
+
+    </div>
+  </template>
+
+  <!-- ══════════════════════════ ON RETURN VIEW ══════════════════════════
+       The fourth mechanic: the agent replies in the thread on receipt, saying what
+       it accepted and what it is querying. THAT REPLY IS THE CHALLENGE LOOP. Without
+       it a file round trip is a black hole. -->
+  <template x-if="view === 'On return'">
+    <div>
+
+      <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+        <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+          <span class="text-[11px] text-slate-500" x-text="'Outlook · Inbox · ' + owner()"></span>
+          <span class="text-[10px] text-slate-400 mono" x-text="'same thread · cycle.2027H1.owner.' + thread()"></span>
+        </div>
+
+        <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+          <h2 class="text-[16px] font-semibold text-slate-900" x-text="'RE: ' + subject()"></h2>
+          <div class="text-[12px] text-slate-500 mt-1">
+            <span class="font-medium text-slate-700">Purchase Planning</span>
+            <span class="mono" x-text="'<plan+' + thread() + '@procurement.flutter.com>'"></span> · Fri 2 Oct 2026, 11:04
+          </div>
+        </div>
+
+        <div class="px-6 py-6 text-[13.5px] leading-[1.65] text-slate-800" style="font-family: 'Segoe UI', Calibri, sans-serif">
+          <p x-text="'Ciao ' + owner().split(' ')[0] + ','"></p>
+          <p class="mt-3">Got the workbook, grazie. Here is what I have taken and what I still need.</p>
+
+          <!-- Accepted -->
+          <div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <div class="text-[12px] font-semibold text-emerald-900" x-text="ret().accepted"></div>
+            <p class="text-[12.5px] text-emerald-900/90 mt-1 leading-relaxed">
+              <span x-text="ret().acceptedDetail"></span>
+              These are in the plan and you do not need to do anything more with them.
+            </p>
+          </div>
+
+          <!-- Queried. The challenge loop, per line, with the reason. -->
+          <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <div class="text-[12px] font-semibold text-amber-900" x-text="'Querying · ' + ret().queries.length + (ret().queries.length === 1 ? ' line' : ' lines')"></div>
+            <ul class="text-[12.5px] text-amber-900/90 mt-1.5 space-y-2 leading-relaxed">
+              <template x-for="q in ret().queries" :key="q.ref">
+                <li>
+                  <span class="mono text-[11.5px]" x-text="q.ref"></span>
+                  <span class="font-medium" x-text="' ' + q.title"></span>
+                  <span class="block" x-text="q.why"></span>
+                </li>
+              </template>
+            </ul>
+            <a href="#" class="inline-block mt-3 text-[12.5px] font-medium text-amber-800 underline underline-offset-2" x-text="ret().queries.length === 1 ? 'Answer this one' : 'Answer these ' + ret().queries.length"></a>
+          </div>
+
+          <!-- Cancel confirmation. The extra click. -->
+          <div x-show="size === 'large'" class="mt-3 rounded-lg border-2 border-rose-200 bg-rose-50 px-4 py-3">
+            <div class="text-[12px] font-semibold text-rose-900">Confirm before I act · 1 cancellation</div>
+            <p class="text-[12.5px] text-rose-900/90 mt-1 leading-relaxed">
+              You marked <span class="mono text-[11.5px]">PP-2027-1184</span>
+              <strong>Load testing platform, Neustar</strong> as canceled, reason
+              <em>moved in-house</em>. Canceling removes it from the plan and there is no further
+              review behind it, so I am asking once before it takes effect.
+            </p>
+            <div class="flex items-center gap-2 mt-3 text-[12.5px] font-medium">
+              <a href="#" class="text-rose-800 underline underline-offset-2">Yes, cancel it</a>
+              <span class="text-slate-300">&middot;</span>
+              <a href="#" class="text-rose-800 underline underline-offset-2">No, keep it</a>
+            </div>
+          </div>
+
+          <!-- Added lines -->
+          <div x-show="size === 'large'" class="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3">
+            <div class="text-[12px] font-semibold text-indigo-900">Added · 1 line</div>
+            <p class="text-[12.5px] text-indigo-900/90 mt-1 leading-relaxed">
+              Incident response retainer with Swascan Srl, ending 31 August 2027. That is outside this
+              window, so I have put it in the backlog and will bring it to you in the Q3 cycle.
+              Procurement will review it before it joins the plan. Your set is now 64 lines.
+            </p>
+          </div>
+
+          <p class="mt-4 text-slate-600">
+            Grazie,<br>Ellie · Purchase Planning Agent
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </template>
+</div>
+
+<script>
+function requestEmail() {
+  return {
+    size: 'small',
+    view: 'Request',
+
+    lines: [
+      { id: 1, title: 'Cloud hosting, production estate',      supplier: 'Amazon Web Services EMEA', entity: 'Sisal Italia', ref: 'PP-2027-0412',
+        value: '€ 1,240,000', method: 'Full Tender', notice: 60, ends: '31 Mar 2027', decide: '5 Jan 2027', urgent: true },
+      { id: 2, title: 'Application monitoring licences',         supplier: 'Datadog France SAS',      entity: 'Sisal Italia', ref: 'PP-2027-0417',
+        value: '€ 186,000',   method: 'Direct Negotiation', notice: 40, ends: '30 Jun 2027', decide: '4 May 2027', urgent: false },
+      { id: 3, title: 'Penetration testing, annual programme',   supplier: 'Yarix Srl',               entity: 'Sisal Italia', ref: 'PP-2027-0433',
+        value: '€ 74,500',    method: 'Light Tender', notice: 40, ends: '28 Feb 2027', decide: '2 Jan 2027', urgent: true },
+      { id: 4, title: 'Developer tooling subscriptions',         supplier: 'JetBrains s.r.o.',        entity: 'Sisal Italia', ref: 'PP-2027-0451',
+        value: '€ 31,200',    method: 'Direct Negotiation', notice: 30, ends: '31 May 2027', decide: '16 Apr 2027', urgent: false },
+      { id: 5, title: 'Data warehouse capacity',                 supplier: 'Snowflake Italy Srl',     entity: 'Sisal Italia', ref: 'PP-2027-0468',
+        value: '€ 420,000',   method: 'Full Tender', notice: 60, ends: '30 Apr 2027', decide: '3 Feb 2027', urgent: true }
+    ],
+
+
+    // Alessandro Conti's five soonest lines, the same lines as the Workbook and E2's large set.
+    largeLines: [
+      { id: 11, title: 'Observability platform',           supplier: 'Grafana Labs',        entity: 'Sisal Gaming', ref: 'PP-2027-1042',
+        value: '€ 96,000',  method: 'Direct Negotiation', ends: '28 Feb 2027', decide: '2 Jan 2027',  urgent: true },
+      { id: 12, title: 'Kubernetes managed control plane', supplier: 'Google Ireland Ltd',  entity: 'Sisal Gaming', ref: 'PP-2027-1002',
+        value: '€ 312,000', method: 'Full Tender',        ends: '31 Mar 2027', decide: '5 Jan 2027',  urgent: true },
+      { id: 13, title: 'SRE consultancy, 2 FTE',           supplier: 'Bitrock Srl',         entity: 'Sisal Gaming', ref: 'PP-2027-1109',
+        value: '€ 264,000', method: 'Full Tender',        ends: '30 Apr 2027', decide: '3 Feb 2027',  urgent: true },
+      { id: 14, title: 'Load testing platform',            supplier: 'Neustar Inc',         entity: 'Sisal Gaming', ref: 'PP-2027-1184',
+        value: '€ 41,000',  method: 'Direct Negotiation', ends: '31 Mar 2027', decide: '16 Feb 2027', urgent: false },
+      { id: 15, title: 'Source control and CI seats',      supplier: 'GitHub BV',           entity: 'Sisal Gaming', ref: 'PP-2027-1067',
+        value: '€ 54,200',  method: 'Light Tender',       ends: '31 May 2027', decide: '16 Apr 2027', urgent: false }
+    ],
+    owner() { return this.size === 'small' ? 'Marco Ferretti' : 'Alessandro Conti'; },
+    email() { return this.size === 'small' ? 'marco.ferretti@sisal.it' : 'alessandro.conti@sisalgaming.com'; },
+    setSize(s) { this.size = s; },
+    setView(v) { this.view = v; },
+    wbName() { return 'Purchase Plan Q1-Q2 2027 · ' + (this.size === 'small' ? 'Ferretti' : 'Conti') + ' · v1.xlsx'; },
+    thread() { return this.size === 'small' ? '7c41' : 'a7f2'; },
+    wbRows() { return this.size === 'small' ? this.smallRows : this.rows; },
+    ret() {
+      return this.size === 'small'
+        ? { accepted: 'Accepted · 3 lines', acceptedDetail: '2 confirmed as planned, 1 not yours which I have passed to Elena Carbone.', queries: this.smallQueries }
+        : { accepted: 'Accepted · 58 lines', acceptedDetail: '51 confirmed as planned, 6 with changes, 1 not yours which I have passed to Paolo Rizzo.', queries: this.queries };
+    },
+    // Marco Ferretti's four lines as he returned them in the workbook, matching the
+    // walkthrough's story: AWS to tender, Datadog down in volume, Yarix belongs to Elena.
+    smallRows: [
+      { ref: 'PP-2027-0412', entity: 'Sisal Italia', bu: 'Digital Ops', cat: 'Technology',            desc: 'Cloud hosting, production estate',      supplier: 'Amazon Web Services EMEA', value: '1.240.000', ends: '31/03/2027', decide: '05/01/2027', urgent: true,  still: 'Confirm as planned', route: 'New good or service, no contract', newValue: '', note: 'Going to tender' },
+      { ref: 'PP-2027-0417', entity: 'Sisal Italia', bu: 'Digital Ops', cat: 'Technology',            desc: 'Application monitoring licences',       supplier: 'Datadog France SAS',       value: '186.000',   ends: '30/06/2027', decide: '04/05/2027', urgent: false, still: 'Needs changes',      route: 'Renewal',                          newValue: '149.000', note: 'Volume down about 20%' },
+      { ref: 'PP-2027-0433', entity: 'Sisal Italia', bu: 'Digital Ops', cat: 'Professional Services', desc: 'Penetration testing, annual programme', supplier: 'Yarix Srl',                value: '74.500',    ends: '28/02/2027', decide: '02/01/2027', urgent: true,  still: 'Not mine',           route: '',                                 newValue: '', note: 'Elena Carbone owns this now' },
+      { ref: 'PP-2027-0451', entity: 'Sisal Italia', bu: 'Digital Ops', cat: 'Technology',            desc: 'Developer tooling subscriptions',       supplier: 'JetBrains s.r.o.',         value: '31.200',    ends: '31/05/2027', decide: '16/04/2027', urgent: false, still: 'Confirm as planned', route: 'Renewal',                          newValue: '', note: '' }
+    ],
+    smallQueries: [
+      { ref: 'PP-2027-0417', title: 'Application monitoring licences, Datadog',
+        why: 'New value € 149,000 is recorded against a Direct Negotiation. Renewing directly at this value needs authorization. Will you justify a direct renewal, or run a tender?' }
+    ],
+    lineCount() { return this.size === 'small' ? 4 : 63; },
+    shownLines() { return this.size === 'small' ? this.lines.slice(0, 4) : this.largeLines; },
+    subject() {
+      return this.size === 'small'
+        ? 'Purchasing plan Q1-Q2 2027 · 4 contracts to confirm by 16 October'
+        : 'Purchasing plan Q1-Q2 2027 · 63 contracts to confirm by 16 October';
+    },
+
+    // ── Workbook and On return (merged from E1b in Session 24) ──
+    sheet: 'My lines',
+    sheets: ['My lines', 'Lines we are missing', 'Vocabulary'],
+
+    // Their column vocabulary, not ours. Same as the platform grid.
+    lockedCols: ['Plan ref', 'Legal entity', 'Business unit', 'Category', 'Description', 'Supplier', 'Yearly value', 'Contract end', 'Decision needed by'],
+    openCols: [
+      { k: 'Still going ahead?' },
+      { k: 'How will it be bought?' },
+      { k: 'New yearly value' },
+      { k: 'Notes / reason' }
+    ],
+    addCols: ['Type', 'Description', 'Supplier', 'Start date', 'End date', 'Yearly value', 'Why it is not in the plan'],
+
+    rows: [
+      { ref: 'PP-2027-1002', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Technology',  desc: 'Kubernetes managed control plane', supplier: 'Google Ireland Ltd',   value: '312.000', ends: '31/03/2027', decide: '05/01/2027', urgent: true,  still: 'Confirm as planned', route: 'Renewal',  newValue: '', note: '' },
+      { ref: 'PP-2027-1014', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Technology',  desc: 'CDN and edge delivery',            supplier: 'Akamai Technologies',  value: '188.500', ends: '30/06/2027', decide: '04/05/2027', urgent: false, still: 'Needs changes',      route: 'Renewal',  newValue: '146.000', note: 'Traffic down, renegotiating tiers' },
+      { ref: 'PP-2027-1042', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Technology',     desc: 'Observability platform',           supplier: 'Grafana Labs',         value: '96.000',  ends: '28/02/2027', decide: '02/01/2027', urgent: true,  still: 'Confirm as planned', route: 'Framework agreement', newValue: '', note: 'Under group agreement' },
+      { ref: 'PP-2027-1067', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Technology',     desc: 'Source control and CI seats',      supplier: 'GitHub BV',            value: '54.200',  ends: '31/05/2027', decide: '16/04/2027', urgent: false, still: 'Confirm as planned', route: 'Renewal',  newValue: '', note: '' },
+      { ref: 'PP-2027-1109', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Professional Services',desc: 'SRE consultancy, 2 FTE',           supplier: 'Bitrock Srl',          value: '264.000', ends: '30/04/2027', decide: '03/02/2027', urgent: true,  still: '',                   route: '',         newValue: '', note: '' },
+      { ref: 'PP-2027-1184', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Technology',     desc: 'Load testing platform',            supplier: 'Neustar Inc',          value: '41.000',  ends: '31/03/2027', decide: '16/02/2027', urgent: false, still: 'Cancel',             route: '',         newValue: '', note: 'Moved in-house' },
+      { ref: 'PP-2027-1201', entity: 'Sisal Gaming', bu: 'Platform Eng', cat: 'Technology',  desc: 'Object storage, archive tier',     supplier: 'Wasabi Technologies',  value: '29.800',  ends: '31/07/2027', decide: '15/06/2027', urgent: false, still: '',                   route: '',         newValue: '', note: '' },
+      { ref: 'PP-2027-1233', entity: 'TSG Italy',    bu: 'Platform Eng', cat: 'Technology',     desc: 'Feature flag service',             supplier: 'LaunchDarkly Ltd',     value: '37.400',  ends: '30/09/2027', decide: '12/08/2027', urgent: false, still: 'Not mine',           route: '',         newValue: '', note: 'Belongs to Data & Analytics' }
+    ],
+
+    vocab: [
+      { k: 'Still going ahead?', opts: ['Confirm as planned', 'Needs changes', 'Cancel (reason required)', 'Not mine'] },
+      { k: 'How will it be bought?', opts: ['Renewal of an expiring contract', 'Addendum to an active contract', 'New good or service, no contract', 'A framework agreement covers it'] },
+      { k: 'Type (missing lines sheet)', opts: ['Contract already running', 'A need with no contract yet'] },
+      { k: 'Cancellation reason', opts: ['Service no longer required', 'Moved in-house', 'Covered by another contract', 'Budget withdrawn', 'Duplicate of another plan line', 'Other'] }
+    ],
+
+    queries: [
+      { ref: 'PP-2027-1109', title: 'SRE consultancy, Bitrock Srl',
+        why: 'Left blank, and its decision date is 3 February. At € 264,000 this one goes to tender, so it is the most exposed line in your set.' },
+      { ref: 'PP-2027-1042', title: 'Observability platform, Grafana Labs',
+        why: 'You answered framework agreement. Can the PO value be set without asking them for a quote? Yes means it skips the RFE entirely.' },
+      { ref: 'PP-2027-1014', title: 'CDN and edge delivery, Akamai',
+        why: 'New value € 146,000 is recorded against a Direct Negotiation. Renewing directly at this value needs authorization. Will you justify a direct renewal, or run a tender?' },
+      { ref: 'PP-2027-1201', title: 'Object storage, Wasabi',
+        why: 'Left blank. Low value and not urgent, but I need an answer before the freeze on 16 October.' }
+    ]
+  };
+}
+</script>
+</body>
+</html>

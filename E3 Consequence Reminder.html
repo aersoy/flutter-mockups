@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!--
+  E3 · The Reminder That States The Consequence  (Phase 1)
+  ========================================================
+  Source: `Tiered Solution/Screen Inventory.md` → "E3. The reminder that states the consequence"
+          `Tiered Solution/Scope and Flow.md`   → "The Agent States The Consequence"
+
+  What it has to prove:
+    Silence has a price, and it is Flutter's own price rather than ours.
+
+  Why this screen carries more risk than any other:
+    Everything else we built lowers the cost of responding. This is the only part
+    that raises the cost of NOT responding, and a 30% response rate is not primarily
+    an ability problem for people who ignore the request entirely.
+    Procurement will read this screen more carefully than any other, because they are
+    being asked to let us say it on their behalf. The wording is to be drafted WITH
+    Procurement, not presented to them.
+
+  The five rules the design has to honour, all from Scope and Flow:
+    1. Computed per line, not boilerplate. The specific date, the specific notice
+       period, the specific consequence for THAT line, derived from configured rules.
+       A generic warning attached to every line trains people to ignore it.
+    2. Escalates with proximity. Information → naming what the line becomes →
+       stating what has now happened. Opening at maximum severity burns the lever
+       on lines that were never at risk.
+    3. Always paired with the one-click answer. The consequence sits NEXT TO confirm
+       and never replaces it with a longer form.
+    4. It explains, it does not threaten. One colleague telling another what the process
+       does next. Session 22: no clause, section or notice-day citation appears in the
+       message; the consequence is stated in plain words. If it reads as a threat,
+       Procurement withdraws the permission after the first complaint.
+    5. Procurement can suppress it, per line and per person. A lever they cannot
+       lower is one they will eventually take away entirely.
+
+  ACCURACY IS THE WHOLE FEATURE. A stated consequence that turns out not to apply is
+  worse than saying nothing, and in a regulated group it will be quoted back. This is
+  why the feature must not go live against an entity whose rulebook we have not seen:
+  we hold the Sisal Technology Hub Turkey document and the pilot is Italian. The
+  consequence wording shown here is still to be confirmed against the Italian procedure.
+
+  Session 22: the annotation rail (Procurement's suppression controls, the accuracy
+  warning, the control-group experiment) was removed from the page. That reasoning lives
+  in Scope and Flow, "The Agent States The Consequence".
+
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E3 · Consequence Reminder</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .mailfont { font-family: 'Segoe UI', -apple-system, Calibri, sans-serif; }
+  [x-cloak] { display: none !important; }
+  .fade { animation: f .22s ease-out; }
+  @keyframes f { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+
+<body class="bg-slate-200 text-slate-800 min-h-screen" x-data="reminder()" x-cloak>
+
+<div class="max-w-[960px] mx-auto px-5 py-5">
+
+  <div class="mb-4">
+    <h1 class="text-lg font-semibold text-slate-900">E3 · The reminder that states the consequence</h1>
+  </div>
+
+  <!-- ══════════ Stage selector ══════════
+       Drawn as a timeline rather than tabs, because the point of the feature is
+       that severity is a function of proximity, not a setting. -->
+  <div class="rounded-xl bg-white border border-slate-200 p-4 mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <div class="text-[13px] font-semibold text-slate-900">Penetration testing, annual programme · Yarix Srl</div>
+        <div class="text-[11.5px] text-slate-500 mt-0.5">
+          <span class="mono">PP-2027-0433</span> · &euro; 74,500 · Light Tender ·
+          Sisal Italia · decision needed <strong>2 Jan 2027</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative pt-2">
+      <div class="absolute left-0 right-0 top-[22px] h-0.5 bg-slate-200"></div>
+      <div class="relative grid grid-cols-3">
+        <template x-for="(s, i) in stages" :key="s.k">
+          <button @click="stage = s.k" class="flex flex-col items-center gap-1.5 group">
+            <span class="w-4 h-4 rounded-full border-2 bg-white transition-all z-10"
+                  :class="stage === s.k ? s.dot + ' scale-125' : 'border-slate-300'"></span>
+            <span class="text-[12px] font-semibold transition-colors"
+                  :class="stage === s.k ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'"
+                  x-text="s.when"></span>
+            <span class="text-[11px]" :class="stage === s.k ? 'text-slate-600' : 'text-slate-400'" x-text="s.reads"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <div>
+
+    <!-- ══════════════════ The email ══════════════════ -->
+    <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+        <span class="text-[11px] text-slate-500">Outlook · Inbox · Marco Ferretti</span>
+        <!-- Same thread, always. Never a new conversation per reminder. -->
+        <span class="text-[10px] text-slate-400 mono">in thread · cycle.2027H1.owner.7c41</span>
+      </div>
+
+      <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2 mb-1">
+          <h2 class="text-[16px] font-semibold text-slate-900 mailfont" x-text="cur().subject"></h2>
+          <span class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">3 earlier messages</span>
+        </div>
+        <div class="text-[12px] text-slate-500">
+          <span class="font-medium text-slate-700">Purchase Planning</span>
+          <span class="mono">&lt;plan+7c41@procurement.flutter.com&gt;</span>
+          &nbsp;·&nbsp; <span x-text="cur().sent"></span>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 mailfont text-[13.5px] leading-[1.65] text-slate-800">
+        <div class="fade" :key="stage">
+          <p>Ciao Marco,</p>
+
+          <!-- ── The body. Three different messages, one shape. ── -->
+          <div class="mt-3 space-y-3" x-html="cur().body"></div>
+
+          <!-- ── The consequence block. Generated from configured rules, stated without
+                  citing them. Note it is never the last thing in the message: the answer
+                  links come after it, so the cost of silence is always immediately
+                  followed by the cheapest possible way out. ── -->
+          <div class="mt-4 rounded-lg px-4 py-3.5 border" :class="cur().boxClass">
+            <div class="text-[11px] font-semibold uppercase tracking-wide mb-1.5" :class="cur().labelClass" x-text="cur().boxLabel"></div>
+            <div class="text-[13px] leading-relaxed" x-html="cur().consequence"></div>
+          </div>
+
+          <!-- ── The one-click answer. Identical at every stage. This is rule 3:
+                  raising the cost of silence only works while answering stays trivial. ── -->
+          <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium">
+            <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Confirm as planned</a>
+            <span class="text-slate-300">&middot;</span>
+            <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Needs changes</a>
+            <span class="text-slate-300">&middot;</span>
+            <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Not mine</a>
+            <span class="text-slate-300">&middot;</span>
+            <a href="E2%20Response%20Page.html" class="text-rose-700 underline underline-offset-2">Cancel this line</a>
+          </div>
+
+          <p class="mt-2 text-[11.5px] text-slate-500">Each link opens Purchase Planning; sign in once with your Microsoft work account.</p>
+
+          <p class="mt-4 text-slate-600">
+            Grazie,<br>
+            Ellie · Purchase Planning Agent<br>
+            <span class="text-[12px] text-slate-500">on behalf of Procurement Italia</span>
+          </p>
+
+          <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed" x-text="cur().foot"></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function reminder() {
+  return {
+    stage: 'early',
+
+    stages: [
+      { k: 'early', when: '20 working days out', reads: 'reads as information', dot: 'border-sky-500' },
+      { k: 'near',  when: '5 working days out',  reads: 'names what the line becomes', dot: 'border-amber-500' },
+      { k: 'past',  when: '3 working days after', reads: 'states what has happened', dot: 'border-rose-500' }
+    ],
+
+
+
+    bodies: {
+      early: {
+        subject: 'Purchasing plan Q1-Q2 2027 · a reminder on 1 line',
+        sent: 'Tue 29 Sep 2026, 08:15',
+        body: '<p>One of your lines has a decision date coming up. Nothing is late and there is nothing to worry about, I just want to flag which one moves first.</p>' +
+              '<p><strong>Penetration testing, annual programme</strong> with Yarix Srl needs a decision by <strong>2 January 2027</strong>.</p>',
+        boxLabel: 'Why this date',
+        boxClass: 'bg-sky-50 border-sky-200',
+        labelClass: 'text-sky-800',
+        citeClass: 'border-sky-200 text-sky-800',
+        consequence: 'The contract ends on 28 February 2027, and a tender of this size takes time to run. Answering by 2 January keeps it on the standard process, with Procurement running the tender.',
+        foot: 'Sent because a line you own reaches its notice date within 20 working days. One message per owner per cycle; this is in the same thread as your original request.'
+      },
+      near: {
+        subject: 'Purchasing plan Q1-Q2 2027 · 5 working days on 1 line',
+        sent: 'Mon 20 Dec 2026, 08:15',
+        body: '<p>This one needs an answer this week.</p>' +
+              '<p><strong>Penetration testing, annual programme</strong> with Yarix Srl reaches its notice date on <strong>2 January 2027</strong>, which is 5 working days away.</p>',
+        boxLabel: 'What happens if the date passes',
+        boxClass: 'bg-amber-50 border-amber-200',
+        labelClass: 'text-amber-900',
+        citeClass: 'border-amber-200 text-amber-900',
+        consequence: 'If the date passes without an answer, this becomes a late RFE. Your function takes over all related activities: running the tender, negotiating, and entering and authorizing the contract in Appian. Procurement would then assess achievable delivery times rather than run the standard process.',
+        foot: 'Sent because a line you own reaches its notice date within 5 working days. You can still answer in one click.'
+      },
+      past: {
+        subject: 'Purchasing plan Q1-Q2 2027 · 1 line has passed its notice date',
+        sent: 'Wed 7 Jan 2027, 08:15',
+        body: '<p>The notice date on this line has passed, so I want to tell you plainly where it now sits.</p>' +
+              '<p><strong>Penetration testing, annual programme</strong> with Yarix Srl passed its notice date on <strong>2 January 2027</strong>. The contract still ends 28 February.</p>',
+        boxLabel: 'What has happened',
+        boxClass: 'bg-rose-50 border-rose-200',
+        labelClass: 'text-rose-900',
+        citeClass: 'border-rose-200 text-rose-900',
+        consequence: 'This is now recorded as a <strong>non-compliant RFE</strong>. Your function has picked up the related activities, including the negotiation and the Appian contract entry. Procurement has been asked to assess achievable delivery times. Non-compliant RFEs are included in the quarterly report to the CEO.<br><br>Answering now still helps: it lets Procurement support the negotiation even though the standard window has closed.',
+        foot: 'Sent because a line you own has passed its notice date. Your BU manager, Chiara Mancini, has been copied on a separate summary of what is outstanding for the unit.'
+      }
+    },
+
+    cur() { return this.bodies[this.stage]; }
+  };
+}
+</script>
+</body>
+</html>

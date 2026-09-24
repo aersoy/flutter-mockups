@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<!--
+  E2 · The Response Page  (Flutter Purchase Planning Agent, Phase 1)
+  ===================================================================
+  Source: `Tiered Solution/Scope and Flow.md` → "A response answers two questions, not one",
+                                                "Reaching Business Units Where They Already Are"
+          `Tiered Solution/Screen Inventory.md` → "E2. The response page"
+
+  Session 22: this used to be the no-login response page. Answering now happens signed
+  in (a light, one-click Microsoft sign-in), because an unauthenticated answer is a
+  security problem and makes the audit trail disputable. So this page opens with the
+  sign-in step, then lands exactly where the old page did: the answer the owner clicked
+  in the email is registered on arrival and stated at the top, and the rest of their set
+  for this cycle is listed below, ready to answer in place.
+
+  What it has to prove: a click from the email, plus one click to sign in, finishes the job.
+
+  Kept from the earlier design:
+    - The email starts the session, the page is the session. Answering one line and
+      answering the set are the same screen.
+    - The first click is registered on arrival and is undoable, never re-confirmed.
+    - Answered lines stay in the list, collapsed to a summary, changeable until the freeze.
+    - Cancel needs a reason and a deliberate confirmation.
+    - Add a line lives here, because looking at the list is when you notice what is
+      missing. It asks which kind of line: a need coming up (tagged NEW) or a contract
+      already running that the plan never captured (tagged RENEW, restored in Session 22).
+    - No product navigation. This is a focused page, not the plan.
+
+  The sign-in step is drawn once, as a Microsoft account picker, to show how light it is.
+  No rule citations anywhere on the page (Session 22).
+
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E2 · Response Page</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  [x-cloak] { display: none !important; }
+  .fade { animation: f .22s ease-out; }
+  @keyframes f { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  .scroll::-webkit-scrollbar { width: 9px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+</style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 min-h-screen" x-data="responsePage()" x-cloak>
+
+<div class="max-w-[960px] mx-auto px-5 py-5">
+
+  <!-- Mockup frame, not part of the page itself -->
+  <div class="flex items-start justify-between mb-3 gap-6">
+    <div>
+      <h1 class="text-lg font-semibold text-slate-900">E2 · The response page</h1>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <!-- Set size switch. The same page has to work for a 4-line owner and a 63-line one. -->
+      <div class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
+        <span class="text-[10px] text-slate-400 px-1.5">Owner set</span>
+        <button @click="setSize('small')" class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+                :class="size === 'small' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">4 lines</button>
+        <button @click="setSize('large')" class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+                :class="size === 'large' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">63 lines</button>
+      </div>
+      <button @click="reset()" class="text-xs px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Reset</button>
+    </div>
+  </div>
+
+  <div>
+
+    <!-- ══════════════════ Browser chrome ══════════════════ -->
+    <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center gap-3">
+        <div class="flex gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+        </div>
+        <div class="flex-1 bg-white rounded px-3 py-1 text-[11px] text-slate-500 mono truncate border border-slate-200">
+          <span x-text="signedIn ? 'plan.flutter.com/respond/' + landed.ref + '?answer=confirm' : 'login.microsoftonline.com'"></span>
+        </div>
+      </div>
+
+      <!-- ══════════ Sign-in step ══════════
+           What a click in E1 opens first: the owner's Microsoft work account, already
+           known to the browser, picked with one click. Drawn to show how light it is. -->
+      <template x-if="!signedIn">
+        <div class="px-8 py-16 flex justify-center bg-slate-50">
+          <div class="w-[380px] bg-white border border-slate-200 shadow-sm rounded px-9 py-8">
+            <div class="flex items-center gap-2">
+              <span class="grid grid-cols-2 gap-[2px] w-[18px] h-[18px]">
+                <span class="bg-[#f25022]"></span><span class="bg-[#7fba00]"></span>
+                <span class="bg-[#00a4ef]"></span><span class="bg-[#ffb900]"></span>
+              </span>
+              <span class="text-[14px] font-semibold text-slate-600">Microsoft</span>
+            </div>
+            <h2 class="text-[20px] font-semibold text-slate-900 mt-5">Pick an account</h2>
+            <p class="text-[12.5px] text-slate-500 mt-1">to continue to Purchase Planning</p>
+            <button @click="signedIn = true"
+                    class="mt-5 w-full flex items-center gap-3 px-3 py-3 border border-slate-200 hover:bg-slate-50 text-left">
+              <span class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 text-[12px] font-semibold flex items-center justify-center shrink-0"
+                    x-text="owner().split(' ').map(x => x[0]).join('')"></span>
+              <span class="min-w-0">
+                <span class="block text-[13px] font-medium text-slate-900" x-text="owner()"></span>
+                <span class="block text-[12px] text-slate-500 truncate" x-text="email()"></span>
+              </span>
+              <span class="ml-auto text-[11px] text-slate-400">Signed in</span>
+            </button>
+            <button class="mt-2 w-full text-left px-3 py-2.5 text-[12.5px] text-slate-600 hover:bg-slate-50">Use another account</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══════════ The page ══════════ -->
+      <div class="px-8 py-6" x-show="signedIn">
+
+        <!-- Identity strip. Who is asking, on whose behalf, and nothing else.
+             No nav, no account menu, no product sidebar. -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <span class="text-white text-[11px] font-bold">E</span>
+            </div>
+            <div class="leading-tight">
+              <div class="text-[13px] font-semibold text-slate-900">Purchasing plan Q1&ndash;Q2 2027</div>
+              <div class="text-[11px] text-slate-500">Procurement Italia · Flutter Southern Europe &amp; Africa</div>
+            </div>
+          </div>
+          <div class="text-right leading-tight">
+            <div class="text-[11px] text-slate-500">Signed in as</div>
+            <div class="text-[12px] font-medium text-slate-800" x-text="owner()"></div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             THE LANDING RECEIPT
+             The action taken in the email is ALREADY DONE when the page opens.
+             It is stated as a fact, not as something to confirm again, and it is
+             undoable. Then the page immediately moves the owner on to the rest.
+             ══════════════════════════════════════════════════════════════ -->
+        <template x-if="!allDone()">
+          <div class="fade mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+            <div class="flex items-start justify-between gap-5">
+              <div class="flex items-start gap-3 min-w-0">
+                <div class="w-6 h-6 rounded-full bg-emerald-600 text-white text-[12px] flex items-center justify-center shrink-0 mt-0.5">&#10003;</div>
+                <div class="min-w-0">
+                  <div class="text-[14px] font-semibold text-emerald-900">
+                    Recorded: <span x-text="landed.desc"></span> confirmed as planned
+                  </div>
+                  <div class="text-[12px] text-emerald-800/85 mt-0.5 leading-relaxed">
+                    That is done, nothing else needed on it.
+                    <span x-text="remaining() + ' more line' + (remaining() === 1 ? '' : 's') + ' below, and you can finish them all here.'"></span>
+                  </div>
+                </div>
+              </div>
+              <button @click="undoLanded()" class="text-[11.5px] font-medium text-emerald-800 hover:text-emerald-950 underline underline-offset-2 shrink-0 mt-1">Undo</button>
+            </div>
+          </div>
+        </template>
+
+        <!-- ══════════ Progress. One line of text plus a bar. Not a dashboard. ══════════ -->
+        <div class="mt-5 flex items-center justify-between gap-5">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
+              <div class="h-full bg-emerald-500 rounded-full transition-all" :style="'width:' + pct() + '%'"></div>
+            </div>
+            <span class="text-[12.5px] text-slate-600">
+              <strong x-text="answered()"></strong> of <span x-text="lines.length"></span> answered
+              <span class="text-slate-400" x-show="remaining()"> · <span x-text="remaining()"></span> to go</span>
+            </span>
+          </div>
+          <div class="text-[12px] text-slate-500 shrink-0">
+            Freeze: <strong class="text-slate-700">Friday 16 October</strong>
+          </div>
+        </div>
+
+        <!-- ══════════ Large-set branch ══════════
+             63 lines in a page is the same mistake as 63 lines in an email body, just
+             on a different surface. So the large set gets the workbook offered first,
+             and the page shows only what is urgent. The list below still works, it is
+             just not pretending to be the right tool for all 63. -->
+        <template x-if="size === 'large' && !allDone()">
+          <div class="fade mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 flex items-center justify-between gap-5">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
+              <div class="min-w-0">
+                <div class="text-[13px] font-semibold text-slate-800">You hold 63 lines this cycle</div>
+                <div class="text-[12px] text-slate-600 mt-0.5 leading-relaxed">
+                  The 7 closest to their decision date are below. For the rest, the workbook is faster than this page.
+                </div>
+              </div>
+            </div>
+            <button class="text-[12px] font-semibold px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shrink-0">
+              Download workbook
+            </button>
+          </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             THE SET
+             Every line the owner holds in this cycle, answered in place.
+             Sorted by decision date, because that is the only ordering that
+             tells someone where to start.
+             ══════════════════════════════════════════════════════════════ -->
+        <div class="mt-5 space-y-2.5">
+          <div class="flex items-baseline gap-2">
+            <h2 class="text-[13px] font-semibold text-slate-900" x-text="listHeading()"></h2>
+            <span class="text-[11.5px] text-slate-400">soonest decision first</span>
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <button @click="showDone = !showDone" class="text-[11.5px] font-medium text-indigo-600 shrink-0"
+                    x-show="answered() > 0"
+                    x-text="showDone ? 'Hide answered' : 'Show ' + answered() + ' answered'"></button>
+          </div>
+
+          <template x-for="l in visibleLines()" :key="l.ref">
+            <div class="rounded-xl border transition-all"
+                 :class="l.answer
+                   ? (l.answer === 'cancel' ? 'border-rose-200 bg-rose-50/40' : 'border-emerald-200 bg-emerald-50/40')
+                   : (open === l.ref ? 'border-indigo-300 bg-white shadow-sm' : 'border-slate-200 bg-white')">
+
+              <!-- ── Line row. Collapsed: identity, number, date, actions. ── -->
+              <div class="px-4 py-3.5">
+                <div class="flex items-start gap-4">
+
+                  <!-- Status dot. Answered lines stay in the list rather than vanishing,
+                       so the owner can see what they have done without scrolling away. -->
+                  <div class="w-5 shrink-0 pt-0.5">
+                    <template x-if="l.answer">
+                      <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] text-white"
+                            :class="l.answer === 'cancel' ? 'bg-rose-500' : 'bg-emerald-500'"
+                            x-text="l.answer === 'cancel' ? '✕' : '✓'"></span>
+                    </template>
+                    <template x-if="!l.answer">
+                      <span class="w-5 h-5 rounded-full border-2 border-slate-200 block"></span>
+                    </template>
+                  </div>
+
+                  <!-- Identity -->
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[14px] font-semibold text-slate-900" x-text="l.desc"></div>
+                    <div class="text-[11.5px] text-slate-500 mt-0.5">
+                      <span x-text="l.supplier"></span> · <span x-text="l.entity"></span> ·
+                      <span class="mono" x-text="l.ref"></span>
+                    </div>
+                    <!-- The answer, once given. Stated back in plain words. -->
+                    <template x-if="l.answer">
+                      <div class="text-[12px] mt-1.5" :class="l.answer === 'cancel' ? 'text-rose-700' : 'text-emerald-800'"
+                           x-text="answerSummary(l)"></div>
+                    </template>
+                  </div>
+
+                  <!-- Value -->
+                  <div class="text-right shrink-0 w-28">
+                    <div class="text-[14px] font-semibold text-slate-900" x-text="l.value"></div>
+                    <div class="text-[11px] text-slate-500" x-text="l.method"></div>
+                  </div>
+
+                  <!-- Decision date. The organizing fact. -->
+                  <div class="text-right shrink-0 w-24">
+                    <div class="text-[12.5px] font-medium"
+                         :class="l.days <= 30 ? 'text-rose-600' : (l.days <= 60 ? 'text-amber-600' : 'text-slate-700')"
+                         x-text="l.decide"></div>
+                    <div class="text-[10.5px] text-slate-400">decide by</div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="shrink-0 w-[92px] flex justify-end">
+                    <template x-if="l.answer">
+                      <button @click="editLine(l)" class="text-[11.5px] font-medium text-indigo-600 hover:text-indigo-800">Change</button>
+                    </template>
+                    <template x-if="!l.answer && open !== l.ref">
+                      <button @click="open = l.ref"
+                              class="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+                        Answer
+                      </button>
+                    </template>
+                    <template x-if="!l.answer && open === l.ref">
+                      <button @click="open = null" class="text-[11.5px] font-medium text-slate-400 hover:text-slate-600">Close</button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── Expanded: the two questions, inline. ──
+                   Same model and same vocabulary as B2 in the app. Nobody should
+                   have to learn two ways of answering. -->
+              <template x-if="open === l.ref">
+                <div class="fade border-t border-slate-200 px-4 py-4 bg-slate-50/50">
+
+                  <!-- QUESTION 1 -->
+                  <div class="flex items-baseline gap-2">
+                    <span class="w-4.5 h-4.5 w-[18px] h-[18px] rounded-full bg-slate-800 text-white text-[9px] font-semibold flex items-center justify-center shrink-0">1</span>
+                    <h3 class="text-[13.5px] font-semibold text-slate-900">Is this still going ahead?</h3>
+                  </div>
+                  <div class="grid grid-cols-4 gap-2 mt-2.5">
+                    <template x-for="o in realOptions" :key="o.k">
+                      <button @click="pickReal(l, o.k)"
+                              class="text-left rounded-lg border-2 px-3 py-2.5 transition-all"
+                              :class="draft.real === o.k
+                                ? (o.k === 'cancel' ? 'border-rose-500 bg-rose-50' : 'border-indigo-600 bg-indigo-50')
+                                : 'border-slate-200 bg-white hover:border-slate-300'">
+                        <div class="text-[12.5px] font-semibold"
+                             :class="draft.real === o.k ? (o.k === 'cancel' ? 'text-rose-800' : 'text-indigo-800') : 'text-slate-800'"
+                             x-text="o.label"></div>
+                        <div class="text-[10.5px] text-slate-500 mt-0.5 leading-snug" x-text="o.hint"></div>
+                      </button>
+                    </template>
+                  </div>
+
+                  <!-- Not mine → delegation, not a dead end -->
+                  <template x-if="draft.real === 'notmine'">
+                    <div class="fade mt-3 rounded-lg border border-slate-200 bg-white p-3.5">
+                      <div class="text-[12.5px] font-semibold text-slate-900">Who should have this?</div>
+                      <p class="text-[11.5px] text-slate-600 mt-0.5">It goes straight to them, without routing back through Procurement.</p>
+                      <input type="text" placeholder="Name or email address"
+                             class="mt-2 w-full max-w-sm text-[12.5px] px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400">
+                      <label class="flex items-center gap-2 mt-2 text-[11.5px] text-slate-600">
+                        <input type="checkbox" class="accent-indigo-600"> I do not know who owns this
+                      </label>
+                    </div>
+                  </template>
+
+                  <!-- Cancel → reason required. The one destructive, ungated action,
+                       and the one thing a signed link never resolves on its own. -->
+                  <template x-if="draft.real === 'cancel'">
+                    <div class="fade mt-3 rounded-lg border-2 border-rose-200 bg-rose-50/60 p-3.5">
+                      <div class="text-[12.5px] font-semibold text-rose-900">Why is this being canceled?</div>
+                      <p class="text-[11.5px] text-rose-800/80 mt-1 leading-relaxed">
+                        A reason is required. The line is not deleted: Procurement reviews it with the other
+                        canceled lines at the freeze.
+                      </p>
+                      <select class="mt-2 w-full max-w-sm text-[12.5px] px-3 py-2 border border-rose-300 rounded-lg bg-white">
+                        <option>Select a reason...</option>
+                        <option>Service no longer required</option><option>Moved in-house</option>
+                        <option>Covered by another contract</option><option>Budget withdrawn</option>
+                        <option>Duplicate of another plan line</option><option>Other (please describe)</option>
+                      </select>
+                    </div>
+                  </template>
+
+                  <!-- Needs changes -->
+                  <template x-if="draft.real === 'changes'">
+                    <div class="fade mt-3 rounded-lg border border-slate-200 bg-white p-3.5">
+                      <div class="text-[12.5px] font-semibold text-slate-900">What has changed?</div>
+                      <div class="grid grid-cols-2 gap-2.5 mt-2.5 max-w-2xl">
+                        <template x-for="c in changeFields" :key="c.k">
+                          <div>
+                            <label class="text-[10.5px] text-slate-500" x-text="c.k"></label>
+                            <input type="text" :placeholder="c.v"
+                                   class="mt-0.5 w-full text-[12.5px] px-3 py-1.5 border border-slate-300 rounded-lg">
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- QUESTION 2 -->
+                  <template x-if="draft.real === 'confirm' || draft.real === 'changes'">
+                    <div class="fade mt-4">
+                      <div class="flex items-baseline gap-2">
+                        <span class="w-[18px] h-[18px] rounded-full bg-slate-800 text-white text-[9px] font-semibold flex items-center justify-center shrink-0">2</span>
+                        <h3 class="text-[13.5px] font-semibold text-slate-900">How will it be bought?</h3>
+                      </div>
+                      <div class="grid grid-cols-4 gap-2 mt-2.5">
+                        <template x-for="o in routeOptions" :key="o.k">
+                          <button @click="pickRoute(o.k)"
+                                  class="text-left rounded-lg border-2 px-3 py-2.5 transition-all"
+                                  :class="draft.route === o.k ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                            <div class="text-[12.5px] font-semibold" :class="draft.route === o.k ? 'text-indigo-800' : 'text-slate-800'" x-text="o.label"></div>
+                            <div class="text-[10.5px] text-slate-500 mt-0.5 leading-snug" x-text="o.hint"></div>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- The framework agreement follow-up. First decision in their own RFE
+                       process, and the whole Phase 2 argument in one question. -->
+                  <template x-if="draft.route === 'framework'">
+                    <div class="fade mt-3 rounded-lg border-2 border-violet-200 bg-violet-50/60 p-3.5">
+                      <div class="text-[12.5px] font-semibold text-violet-900">
+                        Can the PO value be determined without asking the supplier for a quote?
+                      </div>
+                      <div class="flex gap-2 mt-2.5">
+                        <button @click="draft.poValue = 'yes'" class="text-[12.5px] font-semibold px-4 py-1.5 rounded-lg border-2 transition-all"
+                                :class="draft.poValue === 'yes' ? 'border-violet-600 bg-violet-600 text-white' : 'border-violet-300 bg-white text-violet-800'">Yes</button>
+                        <button @click="draft.poValue = 'no'" class="text-[12.5px] font-semibold px-4 py-1.5 rounded-lg border-2 transition-all"
+                                :class="draft.poValue === 'no' ? 'border-violet-600 bg-violet-600 text-white' : 'border-violet-300 bg-white text-violet-800'">No</button>
+                      </div>
+                      <template x-if="draft.poValue">
+                        <div class="fade mt-2.5 rounded-lg bg-white border border-violet-200 px-3 py-2.5 text-[12px] text-violet-900 leading-relaxed"
+                             x-html="draft.poValue === 'yes'
+                               ? '<strong>This line skips the RFE.</strong> It routes to a Purchase Request instead. Nothing further is needed from you on it.'
+                               : '<strong>It still goes to RFE.</strong> I will send you the hand-off pack with everything the Appian form needs, before the notice window opens.'"></div>
+                      </template>
+                    </div>
+                  </template>
+
+                  <!-- Live validation, before Procurement ever sees the answer. -->
+                  <template x-if="warning()">
+                    <div class="fade mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 flex gap-2.5">
+                      <div class="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold mt-0.5"
+                           style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+                      <p class="text-[12px] text-amber-900 leading-relaxed" x-text="warning()"></p>
+                    </div>
+                  </template>
+
+                  <!-- Save. The verb is "save and next", because the whole point of
+                       this revision is that there IS a next, right here. -->
+                  <div class="mt-4 pt-3.5 border-t border-slate-200 flex items-center justify-between">
+                    <span class="text-[11.5px] text-slate-500">
+                      You can change any answer until the freeze on 16 October.
+                    </span>
+                    <div class="flex items-center gap-2">
+                      <button @click="open = null; draft = emptyDraft()" class="text-[12.5px] font-medium px-3.5 py-2 rounded-lg text-slate-500 hover:text-slate-700">Cancel</button>
+                      <button @click="save(l)" :disabled="!canSave()"
+                              class="text-[12.5px] font-semibold px-4 py-2 rounded-lg transition-colors"
+                              :class="canSave() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+                              x-text="draft.real === 'cancel' ? 'Confirm cancellation' : (remaining() > 1 ? 'Save and next' : 'Save')"></button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- ══════════ Add a line, on the response screen itself ══════════
+             The obvious moment to notice something missing is while looking at the list. -->
+        <div class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3.5 flex items-center justify-between gap-5">
+          <div>
+            <div class="text-[13px] font-semibold text-slate-800">Something missing from the plan?</div>
+            <p class="text-[12px] text-slate-500 mt-0.5 leading-relaxed">
+              A contract you are already running, or a need coming up. It joins this cycle, takes the same
+              freeze date and counts toward your set.
+            </p>
+          </div>
+          <button @click="openE2AddLine()" class="text-[12px] font-medium px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shrink-0">Add a line</button>
+        </div>
+
+        <!-- ══════════ Done state ══════════
+             The page still ends, it just ends when the SET is done rather than after
+             one action. No dashboard to return to, no account to create. -->
+        <template x-if="allDone()">
+          <div class="fade mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-6 text-center">
+            <div class="w-11 h-11 rounded-full bg-emerald-600 flex items-center justify-center mx-auto">
+              <span class="text-white text-lg">&#10003;</span>
+            </div>
+            <h2 class="text-[17px] font-semibold text-emerald-900 mt-2.5" x-text="'All done, grazie ' + firstName() + '.'"></h2>
+            <p class="text-[13px] text-emerald-800/90 mt-1.5 max-w-lg mx-auto leading-relaxed">
+              <span x-text="lines.length"></span> lines answered. If anything needs clarifying I will come back to you
+              in the same email thread, and you will hear the outcome once the plan is agreed.
+            </p>
+            <p class="text-[12px] text-emerald-800/70 mt-3">
+              You can close this page. Nothing else is needed.
+            </p>
+          </div>
+        </template>
+
+        <div class="mt-5 pt-4 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">
+          Signed in as <span class="mono" x-text="email()"></span>. Each answer is recorded against your account.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         ADD A LINE MODAL
+         Fields match Procurement's own plan-update request to business units
+         (Product Work/Flutter Purchase Planning/attachments/PP_Email_template.docx).
+         Business Owner is not asked here, it is whoever this link was issued to. -->
+    <template x-if="addLineOpen">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-slate-900/40" @click="addLineOpen = false"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-full flex flex-col">
+          <div class="px-6 pt-5 pb-4 border-b border-slate-200 shrink-0">
+            <h2 class="text-[16px] font-semibold text-slate-900">Something missing from the plan?</h2>
+            <p class="text-[12px] text-slate-500 mt-1">Joins this cycle under <strong x-text="owner()"></strong>, takes the same freeze date, and counts toward your set.</p>
+          </div>
+
+          <div class="px-6 py-4 overflow-y-auto space-y-4">
+            <div class="flex gap-2">
+              <button @click="e2Nd.kind = 'new'" class="flex-1 text-left rounded-lg border-2 px-3 py-2.5"
+                      :class="e2Nd.kind === 'new' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white'">
+                <div class="text-[12.5px] font-semibold text-slate-800">A need coming up</div>
+                <div class="text-[10.5px] text-slate-500">Nothing in place today</div>
+              </button>
+              <button @click="e2Nd.kind = 'running'" class="flex-1 text-left rounded-lg border-2 px-3 py-2.5"
+                      :class="e2Nd.kind === 'running' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white'">
+                <div class="text-[12.5px] font-semibold text-slate-800">A contract already running</div>
+                <div class="text-[10.5px] text-slate-500">Missing from the plan</div>
+              </button>
+            </div>
+            <div>
+              <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">What</div>
+              <div class="grid grid-cols-3 gap-3">
+                <label class="block col-span-2">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Subject Contract</span>
+                  <input type="text" x-model="e2Nd.subject" placeholder="What is needed" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Product Category</span>
+                  <select x-model="e2Nd.cat" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                    <option value="">Choose</option>
+                    <template x-for="o in e2Cats" :key="o"><option :value="o" x-text="o"></option></template>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Sub-category (if applicable)</span>
+                  <input type="text" x-model="e2Nd.sub" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Project</span>
+                  <input type="text" x-model="e2Nd.proj" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Status</span>
+                  <select x-model="e2Nd.status" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                    <template x-for="o in e2StatusOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                  </select>
+                </label>
+                <label class="block col-span-3">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Detailed Activities</span>
+                  <textarea x-model="e2Nd.act" rows="2" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg"></textarea>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Entity, ownership and spend</div>
+              <div class="grid grid-cols-3 gap-3">
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Legal Entity</span>
+                  <select x-model="e2Nd.ent" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                    <template x-for="o in e2Entities" :key="o"><option :value="o" x-text="o"></option></template>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Business Owner</span>
+                  <input type="text" readonly :value="owner()" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Business Unit</span>
+                  <select x-model="e2Nd.bu" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                    <option value="">Choose</option>
+                    <template x-for="o in e2BUs" :key="o"><option :value="o" x-text="o"></option></template>
+                  </select>
+                </label>
+                <div class="col-span-2 flex items-center gap-4">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500 shrink-0">Applies to</span>
+                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.sisal"> Sisal</label>
+                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.pkr"> PokerStars Italy</label>
+                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.snai"> Snaitech</label>
+                </div>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Opex / Capex</span>
+                  <select x-model="e2Nd.opx" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                    <option value="">Choose</option>
+                    <template x-for="o in e2OpxOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                  </select>
+                </label>
+                <label class="flex items-center gap-1.5 text-[12px] text-slate-700 self-end pb-2"><input type="checkbox" x-model="e2Nd.fopp"> Flutter Opportunity</label>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Supplier and sourcing</div>
+              <div class="grid grid-cols-3 gap-3">
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Potential Supplier</span>
+                  <input type="text" x-model="e2Nd.sup" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Incumbent Supplier (if applicable)</span>
+                  <input type="text" x-model="e2Nd.inc" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Sourcing Strategy</span>
+                  <select x-model="e2Nd.strat" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                    <option value="">Choose</option>
+                    <template x-for="o in e2StratOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                  </select>
+                </label>
+                <label class="block col-span-3">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">
+                    Strategy Rationals
+                    <span x-show="e2Nd.strat === 'Direct Negotiation'" class="text-amber-600 normal-case font-normal">&middot; required for direct negotiation</span>
+                  </span>
+                  <textarea x-model="e2Nd.ratio" rows="2" placeholder="Why this sourcing approach" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg"
+                            :class="e2Nd.strat === 'Direct Negotiation' && !e2Nd.ratio.trim() ? '!border-amber-300' : ''"></textarea>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Term and value</div>
+              <div class="grid grid-cols-3 gap-3">
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Start Date</span>
+                  <input type="date" x-model="e2Nd.start" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">End Date</span>
+                  <input type="date" x-model="e2Nd.end" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Total Contract Value (€)</span>
+                  <input type="number" min="0" x-model="e2Nd.value" placeholder="120000" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block col-span-3">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Rational Amount</span>
+                  <input type="text" x-model="e2Nd.ramt" placeholder="Justification of the amount" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                </label>
+                <label class="block col-span-3">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Additional Notes</span>
+                  <textarea x-model="e2Nd.notes" rows="2" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg"></textarea>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 border-t border-slate-200 flex items-center gap-2 shrink-0">
+            <span class="text-[11px] text-slate-400">You can change any answer until the freeze on 16 October.</span>
+            <div class="flex-1"></div>
+            <button @click="addLineOpen = false" class="text-[12.5px] font-medium px-3.5 py-2 rounded-lg text-slate-500 hover:text-slate-700">Cancel</button>
+            <button @click="addE2Need()" :disabled="!canAddE2Need()"
+                    class="text-[12.5px] font-semibold px-4 py-2 rounded-lg transition-colors"
+                    :class="canAddE2Need() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">Add to your set</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+  </div>
+</div>
+
+<script>
+function responsePage() {
+  return {
+    size: 'small',
+    signedIn: false,
+    open: null,
+    showDone: true,
+    draft: { real: null, route: null, poValue: null },
+
+    // The action carried by the link the owner clicked in the email.
+    // Registered on arrival, stated at the top, undoable.
+    landed: { ref: 'PP-2027-0451', desc: 'Developer tooling subscriptions' },
+
+    smallLines: [
+      { ref: 'PP-2027-0433', desc: 'Penetration testing, annual programme', supplier: 'Yarix Srl',           entity: 'Sisal Italia', value: '€ 74,500',   method: 'Light Tender',        decide: '2 Jan 2027',  notice: 40, days: 12, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-0412', desc: 'Cloud hosting, production estate',      supplier: 'Amazon Web Services', entity: 'Sisal Italia', value: '€ 1,240,000',method: 'Full Tender',         decide: '5 Jan 2027',  notice: 60, days: 15, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-0417', desc: 'Application monitoring licences',       supplier: 'Datadog France SAS',  entity: 'Sisal Italia', value: '€ 186,000',  method: 'Direct Negotiation',  decide: '4 May 2027',  notice: 40, days: 121, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-0451', desc: 'Developer tooling subscriptions',       supplier: 'JetBrains s.r.o.',    entity: 'Sisal Italia', value: '€ 31,200',   method: 'Direct Negotiation',  decide: '16 Apr 2027', notice: 30, days: 103, answer: 'confirm', route: 'renewal', poValue: null }
+    ],
+
+    largeLines: [
+      { ref: 'PP-2027-1109', desc: 'SRE consultancy, 2 FTE',           supplier: 'Bitrock Srl',     entity: 'Sisal Gaming', value: '€ 264,000', method: 'Full Tender',        decide: '3 Feb 2027',  notice: 60, days: 18, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-1042', desc: 'Observability platform',           supplier: 'Grafana Labs',    entity: 'Sisal Gaming', value: '€ 96,000',  method: 'Direct Negotiation', decide: '2 Jan 2027',  notice: 40, days: 12, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-1002', desc: 'Kubernetes managed control plane', supplier: 'Google Ireland',  entity: 'Sisal Gaming', value: '€ 312,000', method: 'Full Tender',        decide: '5 Jan 2027',  notice: 60, days: 15, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-1156', desc: 'Database managed service',         supplier: 'MongoDB Ltd',     entity: 'Sisal Gaming', value: '€ 143,000', method: 'Light Tender',       decide: '20 Jan 2027', notice: 40, days: 27, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-1184', desc: 'Load testing platform',            supplier: 'Neustar Inc',     entity: 'Sisal Gaming', value: '€ 41,000',  method: 'Direct Negotiation', decide: '16 Feb 2027', notice: 30, days: 44, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-1014', desc: 'CDN and edge delivery',            supplier: 'Akamai',          entity: 'Sisal Gaming', value: '€ 188,500', method: 'Direct Negotiation', decide: '22 Feb 2027', notice: 40, days: 50, answer: null, route: null, poValue: null },
+      { ref: 'PP-2027-1067', desc: 'Source control and CI seats',      supplier: 'GitHub BV',       entity: 'Sisal Gaming', value: '€ 54,200',  method: 'Light Tender',       decide: '1 Mar 2027',  notice: 40, days: 57, answer: 'confirm', route: 'renewal', poValue: null }
+    ],
+
+    lines: [],
+
+    init() { this.lines = JSON.parse(JSON.stringify(this.smallLines)); },
+
+    // Add a line, on the response screen itself. Fields match Procurement's own
+    // plan-update request to business units (Product Work/Flutter Purchase Planning/
+    // attachments/PP_Email_template.docx). Business Owner is not asked, it is
+    // whoever is signed in; pushed straight into this.lines, unanswered, so it gets
+    // the same open/confirm/change/cancel treatment as every other line here.
+    addLineOpen: false,
+    e2Cats: ['Technology', 'Marketing', 'Professional Services', 'Facility Management',
+             'Retail', 'Human Resources', 'Content Feeds', 'Customer Operations', 'Affiliation'],
+    e2Entities: ['Sisal Italia', 'Snaitech', 'PokerStars Italy', 'Sisal Albania',
+                 'Sisal Technology Turkey', 'Sisal Jeux Maroc', 'Sisal Loterie Tunisie/Maroc',
+                 'TSG Italy', 'Sisal Gaming'],
+    e2BUs: ['Digital Operations', 'Data & Analytics', 'Retail Estate', 'Brand & Media',
+            'Facilities Italia', 'Platform Engineering', 'Legal & Compliance',
+            'Retail Network IT', 'Payments & Risk'],
+    e2StatusOpts: ['To start', 'In progress', 'On hold', 'Closed', 'Canceled'],
+    e2OpxOpts: ['Opex', 'Capex'],
+    // Spelled out, matching this file's own method vocabulary (l.method), not
+    // Plan.html's abbreviated 'Direct Nego'.
+    e2StratOpts: ['Direct Negotiation', 'Light Tender', 'Full Tender'],
+    // Not on file anywhere in this mockup, since no owner-to-unit list exists here.
+    // A small local guess, only used to prefill a field the respondent can still change.
+    e2BuGuess: { 'Marco Ferretti': 'Digital Operations', 'Alessandro Conti': 'Platform Engineering' },
+    emptyE2Nd() {
+      return { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
+               ent: (this.lines[0] && this.lines[0].entity) || 'Sisal Italia',
+               sisal: false, pkr: false, snai: false, bu: this.e2BuGuess[this.owner()] || '',
+               opx: '', sup: '', inc: '', fopp: false, strat: '', ratio: '',
+               value: '', start: '', end: '', ramt: '', notes: '' };
+    },
+    e2Nd: { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start', ent: '',
+            sisal: false, pkr: false, snai: false, bu: '', opx: '', sup: '', inc: '',
+            fopp: false, strat: '', ratio: '', value: '', start: '', end: '', ramt: '', notes: '' },
+    openE2AddLine() { this.e2Nd = this.emptyE2Nd(); this.addLineOpen = true; },
+    canAddE2Need() {
+      const n = this.e2Nd;
+      const stratOk = !!n.strat && (n.strat !== 'Direct Negotiation' || !!n.ratio.trim());
+      return !!(n.subject.trim() && n.cat && n.ent && n.bu && n.opx && stratOk && n.value && n.start);
+    },
+    e2NoticeDays(v) { v = Number(v); return v <= 1000 ? 25 : (v <= 10000 ? 30 : (v <= 50000 ? 40 : 60)); },
+    e2Decide(iso) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return '';
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return Number(m[3]) + ' ' + months[Number(m[2]) - 1] + ' ' + m[1];
+    },
+    e2Dmy(iso) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? (m[3] + '/' + m[2] + '/' + m[1]) : '';
+    },
+    addE2Need() {
+      if (!this.canAddE2Need()) return;
+      const n = this.e2Nd;
+      const brandFlags = [n.sisal && 'Sisal', n.pkr && 'PokerStars Italy', n.snai && 'Snaitech'].filter(Boolean);
+      const nums = this.lines.map(l => Number((l.ref || '').split('-').pop())).filter(x => !isNaN(x));
+      const nextNum = (nums.length ? Math.max(...nums) : 999) + 1;
+      const rawValue = Math.round(Number(n.value));
+      const decideDays = Math.max(0, Math.round((new Date(n.start) - new Date()) / 86400000));
+      this.lines.push({
+        ref: 'PP-2027-' + nextNum, desc: n.subject.trim(), supplier: n.sup.trim() || 'Supplier not chosen',
+        entity: n.ent, value: '€ ' + rawValue.toLocaleString('en-GB'), method: n.strat,
+        decide: this.e2Decide(n.start), notice: this.e2NoticeDays(n.value), days: decideDays,
+        answer: null, route: null, poValue: null, owner: this.owner(),
+        // Rest of Required Information, kept even though this screen's own list only
+        // renders the columns above; matches what P0b and Plan.html store for the same form.
+        cat: n.cat, sub: n.sub.trim(), proj: n.proj.trim(), act: n.act.trim(), status: n.status,
+        sisal: n.sisal ? 'Y' : '', pkr: n.pkr ? 'Y' : '', snai: n.snai ? 'Y' : '',
+        brand: brandFlags.length > 1 ? 'Multi-brand' : (brandFlags[0] || ''),
+        bu: n.bu, opx: n.opx, inc: n.inc.trim(), fopp: n.fopp ? 'Y' : 'N', ratio: n.ratio.trim(),
+        start: this.e2Dmy(n.start), end: this.e2Dmy(n.end), tot: Math.round(rawValue / 1000 * 100) / 100,
+        ramt: n.ramt.trim(), notes: n.notes.trim(), itype: n.kind === 'running' ? 'RENEW' : 'NEW'
+      });
+      this.addLineOpen = false;
+    },
+
+    realOptions: [
+      { k: 'confirm', label: 'Confirm as planned', hint: 'Nothing has changed' },
+      { k: 'changes', label: 'Needs changes',      hint: 'Value, timing, scope or supplier' },
+      { k: 'notmine', label: 'Not mine',           hint: 'Pass it on' },
+      { k: 'cancel',  label: 'Cancel',             hint: 'Reason required' }
+    ],
+    routeOptions: [
+      { k: 'renewal',   label: 'Renewal',            hint: 'Expiring contract, same scope' },
+      { k: 'addendum',  label: 'Addendum',           hint: 'Varying what exists' },
+      { k: 'new',       label: 'New, no contract',   hint: 'Nothing in place today' },
+      { k: 'framework', label: 'Framework agreement',hint: 'Under a group agreement' }
+    ],
+    changeFields: [
+      { k: 'New yearly value', v: 'e.g. € 149,000' },
+      { k: 'New contract end', v: 'dd/mm/yyyy' },
+      { k: 'Supplier',         v: 'if it is changing' },
+      { k: 'What changed and why', v: 'one line is enough' }
+    ],
+
+
+    setSize(s) {
+      this.size = s;
+      this.open = null;
+      this.draft = this.emptyDraft();
+      this.lines = JSON.parse(JSON.stringify(s === 'small' ? this.smallLines : this.largeLines));
+      this.landed = s === 'small'
+        ? { ref: 'PP-2027-0451', desc: 'Developer tooling subscriptions' }
+        : { ref: 'PP-2027-1067', desc: 'Source control and CI seats' };
+    },
+    reset() { this.setSize(this.size); this.signedIn = false; },
+
+    emptyDraft() { return { real: null, route: null, poValue: null }; },
+
+    owner()     { return this.size === 'small' ? 'Marco Ferretti' : 'Alessandro Conti'; },
+    firstName() { return this.owner().split(' ')[0]; },
+    email()     { return this.size === 'small' ? 'marco.ferretti@sisal.it' : 'alessandro.conti@sisalgaming.com'; },
+
+    listHeading() {
+      if (this.size === 'large') return 'Closest to their decision date';
+      return 'Your lines this cycle';
+    },
+
+    answered()  { return this.lines.filter(l => l.answer).length; },
+    remaining() { return this.lines.filter(l => !l.answer).length; },
+    allDone()   { return this.remaining() === 0; },
+    pct()       { return Math.round(this.answered() / this.lines.length * 100); },
+
+    visibleLines() {
+      const ls = this.showDone ? this.lines : this.lines.filter(l => !l.answer);
+      return ls.slice().sort((a, b) => {
+        if (!!a.answer !== !!b.answer) return a.answer ? 1 : -1;  // unanswered first
+        return a.days - b.days;                                    // then soonest decision
+      });
+    },
+
+    undoLanded() {
+      const l = this.lines.find(x => x.ref === this.landed.ref);
+      if (l) { l.answer = null; l.route = null; l.poValue = null; }
+    },
+
+    editLine(l) {
+      this.open = l.ref;
+      this.draft = { real: l.answer, route: l.route, poValue: l.poValue };
+    },
+
+    pickReal(l, k) {
+      this.draft.real = k;
+      if (k !== 'confirm' && k !== 'changes') { this.draft.route = null; this.draft.poValue = null; }
+    },
+    pickRoute(k) { this.draft.route = k; if (k !== 'framework') this.draft.poValue = null; },
+
+    // Illustrative spot check: a method and value band that do not match is exactly
+    // the mismatch the imported plan is full of.
+    warning() {
+      const l = this.lines.find(x => x.ref === this.open);
+      if (!l) return null;
+      if (this.draft.real === 'confirm' && this.draft.route === 'renewal' && l.method === 'Direct Negotiation' && l.days > 60) {
+        return 'This line is recorded as a Direct Negotiation at ' + l.value + '. Renewing directly at this value needs authorization before it can go ahead. Is that what you intend?';
+      }
+      if (this.draft.real === 'confirm' && l.days <= 20) {
+        return 'Worth knowing: the decision date on this line is ' + l.decide + ', which is ' + l.days + ' days away. Confirming now keeps it on the standard process.';
+      }
+      return null;
+    },
+
+    canSave() {
+      const d = this.draft;
+      if (d.real === 'cancel' || d.real === 'notmine') return true;
+      if (d.real === 'confirm' || d.real === 'changes') {
+        if (!d.route) return false;
+        if (d.route === 'framework' && !d.poValue) return false;
+        return true;
+      }
+      return false;
+    },
+
+    save(l) {
+      l.answer  = this.draft.real;
+      l.route   = this.draft.route;
+      l.poValue = this.draft.poValue;
+      this.draft = this.emptyDraft();
+      // "Save and next": open the next unanswered line straight away, so momentum
+      // carries rather than dropping the owner back into a list.
+      const next = this.visibleLines().find(x => !x.answer);
+      this.open = next ? next.ref : null;
+    },
+
+    answerSummary(l) {
+      if (l.answer === 'cancel')  return 'Canceled, reason recorded. Procurement reviews it at the freeze.';
+      if (l.answer === 'notmine') return 'Passed on. I will chase them rather than you.';
+      const routes = { renewal: 'renewal', addendum: 'addendum to an active contract', new: 'new good or service', framework: 'covered by a framework agreement' };
+      let s = (l.answer === 'confirm' ? 'Confirmed as planned' : 'Changes recorded') + ' · ' + (routes[l.route] || '');
+      if (l.route === 'framework') s += l.poValue === 'yes' ? ' → Purchase Request, RFE skipped' : ' → RFE required';
+      return s;
+    }
+  };
+}
+</script>
+</body>
+</html>

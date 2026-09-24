@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<!--
+  Email Journey Walkthrough  (Flutter Purchase Planning Agent, Phase 1)
+  =====================================================================
+  Companion to the E-screens. Same interaction as
+  `Product Work/Email Improvements/Wave 2 Email Demo.html`, with this feature's content.
+
+  Layout: ONE scrolling viewport. Each step is a row in a 3-column grid:
+      [ Procurement, in the platform (left) | timeline spine | Business owner, email (right) ]
+
+    LEFT  = What Procurement does in the platform, and what the platform does on its
+            own. Session 28 (MVP): no chat with Ellie. Procurement reviews and schedules
+            the cycle (P0, P0b), then freezes and authorizes (Plan). Ellie's input is a
+            suggestion card on a screen. Reminders, the consequence reminder and the
+            manager escalation fire on the schedule set at P0b. Ellie still reads and
+            answers owners' email replies in the thread.
+    RIGHT = What Marco Ferretti actually receives. Most of Flutter's 215 business
+            owners will never see anything but this column.
+
+  What the walkthrough is for:
+    The E-screens show individual artifacts. This shows the SEQUENCE: one thread
+    throughout, every answer attributed (a click goes through a one-click Microsoft
+    sign-in, a reply is authenticated by the owner's own mail server), escalation that
+    is specific rather than a blanket nag, and a forward that becomes a recorded
+    delegation rather than a broken chain.
+
+  Session 28: rebuilt for the MVP. Procurement actions replace the Procurement/Ellie chat;
+  a forward is a hand-over (whoever answers owns the line, the old owner gets an undo);
+  new automated emails: the weekly reminder, the hand-over notice, the freeze summary and
+  the authorization outcome.
+
+  Session 22: rebuilt on the light-login model, the reviewer notes (the dashed ⓘ
+  steps) removed, and no rule citations in any message. Chips mark agent actions;
+  amber chips mark the moments Procurement is involved.
+
+  Interaction: manual step-through (Next / Back / Reset), same as the Wave 2 demo.
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Journey Walkthrough</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .body-text { white-space: pre-line; }
+  .mailfont { font-family: 'Segoe UI', -apple-system, Calibri, sans-serif; }
+  .reveal { animation: fade 0.28s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .scroll::-webkit-scrollbar { width: 8px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+  [x-cloak] { display: none !important; }
+</style>
+</head>
+
+<body class="bg-slate-100 text-slate-800">
+<div x-data="journey()" x-cloak class="h-screen flex flex-col max-w-6xl mx-auto">
+
+  <header class="px-5 pt-4 pb-2">
+    <h1 class="text-lg font-semibold text-slate-900">Purchase Planning · the email journey</h1>
+    <p class="text-sm text-slate-500">
+      One cycle, one business owner, one thread. Procurement reviews and schedules the cycle, then freezes
+      and authorizes; everything in between goes out on the schedule they set.
+    </p>
+  </header>
+
+  <div class="px-5">
+    <div class="grid grid-cols-[1fr_2.75rem_1fr] items-end pb-2 border-b border-slate-200">
+      <div class="flex items-center justify-end gap-2 pr-3">
+        <span class="text-xs font-semibold text-slate-700">Procurement · in the platform</span>
+        <span class="w-2.5 h-2.5 rounded-full" style="background:#4f46e5"></span>
+      </div>
+      <div></div>
+      <div class="flex items-center gap-2 pl-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+        <span class="text-xs font-semibold text-slate-700">Marco Ferretti · email
+          <span class="font-normal text-slate-400 mono">plan+7c41@procurement.flutter.com</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div x-ref="scroll" class="scroll flex-1 min-h-0 overflow-y-auto px-5 py-3">
+
+    <template x-for="(e, idx) in visible()" :key="e.i">
+      <div class="reveal grid grid-cols-[1fr_2.75rem_1fr] items-stretch">
+
+        <!-- ───────── LEFT · Procurement in the platform ───────── -->
+        <div class="flex flex-col items-end pr-3 py-1.5 min-w-0">
+          <template x-if="e.pane === 'proc'">
+            <div class="w-full flex flex-col items-end"
+                 :class="idx === revealed - 1 ? 'ring-2 ring-offset-2 ring-indigo-200 rounded-2xl' : ''">
+
+              <!-- Ellie's suggestion, shown as a card on a platform screen. Not a chat: Procurement
+                   accepts or edits it through the screen itself (MVP, Session 28). -->
+              <template x-if="e.kind === 'suggest'">
+                <div class="max-w-[94%] w-[94%] rounded-lg px-3.5 py-2.5 bg-[#f7f3fc] border border-[#dcc9f0]">
+                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <span class="flex items-center gap-1.5">
+                      <span class="w-4 h-4 rounded-full text-white text-[9px] flex items-center justify-center font-bold"
+                            style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</span>
+                      <span class="text-[11px] font-semibold text-[#6d4bb0]">Ellie · suggestion</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400" x-text="e.screen + ' · ' + e.time"></span>
+                  </div>
+                  <div class="body-text text-[13px] text-slate-800" x-text="e.body"></div>
+                </div>
+              </template>
+
+              <!-- A Procurement action taken in the platform, with the screen it happens on -->
+              <template x-if="e.kind === 'action'">
+                <div class="max-w-[94%] w-[94%] rounded-lg px-3.5 py-2.5 bg-white border border-[#c7d6ea] border-l-4 border-l-[#4a6fa5]">
+                  <div class="flex items-center justify-between gap-2 mb-1">
+                    <span class="text-[11px] font-semibold text-[#4a6fa5]" x-text="e.who"></span>
+                    <span class="text-[10px] text-slate-400" x-text="e.screen + ' · ' + e.time"></span>
+                  </div>
+                  <div class="text-sm font-semibold text-slate-900" x-text="e.title"></div>
+                  <div class="body-text text-[13px] text-slate-600 mt-0.5" x-text="e.body"></div>
+                </div>
+              </template>
+
+              <!-- Something the platform did on its own -->
+              <template x-if="e.kind === 'chip'">
+                <div class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border" :class="chipClass(e.variant)">
+                  <span x-text="chipIcon(e.variant)"></span><span x-text="e.body"></span>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- ───────── CENTER spine ───────── -->
+        <div class="relative flex justify-center">
+          <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-slate-200"></div>
+          <div class="relative z-10 mt-2 w-6 h-6 rounded-full text-white text-[10px] font-semibold flex items-center justify-center shadow-sm"
+               :class="dotClass(e)" x-text="idx + 1"></div>
+        </div>
+
+        <!-- ───────── RIGHT · the owner's inbox ───────── -->
+        <div class="flex flex-col items-start pl-3 py-1.5 min-w-0">
+          <template x-if="e.pane === 'bu'">
+            <article class="w-full max-w-[94%] rounded-lg border bg-white overflow-hidden"
+                     :class="[e.dir === 'in' ? 'border-l-4 border-l-[#4f46e5] border-slate-200' : 'border-l-4 border-l-[#3f9a58] border-slate-200',
+                              idx === revealed - 1 ? 'ring-2 ring-offset-2 ring-slate-300' : '']">
+              <div class="px-3.5 py-2 border-b border-slate-100 bg-slate-50/60">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-semibold" :class="e.dir === 'in' ? 'text-[#4f46e5]' : 'text-[#3f9a58]'"
+                        x-text="e.dir === 'in' ? 'Received' : 'Sent'"></span>
+                  <span class="text-[11px] text-slate-400" x-text="e.time"></span>
+                </div>
+                <div class="text-xs text-slate-500 mt-1">
+                  <div><span class="text-slate-400">From:</span> <span class="mono" x-text="e.from"></span></div>
+                  <div><span class="text-slate-400">To:</span> <span class="mono" x-text="e.to"></span></div>
+                  <div x-show="e.cc"><span class="text-slate-400">Cc:</span> <span class="mono" x-text="e.cc"></span></div>
+                </div>
+                <div class="text-sm font-medium text-slate-800 mt-1" x-text="e.subj"></div>
+                <div class="text-[11px] text-slate-400 mt-0.5" x-show="e.behalf" x-text="e.behalf"></div>
+              </div>
+              <template x-if="!e.rich">
+                <div class="px-3.5 py-3 body-text text-sm text-slate-700" x-text="e.body"></div>
+              </template>
+              <!-- The request email is E1 itself (small set), not a summary of it: same paragraphs, same per-line
+                   cards and answer links, same sign-off. Keep the two in step. -->
+              <template x-if="e.rich === 'request'">
+                <div class="px-4 py-4 mailfont text-[13px] leading-[1.6] text-slate-800">
+                  <p>Ciao Marco,</p>
+                  <p class="mt-2.5">
+                    We are putting together the purchasing plan for <strong>Q1&ndash;Q2 2027</strong>.
+                    You are the business owner for <strong>4 contracts</strong> that expire in that window.
+                    Please tell us what happens to each one by <strong>Friday 16 October</strong>.
+                  </p>
+                  <p class="mt-2.5">
+                    Answer each line with the links under it. Each one opens Purchase Planning, where you sign in
+                    once with your Microsoft work account. If it is easier, just reply to this email in your own words
+                    and I will read it.
+                  </p>
+
+                  <div class="mt-4 space-y-3">
+                    <template x-for="l in requestLines" :key="l.id">
+                      <table class="w-full border border-slate-200 rounded-lg" style="border-collapse: separate; border-spacing: 0">
+                        <tr>
+                          <td class="px-3.5 pt-3 pb-2">
+                            <div class="flex items-start justify-between gap-3">
+                              <div class="min-w-0">
+                                <div class="text-[13px] font-semibold text-slate-900" x-text="l.title"></div>
+                                <div class="text-[11.5px] text-slate-500 mt-0.5">
+                                  <span x-text="l.supplier"></span> &middot;
+                                  <span x-text="l.entity"></span> &middot;
+                                  <span class="mono" x-text="l.ref"></span>
+                                </div>
+                              </div>
+                              <div class="text-right shrink-0">
+                                <div class="text-[13px] font-semibold text-slate-900" x-text="l.value"></div>
+                                <div class="text-[11px] text-slate-500" x-text="l.method"></div>
+                              </div>
+                            </div>
+                            <div class="mt-2.5 text-[11.5px] rounded px-2.5 py-1.5"
+                                 :class="l.urgent ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-50 text-slate-600 border border-slate-200'">
+                              Contract ends <strong x-text="l.ends"></strong>.
+                              Decision needed by <strong x-text="l.decide"></strong>.
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="px-3.5 pb-3 pt-1">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium">
+                              <span class="text-indigo-700 underline underline-offset-2">Confirm as planned</span>
+                              <span class="text-slate-300">&middot;</span>
+                              <span class="text-indigo-700 underline underline-offset-2">Needs changes</span>
+                              <span class="text-slate-300">&middot;</span>
+                              <span class="text-indigo-700 underline underline-offset-2">Not mine</span>
+                              <span class="text-slate-300">&middot;</span>
+                              <span class="text-rose-700 underline underline-offset-2">Cancel</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </template>
+                  </div>
+
+                  <p class="mt-4">
+                    If one of these is not yours, choose <em>Not mine</em> and tell me who to pass it to. You can also forward
+                    this email to whoever knows the answer; they sign in with their own account.
+                  </p>
+                  <p class="mt-3 text-slate-600">
+                    Grazie,<br>
+                    Ellie &middot; Purchase Planning Agent<br>
+                    <span class="text-[12px] text-slate-500">on behalf of Procurement Italia &middot; Flutter Southern Europe &amp; Africa</span>
+                  </p>
+                  <p class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">
+                    You are receiving this because you are recorded as business owner for these contracts in the
+                    FSEA purchasing plan. Replies to this message go to Procurement Italia and are attached to the
+                    lines above.
+                  </p>
+                </div>
+              </template>
+              <!-- Action links shown as text links, middot-separated (Session 27: links, not buttons) -->
+              <template x-if="e.actions">
+                <div class="px-3.5 pb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium">
+                  <template x-for="(a, ai) in e.actions" :key="a">
+                    <span class="inline-flex items-center gap-x-2">
+                      <span x-show="ai > 0" class="text-slate-300">&middot;</span>
+                      <span class="underline underline-offset-2"
+                            :class="a === 'Cancel' ? 'text-rose-700' : 'text-indigo-700'"
+                            x-text="a"></span>
+                    </span>
+                  </template>
+                </div>
+              </template>
+            </article>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <div x-show="revealed === 0" class="text-center text-sm text-slate-400 pt-16">
+      Press <span class="font-medium text-slate-500">Next</span> to start the walkthrough.
+    </div>
+  </div>
+
+  <footer class="px-5 py-3">
+    <div class="rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 flex items-center gap-4">
+      <div class="flex items-center gap-2">
+        <button @click="back()" :disabled="revealed === 0"
+                class="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">&larr; Back</button>
+        <button @click="next()" :disabled="revealed >= events.length"
+                class="px-4 py-1.5 rounded-lg text-sm font-semibold bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-40 disabled:cursor-not-allowed">Next &rarr;</button>
+        <button @click="reset()" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-600">Reset</button>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs text-slate-400">Step <span x-text="revealed"></span> / <span x-text="events.length"></span></div>
+        <div class="text-sm text-slate-700 truncate" x-text="caption()"></div>
+      </div>
+      <div class="hidden md:flex items-center gap-1">
+        <template x-for="(e, i) in events" :key="i">
+          <span class="w-1.5 h-1.5 rounded-full" :class="i < revealed ? 'bg-slate-700' : 'bg-slate-200'"></span>
+        </template>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+function journey() {
+  const AGENT = 'Purchase Planning <plan+7c41@procurement.flutter.com>';
+  const MARCO = 'Marco Ferretti <marco.ferretti@sisal.it>';
+  const SUBJ  = 'Purchasing plan Q1-Q2 2027 · 4 contracts to confirm by 16 October';
+
+  const events = [
+    // ── Before the cycle: Procurement sets it up in the platform. Ellie suggests on screen; nobody chats. ──
+    { pane: 'proc', kind: 'suggest', screen: 'P0 · Purchasing Plans', time: 'Fri 18 Sep, 10:12',
+      body: "Q1-Q2 2027 is next: contracts expiring 1 Jan to 30 Jun 2027, 1,284 lines across 68 business owners.\n\nSuggested send: Tue 22 Sep, 08:15\nSuggested freeze: Fri 16 Oct\n\n14 lines have no business owner, so nobody can be asked about them yet.",
+      caption: 'Ellie suggests the next cycle on the plans screen. A suggestion card, not a conversation' },
+
+    { pane: 'proc', kind: 'action', who: 'Giulia Rinaldi · Procurement Italia', screen: 'P0b · Review before scheduling', time: 'Fri 18 Sep, 10:30',
+      title: 'Reviews the lines before scheduling',
+      body: 'Sets an owner on the 14 lines without one, leaves 3 lines out of the cycle (already renegotiated) and adds 1 new need from Digital Operations. 1,282 lines go out.',
+      caption: 'Procurement reviews what will be asked, and of whom' },
+
+    { pane: 'proc', kind: 'action', who: 'Giulia Rinaldi · Procurement Italia', screen: 'P0b · Dates', time: 'Fri 18 Sep, 11:05',
+      title: 'Schedules the cycle',
+      body: "Send Tue 22 Sep, 08:15 · freeze Fri 16 Oct\nReminder every Tuesday to owners with open lines\nConsequence wording on, except Sisal Gaming Malta\nEscalation to the BU manager after 5 working days of silence\nAuthorization session Tue 27 Oct",
+      caption: 'Procurement schedules the cycle. The Malta exception is a setting here, not a request to Ellie' },
+
+    // ── The scheduled date arrives ──
+    { pane: 'proc', kind: 'chip', variant: 'info', body: 'Tue 22 Sep, 08:15 · 68 requests sent on schedule, one thread per owner',
+      caption: 'The send date arrives. Nobody at Procurement presses send' },
+
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Tue 22 Sep, 08:15', subj: SUBJ,
+      cc: 'procurement.italia@sisal.it', behalf: 'sent on behalf of Procurement Italia', rich: 'request',
+      caption: 'E1 · the request email. Four lines, a link for each answer' },
+
+    // ── A one-click answer ──
+    { pane: 'bu', dir: 'out', from: MARCO, to: 'plan+7c41@procurement.flutter.com', time: 'Tue 22 Sep, 09:02', subj: 'RE: ' + SUBJ,
+      body: '[clicked: Confirm as planned, Developer tooling subscriptions]\n[signed in with Microsoft as marco.ferretti@sisal.it]',
+      caption: 'One click on the answer, one click to sign in, 47 minutes after the request' },
+
+    { pane: 'proc', kind: 'chip', variant: 'done', body: 'PP-2027-0451 confirmed · Marco Ferretti, signed in',
+      caption: 'E2 · the answer lands on the plan as he submits it; Progress updates' },
+
+    // ── The scheduled reminder ──
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Tue 29 Sep, 08:15', subj: 'RE: ' + SUBJ,
+      body: "Ciao Marco,\n\n3 of your 4 lines are still open. The plan freezes on Friday 16 October.\n\n• Cloud hosting, production estate · decision by 5 Jan 2027\n• Application monitoring licences · decision by 4 May 2027\n• Penetration testing, annual programme · decision by 2 Jan 2027\n\nThanks for confirming Developer tooling subscriptions.",
+      actions: ['Answer the 3 open lines'],
+      caption: 'The Tuesday reminder goes out as scheduled. Procurement did not write it' },
+
+    // ── A reply in his own words ──
+    { pane: 'bu', dir: 'out', from: MARCO, to: 'plan+7c41@procurement.flutter.com', time: 'Tue 29 Sep, 16:40', subj: 'RE: ' + SUBJ,
+      body: "Ciao,\n\nDatadog we will renew, but at lower volume, maybe 20 percent down.\n\nPen testing is Elena's now, I will forward this to her.\n\nAWS I still need to discuss with the infra team.\n\nMarco",
+      caption: 'He answers in his own words instead of the links' },
+
+    { pane: 'proc', kind: 'chip', variant: 'info', body: 'Reply from Marco read · Datadog recorded as Needs changes, about € 149,000',
+      caption: 'Ellie reads the reply and records what it can, marked as coming from his email' },
+
+    { pane: 'proc', kind: 'chip', variant: 'warn', body: 'Datadog · a direct renewal at € 149,000 needs authorization',
+      caption: 'The rule set flags the line. Nobody had to spot it' },
+
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Tue 29 Sep, 16:41', subj: 'RE: ' + SUBJ,
+      body: "Grazie Marco. I have recorded Application monitoring licences as a renewal at about € 149,000.\n\nRenewing directly at this value needs authorization. Will you justify a direct renewal, or should it go to tender?\n\nPen testing: forwarding is fine. Elena can answer with her own account.\n\nCloud hosting with AWS is still open.",
+      actions: ['Justify a direct renewal', 'Run a tender'],
+      caption: 'Ellie replies in the thread: what she recorded, and the one question the rules raise' },
+
+    { pane: 'bu', dir: 'out', from: MARCO, to: 'plan+7c41@procurement.flutter.com', time: 'Wed 30 Sep, 09:05', subj: 'RE: ' + SUBJ,
+      body: '[clicked: Justify a direct renewal, Application monitoring licences]\n[signed in with Microsoft as marco.ferretti@sisal.it]\n\nJustification: Datadog runs our on-call alerting. Switching mid-year means re-instrumenting 140 services.',
+      caption: 'He writes the justification on the response page' },
+
+    { pane: 'proc', kind: 'chip', variant: 'info', body: 'Datadog · justified · queued for the 27 Oct authorization session',
+      caption: 'The line joins the authorization queue by itself' },
+
+    // ── A forward is a hand-over ──
+    { pane: 'bu', dir: 'out', from: MARCO, to: 'elena.carbone@snaitech.com', time: 'Wed 30 Sep, 09:10', subj: 'FW: ' + SUBJ,
+      body: 'Elena, the pen testing line is yours now. Can you answer this one?\n\nMarco',
+      caption: 'Marco forwards the email to the person who knows' },
+
+    { pane: 'bu', dir: 'out', from: 'Elena Carbone <elena.carbone@snaitech.com>', to: 'plan+7c41@procurement.flutter.com', time: 'Wed 30 Sep, 11:22', subj: 'FW: ' + SUBJ,
+      body: '[clicked in the forwarded email: Confirm as planned, Penetration testing, annual programme]\n[signed in with Microsoft as elena.carbone@snaitech.com]',
+      caption: 'Elena answers from the forwarded email, signed in as herself' },
+
+    { pane: 'proc', kind: 'chip', variant: 'done', body: 'PP-2027-0433 confirmed by Elena Carbone · the line is now hers',
+      caption: 'Whoever answers a forwarded line becomes its owner. No one at Procurement reassigns it' },
+
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Wed 30 Sep, 11:23', subj: 'RE: ' + SUBJ,
+      body: 'Marco, Elena Carbone confirmed Penetration testing, annual programme. The line is hers now, and reminders about it go to her.\n\nIf that is not right, keep it with you below.',
+      actions: ['Keep it with me'],
+      caption: 'Marco is told, with a one-click undo' },
+
+    // ── Silence, then the consequence ──
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Tue 6 Oct, 08:15', subj: 'RE: ' + SUBJ,
+      body: 'Marco, one line is still open, and the plan freezes on Friday 16 October.\n\nCloud hosting with AWS needs a decision by 5 January 2027.\n\nIf that date passes without a decision, this becomes a late RFE. Your function takes over all related activities: running the tender, negotiating, and entering and authorizing the contract in Appian. Procurement would then assess achievable delivery times rather than run the standard process.',
+      actions: ['Confirm as planned', 'Needs changes', 'Not mine', 'Cancel'],
+      caption: 'E3 · the Tuesday reminder, now stating the consequence for this line' },
+
+    // ── Escalation ──
+    { pane: 'proc', kind: 'chip', variant: 'escalate', body: 'Tue 13 Oct · 5 working days without an answer · escalated to Chiara Mancini',
+      caption: 'The escalation rule Procurement set fires' },
+
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'chiara.mancini@sisal.it', time: 'Tue 13 Oct, 08:15', subj: 'Digital Operations · 1 line outstanding before Friday',
+      body: 'Ciao Chiara,\n\nDigital Operations has 1 line of 52 still open before the plan freezes on Friday 16 October.\n\n• Cloud hosting, production estate · € 1,240,000 · owner Marco Ferretti · decision by 5 Jan 2027\n\nAt freeze it will be frozen as it currently stands, which records it as a full tender with no confirmed decision behind it.\n\nThree things you can do: answer it yourself, reassign it to someone who can, or acknowledge that it stays as it is.',
+      actions: ['Answer it', 'Reassign', 'Acknowledge'],
+      caption: 'E4 · escalation to the manager. Different recipient, different content' },
+
+    { pane: 'bu', dir: 'out', from: MARCO, to: 'plan+7c41@procurement.flutter.com', time: 'Tue 13 Oct, 14:30', subj: 'RE: ' + SUBJ,
+      body: '[clicked: Confirm as planned, Cloud hosting, production estate]\n[signed in with Microsoft as marco.ferretti@sisal.it]',
+      caption: 'Marco answers the same afternoon' },
+
+    { pane: 'proc', kind: 'chip', variant: 'done', body: 'Digital Operations 52/52 · cycle at 96% with 3 days to freeze',
+      caption: 'The unit completes' },
+
+    // ── Freeze and authorization: the decisions that are Procurement's ──
+    { pane: 'proc', kind: 'action', who: 'Giulia Rinaldi · Procurement Italia', screen: 'Plan · Review', time: 'Fri 16 Oct, 17:00',
+      title: 'Reviews the cycle and freezes the plan',
+      body: '1,231 lines answered, 51 frozen as they stand. The rule set in force is saved with the plan.',
+      caption: 'Procurement freezes the plan on the date they set' },
+
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Fri 16 Oct, 17:05', subj: 'Purchasing plan Q1-Q2 2027 is frozen · your lines',
+      body: 'Ciao Marco,\n\nThe Q1-Q2 2027 plan is frozen. This is where your lines stand.\n\n• Cloud hosting, production estate · confirmed, full tender · decision by 5 Jan 2027\n• Application monitoring licences · direct renewal, goes to authorization on 27 October\n• Developer tooling subscriptions · confirmed\n• Penetration testing, annual programme · now owned by Elena Carbone\n\nNothing more is needed from you for now.',
+      caption: 'Owners get the outcome without Procurement writing it' },
+
+    { pane: 'proc', kind: 'action', who: 'Giulia Rinaldi · Procurement Italia', screen: 'Plan · Authorization', time: 'Tue 27 Oct, 10:00',
+      title: 'Runs the authorization session',
+      body: 'Application monitoring licences · Datadog · € 149,000 · direct renewal: authorized by the Sr Procurement Director.',
+      caption: 'The one human decision in Marco’s story, taken in the session' },
+
+    { pane: 'bu', dir: 'in', from: AGENT, to: 'marco.ferretti@sisal.it', time: 'Tue 27 Oct, 10:05', subj: 'Application monitoring licences · direct renewal authorized',
+      body: 'Ciao Marco,\n\nThe direct renewal of Application monitoring licences with Datadog France SAS, about € 149,000, was authorized today.\n\nNext step: raise the RFE in Appian by 4 May 2027. I will remind you before then.',
+      caption: 'The decision reaches the owner, with the next step and its date' }
+  ];
+
+  // The four lines in Marco's request. Same data as E1 (small set) and the same titles as the plan grid.
+  const requestLines = [
+    { id: 1, title: 'Cloud hosting, production estate',      supplier: 'Amazon Web Services EMEA', entity: 'Sisal Italia', ref: 'PP-2027-0412',
+      value: '€ 1,240,000', method: 'Full Tender', notice: 60, ends: '31 Mar 2027', decide: '5 Jan 2027', urgent: true },
+    { id: 2, title: 'Application monitoring licences',       supplier: 'Datadog France SAS',      entity: 'Sisal Italia', ref: 'PP-2027-0417',
+      value: '€ 186,000',   method: 'Direct Negotiation', notice: 40, ends: '30 Jun 2027', decide: '4 May 2027', urgent: false },
+    { id: 3, title: 'Penetration testing, annual programme', supplier: 'Yarix Srl',               entity: 'Sisal Italia', ref: 'PP-2027-0433',
+      value: '€ 74,500',    method: 'Light Tender', notice: 40, ends: '28 Feb 2027', decide: '2 Jan 2027', urgent: true },
+    { id: 4, title: 'Developer tooling subscriptions',       supplier: 'JetBrains s.r.o.',        entity: 'Sisal Italia', ref: 'PP-2027-0451',
+      value: '€ 31,200',    method: 'Direct Negotiation', notice: 30, ends: '31 May 2027', decide: '16 Apr 2027', urgent: false }
+  ];
+
+  events.forEach((e, i) => { e.i = i; });
+
+  return {
+    events: events,
+    requestLines: requestLines,
+    revealed: 0,
+    visible() { return this.events.filter(e => e.i < this.revealed); },
+    next() { if (this.revealed < this.events.length) { this.revealed++; this.$nextTick(() => this.bottom()); } },
+    back() { if (this.revealed > 0) this.revealed--; },
+    reset() { this.revealed = 0; },
+    // Follow the newest step. A step taller than the viewport, like the full request email, is scrolled to its top instead,
+    // so the header of the message is what the room sees first.
+    bottom() {
+      const el = this.$refs.scroll; if (!el) return;
+      const rows = el.querySelectorAll('.reveal'); const last = rows[rows.length - 1];
+      if (last && last.offsetHeight > el.clientHeight * 0.75) {
+        el.scrollTop += last.getBoundingClientRect().top - el.getBoundingClientRect().top - 8;
+      } else { el.scrollTop = el.scrollHeight; }
+    },
+    caption() { return this.revealed === 0 ? 'Ready. Press Next to begin.' : this.events[this.revealed - 1].caption; },
+
+    dotClass(e) {
+      if (e.pane === 'bu') return 'bg-slate-400';
+      if (e.kind === 'suggest') return 'bg-[#6d4bb0]';
+      if (e.kind === 'chip') {
+        if (e.variant === 'warn' || e.variant === 'escalate') return 'bg-[#d98a2b]';
+        if (e.variant === 'done') return 'bg-[#3f9a58]';
+        return 'bg-[#4f46e5]';
+      }
+      return 'bg-[#4a6fa5]';
+    },
+    chipClass(v) {
+      if (v === 'warn')     return 'bg-[#fdf0e3] border-[#e6b877] text-[#a5651a]';
+      if (v === 'escalate') return 'bg-[#fbe6d3] border-[#e09a54] text-[#b5651d]';
+      if (v === 'done')     return 'bg-[#e9f6ec] border-[#8fca9f] text-[#2f7d47]';
+      return 'bg-[#eef2ff] border-[#c7d2fe] text-[#4338ca]';
+    },
+    chipIcon(v) {
+      if (v === 'warn') return '!';
+      if (v === 'escalate') return '⤴';
+      if (v === 'done') return '✓';
+      return '•';
+    }
+  };
+}
+</script>
+</body>
+</html>

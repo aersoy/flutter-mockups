@@ -1,0 +1,2935 @@
+<!--
+  ═══════════════════════════════════════════════════════════════════════════════════════
+  Plan.html · The purchasing plan, as one record set seen through saved views
+
+  WHAT THIS FILE REPLACES
+  Six separate screens: P1 Plan Grid, P2 Cycle Workspace, P4 Consolidated Review,
+  P5 Authorization Session, P6 Tracking and P7 Alignment Session. Each of those was
+  designed around a Flutter task, which is exactly why none of them could be sold to a
+  company whose process is shaped differently. P2 and P4 came back in Session 17 as the
+  Report renderer of the Responses and Review views (views[].report), so their content
+  lives on as a shape of those views rather than as screens. Session 18 made Report the
+  default renderer of both and renamed Responses to Progress; Review keeps its name.
+
+  THE MODEL (see Product Work/Building Blocks/Building Blocks Model.md)
+  One record set. Saved views over it. Four renderers that can draw any view.
+
+    record set   the 4,793 lines, typed fields, per-cell validation, row panel
+    view         a saved filter + grouping + sort + visible fields + a default renderer
+    renderer     Grid, Board, Queue, Report (a session is a MODE over a view, not a shape)
+    rule set     typed conditions, entity-owned, effective dated. Computes the
+                 authorization rung rather than storing it
+    cycle        the outbound ask (the email screens, still their own files)
+
+  Every view's definition opens from Filter or Group in the toolbar (the definition
+  panel). A line printing it under the view bar sat on every tab until Session 19, when
+  it came out; the renderer is now a dropdown in the toolbar, beside Filter and Group. The demo can
+  still answer a question Flutter asks in the room by changing a view rather than by
+  promising a screen.
+
+  WHAT IS OURS VERSUS THEIRS
+  Theirs: all 55 columns of Purchasing Plan.xlsx, under their own names, in their order.
+  Ours: seven fields, tinted and marked OURS in Fields. Response (what the business
+  unit answered), Stage, Next step, Next step due, Decision date, Authorization rung (a
+  formula, not a typed field) and Authorization outcome. Tracking and Authorization stop
+  being screens and become six of our columns plus two views. 55 plus 7 is 62 fields.
+
+  FIELD SETS
+  A renderer declares the slots it has; the view decides which fields fill them and in
+  what order. The Grid's slot budget is every field, so the Table shows all 62 and each
+  task view names the ten or so that task needs, leading with the ones it writes.
+
+  THE RULE SET (Sessions 22 and 23)
+  Rules drive the flags, the Authorization Rung and the deadlines. No label, flag or message
+  names a procedure or a section number. The rule set a plan was judged against is saved
+  with the plan and opens, as values only, from the Review strip. O2 administers the rules.
+  The values and their sources are listed where the rule set is declared in the script.
+
+  BUILD NOTES
+  Tailwind and Alpine from CDN, IBM Plex Sans. Single file.
+  Never name a custom CSS class after a Tailwind utility: the table class is `sheet`,
+  not `grid`, because Tailwind's .grid is display:grid and it breaks the header alignment.
+  Alpine rule: no double quotes inside the x-data attribute value.
+  ═══════════════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchasing Plan Q1&ndash;Q2 2027</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  [x-cloak] { display: none !important; }
+
+  .gwrap::-webkit-scrollbar { width: 11px; height: 11px; }
+  .gwrap::-webkit-scrollbar-thumb { background: #c8cad1; border-radius: 8px; border: 2px solid #fff; }
+  .gwrap::-webkit-scrollbar-track { background: #f6f7f9; }
+  .gwrap::-webkit-scrollbar-corner { background: #f6f7f9; }
+
+  /* ── The sheet ─────────────────────────────────────────────────────────────────────
+     Fixed layout: column widths come from <colgroup> only, never from cell content.
+     Named `sheet`, NOT `grid`: Tailwind's .grid utility is display:grid. */
+  table.sheet { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  table.sheet th, table.sheet td {
+    border-right: 1px solid #e8e9ed;
+    border-bottom: 1px solid #e8e9ed;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  table.sheet td { vertical-align: middle; }
+  table.sheet tbody td { height: 36px; }   /* the one row height */
+  table.sheet .gs { border-left: 1px solid #d5d7de; }
+
+  table.sheet thead th { position: sticky; z-index: 20; background: #f6f7f9; }
+  table.sheet thead tr.hg th { top: 0;    height: 24px; background: #eceef3; border-bottom: 1px solid #dcdee5; }
+  table.sheet thead tr.hc th { top: 24px; height: 40px; border-bottom: 1px solid #d9dbe1; }
+
+  table.sheet th.gh { overflow: visible; padding: 0 10px; text-align: left; border-left: 1px solid #d5d7de;
+    font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
+  .glabel { position: sticky; left: 458px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+
+  .hn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        white-space: normal; line-height: 1.2; min-width: 0; }
+
+  /* Frozen columns: row number (44), ID (64), Subject contract (340). */
+  .fz { position: sticky; z-index: 15; background: #fff; }
+  .f0 { left: 0; }
+  .f1 { left: 44px; }
+  .f2 { left: 108px; border-right: 1px solid #d0d3db !important; }
+  table.sheet thead th.fz { z-index: 30; background: #f6f7f9; }
+  table.sheet thead tr.hg th.fz { z-index: 35; background: #eceef3; }
+  tr:hover td.fz { background: #fafbfc; }
+  tr.sel { background: #eef2ff; }
+  tr.sel td.fz { background: #eef2ff; }
+
+  /* A group band row inside the body, for a grouped view. Sticky to the left so the
+     label stays readable while the sheet scrolls sideways.
+     Two things have to both be true for this to work, and the original build had
+     neither: every cell in this sheet is overflow:hidden, and overflow:hidden on an
+     ancestor silently kills position:sticky on a descendant, so the label's own td has
+     to opt back in to overflow:visible. And the sticky element has to be the label
+     itself, not the td: Chromium does not honor position:sticky on a <td> that carries
+     a colspan, which this one does to span the full row. */
+  td.gband { background: #f3f4f7; height: 28px !important; border-bottom: 1px solid #dcdee5; }
+  /* table.sheet td sets overflow:hidden at higher specificity than a bare .gbandmain
+     would, so this has to repeat the "table.sheet td" prefix to actually win. */
+  table.sheet td.gbandmain { overflow: visible; }
+  /* 56px, not 12: the offset is against the scrollport, not against this td, so it has to
+     clear the frozen row-number column (44px) or the label renders half-hidden under it. */
+  .gbandlabel { position: sticky; left: 56px; display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Our columns, next to theirs. */
+  table.sheet thead th.plat { background: #eef2ff; color: #4338ca; }
+  td.platcell { background: rgba(238, 242, 255, .45); }
+
+  /* A cell that fails validation. Marked, not hidden, and never blocking. */
+  .badcell { background: #fff7ed !important; box-shadow: inset 0 0 0 1px #fdba74; }
+  .badcell::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    border-width: 0 6px 6px 0; border-style: solid;
+    border-color: transparent #f97316 transparent transparent;
+  }
+  .cellrel { position: relative; }
+
+  .panel { animation: slide .2s ease-out; }
+  @keyframes slide { from { transform: translateX(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .scroll::-webkit-scrollbar { width: 8px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+  .scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* Board: columns scroll sideways, cards stack. */
+  .board::-webkit-scrollbar { height: 10px; }
+  .board::-webkit-scrollbar-thumb { background: #c8cad1; border-radius: 8px; }
+
+  /* Projection density. The only thing the dark session screen did that a table cannot
+     is be legible across a room, and that is a row height and a type size. Everything
+     else about the table stays exactly where it is. */
+  table.sheet.proj tbody td { height: 62px; font-size: 15px; }
+  table.sheet.proj tbody td .chip { font-size: 13px; padding: 4px 12px; }
+  table.sheet.proj thead tr.hc th { height: 46px; font-size: 13px; }
+
+  /* A value the session has staged and not yet written. */
+  td.staged { background: #eef2ff !important; box-shadow: inset 2px 0 0 #4f46e5; }
+
+  /* The row the session is on. */
+  tr.focus td { background: #f5f3ff !important; }
+</style>
+</head>
+
+<body class="bg-gray-100 h-screen overflow-hidden text-slate-800" x-data="planApp()" x-cloak>
+<div class="flex h-screen">
+
+  <!-- ══════════ Product rail ══════════ -->
+  <nav class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-2 shrink-0 z-40">
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center mb-3">
+      <span class="text-white text-xs font-bold">E</span>
+    </div>
+    <template x-for="item in rail" :key="item.k">
+      <button class="w-10 h-11 rounded-lg flex flex-col items-center justify-center gap-0.5 text-[8px] leading-tight"
+              :class="item.on ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-gray-400 hover:bg-gray-100'">
+        <span class="text-[15px]" x-text="item.i"></span><span x-text="item.k"></span>
+      </button>
+    </template>
+  </nav>
+
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- ══════════ Plan header ══════════
+         The h1 is the plan, not the screen. It does not change underneath the views,
+         because every view below is the same object. -->
+    <header class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 z-30">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <a href="P0%20Purchasing%20Plans.html" class="text-gray-400 hover:text-gray-700 text-sm" title="All purchasing plans" aria-label="All purchasing plans">&lsaquo;</a>
+          <h1 class="text-[17px] font-semibold text-gray-900 shrink-0">Purchasing Plan Q1&ndash;Q2 2027</h1>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">FSEA</span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">ACTIVE</span>
+          <span class="text-[11px] text-gray-400 truncate">4,793 lines &middot; one record set</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Import</button>
+          <button class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Export to Excel</button>
+          <button class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" x-text="v().action || 'Open a collection cycle'"></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ══════════ View bar ══════════
+         This was a tab bar of six task-named screens. It is now a list of saved views
+         over one record set. The names stay Flutter's, because a view is named after
+         the job it does. What changed is that they are all the same object. -->
+    <div class="bg-white border-b border-gray-200 px-5 flex items-center gap-0.5 shrink-0 z-20 overflow-x-auto">
+      <template x-for="vw in views" :key="vw.id">
+        <button @click="go(vw.id)"
+                class="px-3 py-2 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 shrink-0"
+                :class="viewId === vw.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+          <span x-text="vw.k"></span>
+          <span x-show="tabCount(vw)" class="text-[10px] px-1.5 rounded-full"
+                :class="viewId === vw.id ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-500'" x-text="tabCount(vw)"></span>
+        </button>
+      </template>
+      <button @click="newView = true"
+              class="px-2.5 py-2 text-xs text-gray-400 hover:text-gray-700 shrink-0" title="New view">&plus;</button>
+    </div>
+
+    <!-- ══════════ Toolbar ══════════
+         The spreadsheet verbs. Nothing here is a concept Procurement has to learn.
+         Present on every view, including one being run as a session. -->
+    <div class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-1.5 shrink-0 relative z-30">
+
+      <div class="relative" @click.outside="menu = false" @keydown.escape.window="menu = false">
+        <button @click="menu = !menu"
+                class="text-[11.5px] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors"
+                :class="(menu || hiddenCount) ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-100'">
+          <span class="text-[12px]">&#9707;</span><span>Fields</span>
+          <span x-show="hiddenCount" class="text-[10px] px-1.5 rounded-full bg-indigo-100 text-indigo-700" x-text="hiddenCount"></span>
+        </button>
+
+        <div x-show="menu" x-cloak
+             class="scroll absolute left-0 top-full mt-1 w-[310px] max-h-[440px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl z-50 pb-1.5">
+          <div class="sticky top-0 bg-white px-3 py-2 flex items-center justify-between border-b border-gray-100">
+            <span class="text-[11px] text-gray-500"><strong class="text-gray-800" x-text="visCols.length + 2"></strong> of <span x-text="cols.length + 2"></span> fields showing</span>
+            <button @click="hidden = {}; shown = {}; showAll = true" class="text-[11px] font-medium text-indigo-600 hover:underline">Show all</button>
+          </div>
+          <template x-for="grp in groupList" :key="grp.g">
+            <div>
+              <button @click="toggleGroup(grp)" class="w-full flex items-center gap-2 px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 text-left">
+                <span x-text="grp.g"></span>
+                <span class="ml-auto normal-case tracking-normal font-normal text-[10.5px]" x-text="groupShown(grp) + ' / ' + grp.cols.length"></span>
+              </button>
+              <template x-for="c in grp.cols" :key="c.id">
+                <label class="flex items-center gap-2 px-3 py-1 text-[11.5px] text-gray-700 hover:bg-gray-50 cursor-pointer">
+                  <input type="checkbox" class="accent-indigo-600 w-3 h-3 shrink-0" :checked="fieldOn(c)" @change="toggleField(c)">
+                  <span class="text-gray-400 text-[10px] w-3 text-center shrink-0" x-text="typeIcon(c.t)"></span>
+                  <span class="truncate" x-text="c.k"></span>
+                  <span x-show="c.plat" class="ml-auto text-[9px] font-semibold text-indigo-600 shrink-0">OURS</span>
+                </label>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Filter and Group are live, because they are what a view IS. Clicking either
+           opens the current view's definition rather than an empty builder. -->
+      <button @click="def = !def"
+              class="text-[11.5px] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors"
+              :class="(def || v().filter !== 'all') ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-100'">
+        <span class="text-[12px]">&#8863;</span><span>Filter</span>
+        <span x-show="v().filter !== 'all'" class="text-[10px] px-1.5 rounded-full bg-indigo-100 text-indigo-700">1</span>
+      </button>
+      <button @click="def = !def"
+              class="text-[11.5px] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors"
+              :class="(def || v().group) ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-100'">
+        <span class="text-[12px]">&#9638;</span><span>Group</span>
+        <span x-show="v().group" class="text-[10px] px-1.5 rounded-full bg-indigo-100 text-indigo-700">1</span>
+      </button>
+      <button class="text-[11.5px] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 text-gray-600 hover:bg-gray-100">
+        <span class="text-[12px]">&#8645;</span><span>Sort</span>
+      </button>
+      <!-- Renderer. Last in the left-hand group, after Fields, Filter, Group and Sort.
+           Fields, filter, grouping and this shape are what a view is: the tab's definition.
+           Sort sits in between but is not part of the definition and has no handler yet
+           (see worklog Session 14). Session 20 made this a label-less dropdown beside
+           Filter and Group; Session 21 moved it after Sort and renamed Hide fields to Fields. -->
+      <select x-model="renderer" :title="(renderers.find(r => r.k === renderer) || {}).hint"
+              class="text-[11.5px] text-gray-700 border border-gray-200 rounded-md pl-2 pr-7 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 shrink-0">
+        <template x-for="r in renderers" :key="r.k">
+          <option :value="r.k" x-text="r.k" :selected="renderer === r.k"></option>
+        </template>
+      </select>
+
+      <div class="flex-1"></div>
+
+      <div class="relative">
+        <input type="text" placeholder="Search 4,793 lines..."
+               class="text-[11.5px] pl-7 pr-3 py-1.5 border border-gray-200 rounded-md w-56 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]">&#9906;</span>
+      </div>
+      <button class="text-[11.5px] px-2.5 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span class="text-[12px]">&plus;</span> Add line
+      </button>
+    </div>
+
+    <!-- ══════════ The view definition, opened ══════════
+         What Filter and Group open. A view is four settings, and this is them.
+         Showing it is what makes the configurability real rather than asserted. -->
+    <div x-show="def" x-cloak class="bg-indigo-50/60 border-b border-indigo-100 px-5 py-3 shrink-0 z-20">
+      <div class="flex items-start gap-8">
+        <div>
+          <div class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">
+            Filter <span class="normal-case tracking-normal font-normal text-slate-400 mono" x-text="v().filter"></span>
+          </div>
+          <div class="text-[12px] text-slate-700" x-text="filterLabelOf(v().filter)"></div>
+        </div>
+        <div>
+          <div class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">Group by</div>
+          <div class="text-[12px] text-slate-700" x-text="v().groupLabel || 'Not grouped'"></div>
+        </div>
+        <div>
+          <div class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">Fields</div>
+          <div class="text-[12px] text-slate-700" x-text="(cols.length + 2 - hiddenCount) + ' of ' + (cols.length + 2) + ' showing'"></div>
+        </div>
+        <div>
+          <div class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">Renderer</div>
+          <div class="text-[12px] text-slate-700" x-text="renderer + (renderer === v().renderer ? '' : ' (changed from ' + v().renderer + ')')"></div>
+        </div>
+        <div class="flex-1"></div>
+        <button @click="def = false" class="text-[11px] text-indigo-600 hover:underline shrink-0">Close</button>
+      </div>
+    </div>
+
+    <!-- ══════════ Context strip ══════════
+         Per-view context, in the slot every view shares. This is where the content of
+         the old P2, P4, P6 headers went: it is chrome belonging to a view, not a screen. -->
+
+    <!-- Table: the day-one validation report, surfacing where the work is. -->
+    <div x-show="viewId === 'table'"
+         class="bg-amber-50 border-b border-amber-200 px-5 py-2 flex items-center gap-3 shrink-0 z-20">
+      <div class="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold"
+           style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+      <span class="text-[12px] text-amber-900 min-w-0 truncate">
+        <strong>1,042 lines</strong> need attention before the cycle opens.
+        619 direct negotiations with no justification &middot;
+        359 with no sourcing strategy &middot; 38 with an end date before the start.
+      </span>
+      <div class="flex-1"></div>
+      <button @click="onlyBad = !onlyBad"
+              class="text-[11.5px] font-semibold px-2.5 py-1 rounded-md transition-colors shrink-0"
+              :class="onlyBad ? 'bg-amber-600 text-white' : 'bg-white border border-amber-300 text-amber-800 hover:bg-amber-100'"
+              x-text="onlyBad ? 'Showing only flagged lines' : 'Show only flagged lines'"></button>
+    </div>
+
+    <!-- Responses: the cycle. The denominator moves, so completion is a fraction and
+         never a percentage: a unit that adds three lines has three more to answer. -->
+    <div x-show="viewId === 'responses'"
+         class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-6 shrink-0 z-20">
+      <div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Cycle</div>
+        <div class="text-[12px] font-medium text-gray-800">2027 H1 &middot; freezes Fri 16 Oct 2026</div>
+      </div>
+      <template x-for="s in cycleStats" :key="s.label">
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider" x-text="s.label"></div>
+          <div class="text-[12px] font-medium" :class="s.tone"><span x-text="s.value"></span>
+            <span class="text-[11px] font-normal text-gray-400" x-text="s.sub"></span></div>
+        </div>
+      </template>
+      <div class="flex-1"></div>
+      <span class="text-[11px] text-gray-400">24 lines added by business units since the cycle opened</span>
+    </div>
+
+    <!-- Review: the state at the freeze, the outcome mix, and the rule set this plan was
+         judged against. The rule set is saved with the plan at the freeze, so a plan read
+         later is judged against its own rules, not today's. Collapsed, because it is evidence
+         rather than working material. Session 23: restored after Session 22 removed it. It
+         names no procedure or section, only the values; O2 administers them. -->
+    <div x-show="viewId === 'review'"
+         class="bg-white border-b border-gray-200 px-5 py-2 shrink-0 z-20">
+      <div class="flex items-center gap-6">
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider">State</div>
+          <div class="text-[12px] font-medium text-gray-800">Frozen Fri 16 Oct 2026 &middot; 1,284 lines</div>
+        </div>
+        <template x-for="o in outcomeMix" :key="o.k">
+          <div>
+            <div class="text-[10px] text-gray-400 uppercase tracking-wider" x-text="o.k"></div>
+            <div class="text-[12px] font-medium text-gray-800" x-text="o.n.toLocaleString()"></div>
+          </div>
+        </template>
+        <div class="flex-1"></div>
+        <button @click="rulesOpen = !rulesOpen" class="text-[11px] text-indigo-600 hover:underline shrink-0"
+                x-text="rulesOpen ? 'Hide the rules this plan was judged against' : 'Rules this plan was judged against'"></button>
+      </div>
+      <div x-show="rulesOpen" x-cloak class="mt-2.5 rounded-lg border border-gray-200 overflow-hidden">
+        <div class="bg-gray-50 px-3 py-1.5 text-[10.5px] text-gray-500 border-b border-gray-200">
+          Saved with this plan at the freeze, Fri 16 Oct 2026. Rule set effective from 1 Jan 2026, Italian entities.
+        </div>
+        <div class="grid grid-cols-2 divide-x divide-gray-200">
+          <table class="w-full text-[11.5px]">
+            <thead><tr class="text-left text-gray-500 bg-white border-b border-gray-100">
+              <th class="px-3 py-1.5 font-medium">Purchase amount</th>
+              <th class="px-3 py-1.5 font-medium">Required method</th>
+              <th class="px-3 py-1.5 font-medium">Authorizer for a derogation</th>
+              <th class="px-3 py-1.5 font-medium text-right">Lines</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="r in frozenBands" :key="r.band">
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-3 py-1.5 text-gray-800" x-text="r.band"></td>
+                  <td class="px-3 py-1.5 text-gray-600" x-text="r.method"></td>
+                  <td class="px-3 py-1.5 text-gray-600" x-text="r.auth"></td>
+                  <td class="px-3 py-1.5 text-gray-600 text-right mono" x-text="r.n"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <table class="w-full text-[11.5px]">
+            <thead><tr class="text-left text-gray-500 bg-white border-b border-gray-100">
+              <th class="px-3 py-1.5 font-medium">Sourcing strategy</th>
+              <th class="px-3 py-1.5 font-medium">Amount</th>
+              <th class="px-3 py-1.5 font-medium text-right">Minimum notice</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="n in frozenNotice" :key="n.strat + n.amt">
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-3 py-1.5 text-gray-800" x-text="n.strat"></td>
+                  <td class="px-3 py-1.5 text-gray-600" x-text="n.amt"></td>
+                  <td class="px-3 py-1.5 text-gray-600 text-right" x-text="n.days + ' working days'"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-gray-50 border-t border-gray-200 px-3 py-1.5 text-[10.5px] text-gray-500">
+          A direct negotiation above &euro; 10,000 is a derogation and needs authorization. An authorization lapses
+          if the final amount exceeds it by more than 10% or &euro; 50,000, or crosses the authorizer's threshold.
+        </div>
+      </div>
+    </div>
+
+    <!-- Tracking: flags computed from dates and amounts only. Everything else is typed. -->
+    <div x-show="viewId === 'tracking'"
+         class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-6 shrink-0 z-20">
+      <div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">As of</div>
+        <div class="text-[12px] font-medium text-gray-800">Mon 23 Nov 2026</div>
+      </div>
+      <div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Late RFE</div>
+        <div class="text-[12px] font-medium text-rose-600">14</div>
+      </div>
+      <div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">RFE due soon</div>
+        <div class="text-[12px] font-medium text-amber-600">92</div>
+      </div>
+      <div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Authorization void</div>
+        <div class="text-[12px] font-medium text-rose-600">2</div>
+      </div>
+    </div>
+
+    <!-- ══════════ Session bar ══════════
+         A session is a mode over a view, so this is the view's context strip with an
+         agenda in it. The table underneath is the same table, grouped the same way, and
+         the decisions are values in a field on the line.
+
+         This replaces the dark one-record-at-a-time screen that P5 and P7 used to be.
+         What that screen had that a table lacks is legibility across a room, and that is
+         the Projection control on the right rather than a separate design. -->
+    <div x-show="sessionOn()" class="bg-indigo-50/70 border-b border-indigo-100 px-5 py-2 shrink-0 z-20">
+
+      <!-- Authorization: a single agenda item, so the title, the agenda tabs and the
+           definition line underneath said nothing the room did not already know. What
+           is left is the only thing that changes as the room works: the count, and the
+           one action that ends it. -->
+      <template x-if="viewId === 'auth'">
+        <div class="flex items-center gap-3">
+          <span class="text-[11px] text-indigo-700/80" x-text="decidedCount() + ' of ' + stepRows().length + ' decided'"></span>
+          <div class="flex-1"></div>
+          <button @click="nextStepOrClose()"
+                  class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+                  x-text="sStep < sess().agenda.length - 1 ? 'Next agenda item' : 'Review and close'"></button>
+        </div>
+      </template>
+
+      <!-- Alignment: one bar rather than two. The focused business unit used to sit in its
+           own white strip above this one; it lives here now, first in the row, since it is
+           part of what this session is rather than a setting above it. The line count and
+           filter text that used to run underneath (stepDef) and the decided tally that used
+           to sit by the button are both gone: neither earned the room's attention every time
+           the step changed, and the agenda tab itself already names what is being decided. -->
+      <template x-if="viewId !== 'auth'">
+        <div class="flex items-center gap-3">
+          <div class="shrink-0">
+            <div class="text-[10px] text-indigo-400 uppercase tracking-wider">Focused business unit</div>
+            <select x-model="alignBU" @change="sReset()"
+                    class="text-[12.5px] font-medium text-gray-800 border border-indigo-200 rounded-md px-2 py-1 mt-0.5 bg-white">
+              <template x-for="bu in businessUnits" :key="bu">
+                <option :value="bu" x-text="bu"></option>
+              </template>
+            </select>
+          </div>
+          <div class="flex items-center gap-1 flex-wrap">
+            <template x-for="(ag, i) in sess().agenda" :key="ag.k">
+              <button @click="sStep = i; focus = null"
+                      class="text-[11px] px-2.5 py-1 rounded-md transition-colors max-w-[200px] truncate"
+                      :class="sStep === i ? 'bg-indigo-600 text-white font-medium' : 'text-indigo-700 hover:bg-indigo-100'"
+                      x-text="(i + 1) + '. ' + ag.k"></button>
+            </template>
+          </div>
+          <div class="flex-1"></div>
+          <button @click="sView = 'summary'"
+                  class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shrink-0">Review and close</button>
+        </div>
+      </template>
+    </div>
+
+    <!-- ══════════════════════════ RENDERERS ══════════════════════════ -->
+    <div class="flex-1 min-h-0 flex flex-col isolate">
+
+      <!-- ── GRID ───────────────────────────────────────────────────────────────────
+           Their spreadsheet, with every column knowing what it is. When the view has a
+           grouping, a band row is inserted before each group: the same rows, gathered. -->
+      <template x-if="renderer === 'Grid' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+        <div class="gwrap flex-1 min-h-0 overflow-auto bg-white">
+          <table class="sheet text-[12px]" :class="density === 'proj' ? 'proj' : ''" :style="'width:' + tableW + 'px'">
+            <colgroup>
+              <col style="width:44px">
+              <col style="width:64px">
+              <col style="width:340px">
+              <template x-for="c in visCols" :key="c.id"><col :style="'width:' + c.w + 'px'"></template>
+            </colgroup>
+
+            <thead>
+              <tr class="hg">
+                <th colspan="3" class="fz gh f0" style="border-left: 0"><span class="text-gray-500">Line</span></th>
+                <!-- Keyed by position, NOT by the group name. A view that orders its fields
+                     can put the same group on screen twice, and a name key makes Alpine drop
+                     the second one and shift every band left of it. -->
+                <template x-for="(g, gi) in visGroups" :key="gi">
+                  <th :colspan="g.n" class="gh"><span class="glabel" x-text="g.g"></span></th>
+                </template>
+              </tr>
+              <tr class="hc">
+                <th class="fz f0 px-1 text-[10px] font-semibold text-gray-400 text-center">#</th>
+                <th class="fz f1 px-2.5 text-left text-[11.5px] font-semibold text-gray-600">
+                  <div class="flex items-center gap-1.5"><span class="text-gray-400 text-[10px]">#</span><span>ID</span></div>
+                </th>
+                <th class="fz f2 px-2.5 text-left text-[11.5px] font-semibold text-gray-600">
+                  <div class="flex items-center gap-1.5"><span class="text-gray-400 text-[10px]">A</span><span>Subject Contract</span></div>
+                </th>
+                <template x-for="c in visCols" :key="c.id">
+                  <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600"
+                      :class="[starts[c.id] ? 'gs' : '', c.plat ? 'plat' : '']" :title="headTitle(c)">
+                    <div class="flex items-center gap-1.5"
+                         :class="al(c) === 'r' ? 'justify-end' : (al(c) === 'c' ? 'justify-center' : '')">
+                      <span x-show="c.plat" class="w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center text-white text-[8px] font-bold"
+                            style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</span>
+                      <span x-show="!c.plat" class="text-gray-400 text-[10px] shrink-0" x-text="typeIcon(c.t)"></span>
+                      <span class="hn" x-text="c.k"></span>
+                      <span x-show="c.rule" class="text-[9px] text-indigo-500 shrink-0">&#9679;</span>
+                    </div>
+                  </th>
+                </template>
+              </tr>
+            </thead>
+
+            <!-- One tbody per band. Several tbody elements in one table is valid HTML, and it
+                 is the only shape that lets an x-for template keep a single root element. -->
+            <template x-for="band in banded()" :key="band.label">
+              <tbody>
+                  <!-- Group band row. Present only when the view groups. -->
+                  <template x-if="band.label !== '__none__'">
+                    <tr>
+                      <td class="gband fz f0" style="left:0"></td>
+                      <td class="gband gbandmain" :colspan="visCols.length + 2">
+                        <span class="gbandlabel">
+                          <span class="text-[11.5px] font-semibold text-gray-700" x-text="band.label"></span>
+                          <span class="text-[10.5px] text-gray-400" x-text="band.rows.length + (band.rows.length === 1 ? ' line' : ' lines')"></span>
+                          <span x-show="band.note" class="text-[10.5px] text-gray-400" x-text="band.note"></span>
+                        </span>
+                      </td>
+                    </tr>
+                  </template>
+
+                  <template x-for="r in band.rows" :key="r.n">
+                    <tr class="group" :class="[selected === r.n ? 'sel' : 'hover:bg-gray-50/70', focus === r.n ? 'focus' : '']">
+                      <td class="fz f0 px-1 text-center">
+                        <div class="flex items-center justify-center">
+                          <span class="text-[10.5px] text-gray-400 group-hover:hidden" x-text="r.n"></span>
+                          <input type="checkbox" class="hidden group-hover:block accent-indigo-600 w-3 h-3">
+                        </div>
+                      </td>
+                      <td class="fz f1 px-2.5 text-[11px] text-gray-500 mono" x-text="r.id"></td>
+                      <td class="fz f2 px-2.5">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <span class="truncate min-w-0 text-gray-900 font-medium flex-1" x-text="r.subj"></span>
+                          <template x-if="r.comments">
+                            <span class="inline-flex items-center gap-1 text-[10px] text-indigo-500 shrink-0" :title="r.comments + ' comments'">
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 3h11v7.5H7L4 13v-2.5H2.5z"/></svg>
+                              <span x-text="r.comments"></span>
+                            </span>
+                          </template>
+                          <button @click="openRow(r)"
+                                  class="opacity-0 group-hover:opacity-100 shrink-0 text-[10px] px-1.5 py-0.5 rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-opacity">
+                            Expand
+                          </button>
+                        </div>
+                      </td>
+                      <template x-for="c in visCols" :key="c.id">
+                        <td class="px-2.5 cellrel"
+                            :class="[isBad(r, c.id) ? 'badcell' : '', isStaged(r, c) ? 'staged' : '', starts[c.id] ? 'gs' : '', c.plat ? 'platcell' : '',
+                                     al(c) === 'r' ? 'text-right' : (al(c) === 'c' ? 'text-center' : ''), isMono(c) ? 'mono' : '']"
+                            :title="isBad(r, c.id) ? badReason(r, c.id) : ''">
+                          <!-- The field the room is deciding. In a session its cell is the
+                               choice itself, so the decision is made in the table rather
+                               than on a screen built to make it. -->
+                          <template x-if="sessionOn() && step().kind === 'records' && c.id === step().field">
+                            <span class="flex items-center gap-1 flex-wrap">
+                              <template x-for="o in step().options" :key="o">
+                                <button @click="setDecision(r, o)"
+                                        class="chip text-[10.5px] px-2 py-0.5 rounded-full border transition-colors"
+                                        :class="decOf(r) === o ? chipClass(c.id, o) + ' font-medium ring-1 ring-indigo-400' : 'border-gray-200 text-gray-400 hover:bg-gray-100'"
+                                        x-text="o"></button>
+                              </template>
+                            </span>
+                          </template>
+
+                          <template x-if="c.t === 'sel' && !(sessionOn() && step().kind === 'records' && c.id === step().field)">
+                            <span x-show="r[c.id]" class="chip inline-block max-w-full truncate align-middle text-[10.5px] px-2 py-0.5 rounded-full border"
+                                  :class="chipClass(c.id, r[c.id])" x-text="r[c.id]"></span>
+                          </template>
+                          <template x-if="c.t === 'per'">
+                            <span x-show="r[c.id]" class="flex items-center gap-1.5 min-w-0">
+                              <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-600 text-[8px] font-semibold flex items-center justify-center shrink-0" x-text="initials(r[c.id])"></span>
+                              <span class="text-gray-700 truncate min-w-0" x-text="r[c.id]"></span>
+                            </span>
+                          </template>
+                          <template x-if="c.t === 'chk'">
+                            <span class="text-[12px]" :class="r[c.id] === 'Y' ? 'text-emerald-600' : 'text-gray-300'"
+                                  x-text="r[c.id] === 'Y' ? '☑' : (r[c.id] === 'N' ? '☐' : '')"></span>
+                          </template>
+                          <template x-if="!['sel','per','chk'].includes(c.t)">
+                            <div class="truncate" :class="c.t === 'cmp' ? 'text-gray-600' : 'text-gray-700'" x-text="val(r, c)"></div>
+                          </template>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+              </tbody>
+            </template>
+
+            <tbody>
+              <tr>
+                <td class="fz f0 px-1 text-center text-gray-300 text-[13px]">+</td>
+                <td class="fz f1"></td>
+                <td class="fz f2 px-2.5 text-[11.5px] text-gray-400">Add a line...</td>
+                <template x-for="c in visCols" :key="c.id"><td :class="starts[c.id] ? 'gs' : ''"></td></template>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <!-- ── A needs agenda item ────────────────────────────────────────
+           Needs not in the plan is not a view of rowsAll, because these lines do not
+           exist yet, but the room still works it row by row the same way it works
+           steps 1 and 2, so it gets the same sheet look rather than the card list a
+           plain note gets. Its own kind, because there is no field on file to decide. -->
+      <template x-if="sessionOn() && step().kind === 'needs'">
+        <div class="gwrap flex-1 min-h-0 overflow-auto bg-white">
+          <table class="sheet text-[12px]" :class="density === 'proj' ? 'proj' : ''">
+            <colgroup>
+              <col style="width:44px">
+              <col style="width:300px">
+              <col style="width:170px">
+              <col style="width:110px">
+              <col style="width:120px">
+              <col style="width:180px">
+            </colgroup>
+            <thead>
+              <tr class="hc" style="top:0">
+                <th class="fz f0 px-1 text-[10px] font-semibold text-gray-400 text-center" style="top:0">#</th>
+                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Need</th>
+                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Owner</th>
+                <th class="px-2.5 text-right text-[11.5px] font-semibold text-gray-600" style="top:0">Value</th>
+                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Wanted by</th>
+                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Raised</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="(n, ni) in step().items" :key="ni">
+                <tr class="hover:bg-gray-50/70">
+                  <td class="fz f0 px-1 text-center text-[10.5px] text-gray-400" x-text="ni + 1"></td>
+                  <td class="px-2.5 text-gray-900 font-medium truncate" x-text="n.need"></td>
+                  <td class="px-2.5 text-gray-700 truncate" x-text="n.owner"></td>
+                  <td class="px-2.5 text-right text-gray-700" x-text="n.value"></td>
+                  <td class="px-2.5 text-gray-700" x-text="n.by"></td>
+                  <td class="px-2.5 text-gray-500 truncate" x-text="n.raised"></td>
+                </tr>
+              </template>
+              <tr>
+                <td class="fz f0 px-1 text-center text-gray-300 text-[13px]">+</td>
+                <td class="px-2.5 text-[11.5px] text-gray-400" colspan="5">
+                  <button class="hover:text-indigo-600" @click="openAlignAddLine()" x-text="step().add"></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <!-- ── A note agenda item ────────────────────────────────────────
+           The alignment's last item is not a view of the plan either, because it is not
+           about lines at all: it is feedback and follow-ups kept with the alignment
+           record. That one stays a card list, because there is no column shape to give
+           it, unlike the needs above. -->
+      <template x-if="sessionOn() && step().kind === 'note'">
+        <div class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-6">
+          <div class="max-w-3xl">
+            <h2 class="text-[20px] font-semibold text-gray-900" x-text="step().k"></h2>
+            <p class="text-[13px] text-gray-500 mt-1.5 leading-relaxed" x-text="step().blurb"></p>
+            <div class="mt-4 space-y-2">
+              <template x-for="n in step().items" :key="n.t">
+                <div class="rounded-xl border border-gray-200 bg-white px-4 py-3">
+                  <div class="text-[13px] text-gray-900" x-text="n.t"></div>
+                  <div class="text-[11.5px] text-gray-500 mt-0.5" x-text="n.sub"></div>
+                </div>
+              </template>
+              <button class="w-full rounded-xl border border-dashed border-gray-300 px-4 py-3 text-[12.5px] text-gray-500 hover:bg-white text-left"
+                      x-text="step().add"></button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ── BOARD ──────────────────────────────────────────────────────────────────
+           The same rows, gathered by one select field. Moving a card writes that field,
+           which is the whole of what the Tracking screen used to be. -->
+      <template x-if="renderer === 'Board' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+        <div class="board flex-1 min-h-0 overflow-x-auto overflow-y-hidden bg-gray-100 px-4 py-3">
+          <div class="flex gap-3 h-full items-start">
+            <template x-for="col in boardColumns()" :key="col.label">
+              <div class="w-[260px] shrink-0 bg-white rounded-xl border border-gray-200 flex flex-col max-h-full">
+                <div class="px-3 py-2 border-b border-gray-100 flex items-center gap-2 shrink-0">
+                  <span class="text-[11.5px] font-semibold text-gray-700 truncate min-w-0" x-text="col.label"></span>
+                  <span class="text-[10px] px-1.5 rounded-full bg-gray-100 text-gray-500" x-text="col.rows.length"></span>
+                  <div class="flex-1"></div>
+                  <span class="text-[10px] text-gray-400 mono whitespace-nowrap shrink-0" x-text="col.value"></span>
+                </div>
+                <div class="scroll flex-1 overflow-y-auto p-2 space-y-2 min-h-[60px]">
+                  <template x-for="r in col.rows" :key="r.n">
+                    <button @click="openRow(r)"
+                            class="w-full text-left bg-white border border-gray-200 rounded-lg px-2.5 py-2 hover:border-indigo-300 hover:shadow-sm transition-all">
+                      <div class="text-[11.5px] font-medium text-gray-900 leading-snug" x-text="r.subj"></div>
+                      <div class="text-[10px] text-gray-400 mono mt-0.5" x-text="r.ref"></div>
+                      <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full border" :class="chipClass('cat', r.cat)" x-text="r.cat"></span>
+                        <span class="text-[10px] text-gray-500 mono" x-text="'€ ' + fmtK(yearly(r)) + 'K'"></span>
+                      </div>
+                      <template x-if="flagOf(r)">
+                        <div class="mt-1.5 text-[10px] px-1.5 py-0.5 rounded border inline-block"
+                             :class="flagOf(r).cls" x-text="flagOf(r).text"></div>
+                      </template>
+                      <div x-show="r.nextstep" class="text-[10.5px] text-gray-500 mt-1.5 leading-snug">
+                        <span class="text-gray-400">Next:</span> <span x-text="r.nextstep"></span>
+                      </div>
+                    </button>
+                  </template>
+                  <div x-show="!col.rows.length" class="text-[10.5px] text-gray-300 text-center py-3">Empty</div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- ── QUEUE ──────────────────────────────────────────────────────────────────
+           One person's outstanding work, ordered by urgency rather than by plan order.
+           A sixty-four line queue read in plan order is a spreadsheet with worse
+           ergonomics, which is the thing the app is supposed to beat. -->
+      <template x-if="renderer === 'Queue' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+        <div class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-4">
+          <div class="max-w-4xl mx-auto space-y-5">
+            <template x-for="grp in queueGroups()" :key="grp.label">
+              <div>
+                <div class="flex items-baseline gap-2 mb-2">
+                  <span class="text-[12px] font-semibold" :class="grp.tone" x-text="grp.label"></span>
+                  <span class="text-[11px] text-gray-400" x-text="grp.rows.length + (grp.rows.length === 1 ? ' line' : ' lines')"></span>
+                  <span x-show="grp.sub" class="text-[11px] text-gray-400" x-text="'· ' + grp.sub"></span>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+                  <template x-for="r in grp.rows" :key="r.n">
+                    <div class="px-4 py-3 hover:bg-gray-50/70">
+                      <div class="flex items-start gap-3">
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-2">
+                            <span class="text-[13px] font-medium text-gray-900 truncate" x-text="r.subj"></span>
+                            <span class="text-[10px] text-gray-400 mono shrink-0" x-text="r.ref"></span>
+                          </div>
+                          <div class="text-[11.5px] text-gray-500 mt-0.5">
+                            <span x-text="r.sup || 'No supplier recorded'"></span> &middot;
+                            <span x-text="'€ ' + fmtK(yearly(r)) + 'K a year'"></span> &middot;
+                            <span x-text="r.strat || 'no method set'"></span>
+                          </div>
+                          <div class="text-[11.5px] mt-1" :class="daysTo(r) !== null && daysTo(r) <= 30 ? 'text-rose-600' : 'text-gray-500'">
+                            <template x-if="daysTo(r) !== null">
+                              <span x-text="'Decision needed by ' + longDate(r.decide) + ', ' + daysTo(r) + ' days away'"></span>
+                            </template>
+                            <template x-if="daysTo(r) === null">
+                              <span class="text-gray-400">No decision date, because no sourcing method is set</span>
+                            </template>
+                          </div>
+                        </div>
+                        <div class="shrink-0 flex flex-col items-end gap-1.5">
+                          <span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="chipClass('resp', r.resp)" x-text="r.resp"></span>
+                          <div class="flex gap-1">
+                            <button class="text-[10.5px] px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">Confirm</button>
+                            <button class="text-[10.5px] px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">Change</button>
+                            <button @click="openRow(r)" class="text-[10.5px] px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">Open</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- ── REPORT ─────────────────────────────────────────────────────────────────
+           An aggregation of the current view. Changing the view changes the report,
+           which is why reports are not a separate module. A view can also name its own
+           report (views[].report): Responses draws the old P2 Cycle Workspace here and
+           Review draws the old P4 Consolidated Review. Every other view gets the generic
+           aggregation with the report picker. -->
+      <template x-if="renderer === 'Report' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+        <div class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-4">
+          <div class="max-w-5xl mx-auto">
+            <!-- ── RESPONSES, SHOWN AS REPORT (was P2 Cycle Workspace) ──────────────────
+                 Ported from Mockups - Old/P2. The old header, tab bar and cycle strip are
+                 dropped: the Responses context strip above already carries the cycle, the
+                 freeze date and the same four numbers P2 drew as tiles, so the tiles are gone
+                 too. What is left is what the grid cannot show. Ellie's state of play, how
+                 long lines have been waiting (ageing predicts a line freezing unanswered
+                 better than a percentage does), and the cycle rolled up to business units with
+                 the chase state each has reached. Completion stays a fraction with an
+                 added-lines chip, never a percentage, because the denominator moves.
+                 Numbers are the illustrative ones P2 carried, not computed from the rows. -->
+            <template x-if="v().report === 'cycle'">
+              <div>
+                <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 mb-4 flex gap-3">
+                  <div class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-[11px] font-bold"
+                       style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+                  <div class="min-w-0">
+                    <p class="text-[13px] text-slate-800 leading-relaxed">
+                      <span class="font-semibold">1,284 lines</span> fall due in this window, assigned to
+                      <span class="font-semibold">68 business owners</span> across 5 legal entities.
+                      <span class="font-semibold text-emerald-700">742 answered</span>,
+                      <span class="font-semibold text-amber-700">412 waiting</span>,
+                      <span class="font-semibold text-rose-700">130 escalated</span>.
+                    </p>
+                    <p class="text-[13px] text-slate-700 leading-relaxed mt-1.5">
+                      I am holding <span class="font-medium">37 challenges</span> open where an answer did not pass validation,
+                      and <span class="font-medium">24 lines</span> business units added that were not in the imported plan.
+                      Two units have not opened their request at all: <span class="font-medium">Retail Network IT</span> and <span class="font-medium">Sisal Gaming Malta</span>.
+                    </p>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                      <button class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Review 37 open challenges</button>
+                      <button class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Review 24 added lines</button>
+                      <button class="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Escalate 2 silent units</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 bg-white p-4 mb-4">
+                  <div class="flex items-baseline justify-between mb-3">
+                    <h2 class="text-[13px] font-semibold text-gray-900">How long lines have been waiting</h2>
+                    <span class="text-[11px] text-gray-400">412 unanswered · issued 22 Sep</span>
+                  </div>
+                  <div class="space-y-2">
+                    <template x-for="b in cwAgeing" :key="b.band">
+                      <div class="flex items-center gap-3">
+                        <span class="w-28 text-[11px] text-gray-600 shrink-0" x-text="b.band"></span>
+                        <div class="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
+                          <div class="h-full rounded" :class="b.tone" :style="'width:' + b.pct + '%'"></div>
+                        </div>
+                        <span class="w-10 text-right text-[11px] font-medium text-gray-700 mono" x-text="b.n"></span>
+                        <span class="w-32 text-[10px] text-gray-400" x-text="b.note"></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- How answers arrived. A pilot metric (Scope and Flow), added in Session 22. -->
+                <div class="rounded-xl border border-gray-200 bg-white p-4 mb-4">
+                  <div class="flex items-baseline justify-between mb-3">
+                    <h2 class="text-[13px] font-semibold text-gray-900">How answers arrived</h2>
+                    <span class="text-[11px] text-gray-400">742 answered</span>
+                  </div>
+                  <div class="flex h-5 rounded overflow-hidden">
+                    <template x-for="c in cwChannels" :key="c.k">
+                      <div :class="c.tone" :style="'width:' + c.pct + '%'" :title="c.k + ': ' + c.n"></div>
+                    </template>
+                  </div>
+                  <div class="flex flex-wrap gap-x-5 gap-y-1.5 mt-2.5">
+                    <template x-for="c in cwChannels" :key="c.k">
+                      <div class="flex items-center gap-1.5 text-[11.5px]">
+                        <span class="w-2.5 h-2.5 rounded-sm" :class="c.tone"></span>
+                        <span class="text-gray-700" x-text="c.k"></span>
+                        <span class="text-gray-400" x-text="c.n + ' · ' + c.pct + '%'"></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-3">
+                    <h2 class="text-[13px] font-semibold text-gray-900">Business units</h2>
+                    <div class="flex gap-1">
+                      <template x-for="f in cwFilters" :key="f">
+                        <button @click="cwFilter = f"
+                                class="text-[11px] px-2.5 py-1 rounded-lg border transition-colors"
+                                :class="cwFilter === f ? 'bg-indigo-600 text-white border-indigo-600 font-medium' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+                                x-text="f"></button>
+                      </template>
+                    </div>
+                  </div>
+                  <table class="w-full text-[12px]">
+                    <thead class="bg-gray-50 text-gray-500">
+                      <tr class="text-left">
+                        <th class="px-4 py-2 font-medium">Business unit</th>
+                        <th class="px-3 py-2 font-medium">Owner</th>
+                        <th class="px-3 py-2 font-medium">Legal entity</th>
+                        <th class="px-3 py-2 font-medium">Answered</th>
+                        <th class="px-3 py-2 font-medium">Oldest waiting</th>
+                        <th class="px-3 py-2 font-medium">Chase state</th>
+                        <th class="px-3 py-2 font-medium text-right">Open challenges</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                      <template x-for="u in cwVisible()" :key="u.unit">
+                        <tr class="hover:bg-gray-50/70">
+                          <td class="px-4 py-2">
+                            <div class="font-medium text-gray-900" x-text="u.unit"></div>
+                            <div class="text-[10px] text-gray-400" x-text="u.cat"></div>
+                          </td>
+                          <td class="px-3 py-2 text-gray-700" x-text="u.owner"></td>
+                          <td class="px-3 py-2 text-gray-600" x-text="u.entity"></td>
+                          <td class="px-3 py-2">
+                            <div class="flex items-center gap-2">
+                              <div class="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full"
+                                     :class="u.done / u.total >= 0.8 ? 'bg-emerald-500' : (u.done / u.total >= 0.4 ? 'bg-amber-400' : 'bg-rose-400')"
+                                     :style="'width:' + Math.round(u.done / u.total * 100) + '%'"></div>
+                              </div>
+                              <span class="font-medium text-gray-800 mono" x-text="u.done + '/' + u.total"></span>
+                              <template x-if="u.added">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100"
+                                      :title="'This unit added ' + u.added + ' lines after the cycle opened, so their total grew'"
+                                      x-text="'+' + u.added + ' added'"></span>
+                              </template>
+                            </div>
+                          </td>
+                          <td class="px-3 py-2">
+                            <span :class="u.ageDays >= 14 ? 'text-rose-600 font-medium' : (u.ageDays >= 7 ? 'text-amber-600' : 'text-gray-600')"
+                                  x-text="u.ageDays ? u.ageDays + ' days' : 'Nothing waiting'"></span>
+                          </td>
+                          <td class="px-3 py-2">
+                            <span class="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border"
+                                  :class="cwChase(u.chase)" x-text="u.chase"></span>
+                            <template x-if="u.suppressed">
+                              <span class="block text-[10px] text-gray-400 mt-0.5" x-text="'Suppressed: ' + u.suppressed"></span>
+                            </template>
+                          </td>
+                          <td class="px-3 py-2 text-right">
+                            <span :class="u.challenges ? 'text-amber-700 font-medium mono' : 'text-gray-300 mono'" x-text="u.challenges"></span>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                  <div class="px-4 py-2 border-t border-gray-100 bg-gray-50/60 text-[10.5px] text-gray-500">
+                    Showing <span x-text="cwVisible().length"></span> of 68 units.
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- ── REVIEW, SHOWN AS REPORT (was P4 Consolidated Review) ─────────────────
+                 Ported from Mockups - Old/P4, in its fixed section order, without P4's Rules
+                 in force section, which lives in the Review strip above as the saved rule set. Needs authorization
+                 lists the rungs a derogation (a direct negotiation above 10K) can reach under
+                 the Session 22 rule set: Head of Procurement, Sr Procurement Director and FSEA
+                 CFO. The 47 lines and 21.4M are P4's totals; the split is illustrative.
+
+                 Canceled stays a section, expanded, never a filter. There is no review gate
+                 on individual responses, so this grouping is the compensating control. -->
+            <template x-if="v().report === 'review'">
+              <div>
+                <section class="mb-5">
+                  <h2 class="text-[13px] font-semibold text-gray-900 mb-2">What the cycle produced</h2>
+                  <div class="rounded-xl border border-gray-200 bg-white p-4">
+                    <div class="flex h-9 rounded-lg overflow-hidden">
+                      <template x-for="o in rvOutcomes" :key="o.k">
+                        <div class="flex items-center justify-center text-white text-[11px] font-semibold"
+                             :class="o.bar" :style="'width:' + o.pct + '%'" :title="o.k + ': ' + o.n">
+                          <span x-show="o.pct > 7" x-text="o.n"></span>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="flex flex-wrap gap-x-5 gap-y-1.5 mt-3">
+                      <template x-for="o in rvOutcomes" :key="o.k">
+                        <div class="flex items-center gap-1.5 text-[11.5px]">
+                          <span class="w-2.5 h-2.5 rounded-sm" :class="o.bar"></span>
+                          <span class="text-gray-700" x-text="o.k"></span>
+                          <span class="text-gray-400" x-text="o.n + ' · ' + o.pct + '%'"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-4 gap-3 mt-3">
+                    <template x-for="r in rvRoutes" :key="r.k">
+                      <div class="rounded-xl border border-gray-200 bg-white p-3.5">
+                        <div class="text-[11px] text-gray-500" x-text="r.k"></div>
+                        <div class="text-xl font-semibold text-gray-900 mt-0.5" x-text="r.n"></div>
+                        <div class="text-[10.5px] text-gray-400 mt-0.5" x-text="r.sub"></div>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="mt-3 rounded-xl border border-violet-200 bg-violet-50/60 px-4 py-3 text-[12px] text-violet-900 leading-relaxed">
+                    <strong>118 lines answered that a framework agreement covers it.</strong>
+                    Of those, 71 can set the PO value without a quote and skip the RFE entirely.
+                  </div>
+                </section>
+
+                <section class="mb-5">
+                  <div class="flex items-baseline gap-2 mb-2">
+                    <h2 class="text-[13px] font-semibold text-gray-900">Needs authorization</h2>
+                    <span class="text-[11.5px] text-gray-500">47 lines · &euro; 21.4M</span>
+                  </div>
+                  <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                    <table class="w-full text-[12px]">
+                      <thead class="bg-gray-50 text-gray-500">
+                        <tr class="text-left">
+                          <th class="px-4 py-2 font-medium">Authorizer</th>
+                          <th class="px-3 py-2 font-medium text-right">Lines</th>
+                          <th class="px-3 py-2 font-medium text-right">Value</th>
+                          <th class="px-3 py-2 font-medium"></th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        <template x-for="a in rvAuth" :key="a.rung">
+                          <tr class="hover:bg-gray-50/70">
+                            <td class="px-4 py-2 font-medium text-gray-900" x-text="a.rung"></td>
+                            <td class="px-3 py-2 text-right font-medium text-gray-800 mono" x-text="a.n"></td>
+                            <td class="px-3 py-2 text-right text-gray-700 mono" x-text="a.value"></td>
+                            <td class="px-3 py-2 text-right">
+                              <!-- Hands off to the Authorization view, which is this same plan
+                                   filtered to the lines that reach a rung. -->
+                              <button @click="go('auth')" class="text-[11px] font-medium text-indigo-600 hover:text-indigo-800">Open in Authorization</button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section class="mb-5">
+                  <div class="flex items-baseline gap-2 mb-2">
+                    <h2 class="text-[13px] font-semibold text-rose-700">Canceled</h2>
+                    <span class="text-[11.5px] text-gray-500">63 lines · &euro; 4.1M removed from the plan</span>
+                  </div>
+                  <div class="rounded-xl border-2 border-rose-200 bg-white overflow-hidden">
+                    <div class="bg-rose-50 border-b border-rose-200 px-4 py-2.5 text-[11.5px] text-rose-900 leading-relaxed">
+                      Canceled lines stay in the plan and in coverage reporting. Reinstate any line that should not have been canceled.
+                    </div>
+                    <table class="w-full text-[12px]">
+                      <thead class="bg-gray-50 text-gray-500">
+                        <tr class="text-left">
+                          <th class="px-4 py-2 font-medium">Line</th>
+                          <th class="px-3 py-2 font-medium">Business unit</th>
+                          <th class="px-3 py-2 font-medium">Reason</th>
+                          <th class="px-3 py-2 font-medium text-right">Yearly value</th>
+                          <th class="px-3 py-2 font-medium">Canceled by</th>
+                          <th class="px-3 py-2 font-medium"></th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        <template x-for="c in rvCanceled" :key="c.ref">
+                          <tr class="hover:bg-rose-50/40">
+                            <td class="px-4 py-2">
+                              <div class="font-medium text-gray-900" x-text="c.desc"></div>
+                              <div class="text-[10.5px] text-gray-400 mono" x-text="c.ref + ' · ' + c.supplier"></div>
+                            </td>
+                            <td class="px-3 py-2 text-gray-600" x-text="c.bu"></td>
+                            <td class="px-3 py-2 text-gray-700" x-text="c.reason"></td>
+                            <td class="px-3 py-2 text-right text-gray-800 mono" x-text="c.value"></td>
+                            <td class="px-3 py-2">
+                              <div class="text-gray-700" x-text="c.by"></div>
+                              <div class="text-[10px] text-gray-400" x-text="c.channel"></div>
+                            </td>
+                            <td class="px-3 py-2 text-right">
+                              <button class="text-[11px] font-medium text-indigo-600">Reinstate</button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                    <div class="border-t border-rose-200 bg-amber-50 px-4 py-3 flex gap-3">
+                      <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-white text-[10px] font-bold"
+                           style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+                      <div class="text-[12px] text-amber-900 leading-relaxed">
+                        <strong>Worth a look:</strong> Retail Estate canceled 21 of their 88 lines, all with the reason
+                        Covered by another contract, all answered within four minutes of each other in the workbook.
+                        That pattern usually means a bulk fill rather than 21 decisions. I have not acted on it.
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="mb-5">
+                  <div class="flex items-baseline gap-2 mb-2">
+                    <h2 class="text-[13px] font-semibold text-gray-900">Frozen without an answer</h2>
+                    <span class="text-[11.5px] text-gray-500">38 lines · escalation ran out</span>
+                  </div>
+                  <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                    <div class="bg-slate-50 border-b border-gray-200 px-4 py-2.5 text-[11.5px] text-gray-600 leading-relaxed">
+                      These lines were reminded, passed to a named backup, and escalated to the BU manager.
+                      Nothing came back, so they are frozen as they stand and the business unit has been told
+                      what happened. They carry their existing plan data and will still be monitored against
+                      their notice dates.
+                    </div>
+                    <table class="w-full text-[12px]">
+                      <thead class="bg-gray-50 text-gray-500">
+                        <tr class="text-left">
+                          <th class="px-4 py-2 font-medium">Business unit</th>
+                          <th class="px-3 py-2 font-medium">Owner</th>
+                          <th class="px-3 py-2 font-medium text-right">Lines</th>
+                          <th class="px-3 py-2 font-medium text-right">Value</th>
+                          <th class="px-3 py-2 font-medium">Escalation reached</th>
+                          <th class="px-3 py-2 font-medium">Earliest notice date</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        <template x-for="f in rvFrozen" :key="f.bu">
+                          <tr class="hover:bg-gray-50/70">
+                            <td class="px-4 py-2 font-medium text-gray-900" x-text="f.bu"></td>
+                            <td class="px-3 py-2 text-gray-600" x-text="f.owner"></td>
+                            <td class="px-3 py-2 text-right font-medium text-gray-800 mono" x-text="f.n"></td>
+                            <td class="px-3 py-2 text-right text-gray-700 mono" x-text="f.value"></td>
+                            <td class="px-3 py-2 text-gray-600" x-text="f.reached"></td>
+                            <td class="px-3 py-2" :class="f.urgent ? 'text-rose-600 font-medium' : 'text-gray-600'" x-text="f.notice"></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <p class="text-[10.5px] text-gray-400">
+                  Includes 24 lines added by business units during the cycle.
+                </p>
+              </div>
+            </template>
+
+            <!-- ── Every other view: the generic aggregation, picked from the report list. -->
+            <template x-if="!v().report">
+            <div>
+            <div class="flex items-center gap-1.5 mb-4 flex-wrap">
+              <template x-for="r in reports" :key="r">
+                <button @click="report = r"
+                        class="text-[11.5px] px-2.5 py-1.5 rounded-lg border transition-colors"
+                        :class="report === r ? 'bg-white border-indigo-300 text-indigo-700 font-medium' : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'"
+                        x-text="r"></button>
+              </template>
+            </div>
+
+            <div class="grid grid-cols-4 gap-3 mb-4">
+              <template x-for="t in reportTiles()" :key="t.k">
+                <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+                  <div class="text-[10px] text-gray-400 uppercase tracking-wider" x-text="t.k"></div>
+                  <div class="text-[20px] font-semibold mt-1" :class="t.tone" x-text="t.v"></div>
+                  <div class="text-[10.5px] text-gray-400 mt-1 leading-snug" x-text="t.sub"></div>
+                </div>
+              </template>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <span class="text-[12px] font-semibold text-gray-800" x-text="report"></span>
+                <span class="text-[11px] text-gray-400" x-text="'· ' + rows.length + ' lines in the current view, grouped by ' + reportByLabel"></span>
+                <div class="flex-1"></div>
+                <select x-model="reportBy" class="text-[11px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-600">
+                  <option value="cat">Product Category</option>
+                  <option value="bu">Business Unit</option>
+                  <option value="ent">Legal Entity</option>
+                  <option value="strat">Sourcing Strategy</option>
+                </select>
+              </div>
+              <table class="w-full text-[12px]">
+                <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                  <th class="px-4 py-2 font-medium" x-text="reportByLabel"></th>
+                  <th class="px-4 py-2 font-medium text-right">Lines</th>
+                  <th class="px-4 py-2 font-medium text-right">Yearly value (K&euro;)</th>
+                  <th class="px-4 py-2 font-medium text-right">Flagged</th>
+                  <th class="px-4 py-2 font-medium w-1/3">Share</th>
+                </tr></thead>
+                <tbody>
+                  <template x-for="g in reportRows()" :key="g.k">
+                    <tr class="border-b border-gray-50 last:border-0">
+                      <td class="px-4 py-2 text-gray-800" x-text="g.k"></td>
+                      <td class="px-4 py-2 text-right mono text-gray-600" x-text="g.n"></td>
+                      <td class="px-4 py-2 text-right mono text-gray-800" x-text="fmtK(g.v)"></td>
+                      <td class="px-4 py-2 text-right mono" :class="g.bad ? 'text-amber-600' : 'text-gray-300'" x-text="g.bad || '0'"></td>
+                      <td class="px-4 py-2">
+                        <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                          <div class="h-full rounded-full bg-indigo-500" :style="'width:' + g.pct + '%'"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- ── Summary bar. Under the renderer, never over it. ── -->
+      <div class="shrink-0 bg-white border-t border-gray-200 px-5 py-1.5 flex items-center gap-5 text-[11.5px] text-gray-500">
+        <span><strong class="text-gray-800" x-text="rows.length.toLocaleString()"></strong> of 4,793 lines in this view</span>
+        <span>Yearly value <strong class="text-gray-800" x-text="'€ ' + fmtK(totalYearly()) + 'K'"></strong></span>
+        <span>Budget <strong class="text-gray-800" x-text="'€ ' + fmtK(totalBudget()) + 'K'"></strong></span>
+        <div class="flex-1"></div>
+        <span class="text-amber-600" x-text="flaggedCount() + ' lines with a flagged cell'"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ROW PANEL
+       A property of the record, not of a screen, which is why it opens the same
+       way from the grid, from a board card and from the queue.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <template x-if="selected">
+    <div class="fixed inset-0 z-50 flex justify-end">
+      <div class="flex-1 bg-gray-900/40" @click="selected = null"></div>
+      <aside class="panel w-[470px] bg-white h-full flex flex-col shadow-2xl">
+
+        <div class="px-5 pt-4 pb-3 border-b border-gray-200 shrink-0">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="text-[11px] text-gray-400 mono" x-text="row().ref"></div>
+              <h2 class="text-[15px] font-semibold text-gray-900 mt-0.5 leading-tight" x-text="row().subj"></h2>
+              <div class="text-[11.5px] text-gray-500 mt-0.5">
+                <span x-text="row().sup || 'No supplier recorded'"></span> &middot; <span x-text="row().ent"></span>
+              </div>
+            </div>
+            <button @click="selected = null" class="w-7 h-7 rounded-lg text-gray-400 hover:bg-gray-100 shrink-0">&times;</button>
+          </div>
+          <div class="flex gap-0.5 mt-3 -mb-3">
+            <template x-for="t in panelTabs" :key="t.k">
+              <button @click="pane = t.k"
+                      class="px-3 py-2 text-[12px] font-medium border-b-2 transition-colors flex items-center gap-1.5"
+                      :class="pane === t.k ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+                <span x-text="t.k"></span>
+                <span x-show="t.n" class="text-[10px] px-1.5 rounded-full bg-gray-100 text-gray-500" x-text="t.n"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <template x-if="pane === 'Details'">
+          <div class="scroll flex-1 overflow-y-auto px-5 py-4">
+            <template x-if="rowFlags().length">
+              <div class="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 mb-4">
+                <div class="text-[11.5px] font-semibold text-amber-900 mb-1.5"
+                     x-text="rowFlags().length + (rowFlags().length === 1 ? ' flag on this line' : ' flags on this line')"></div>
+                <template x-for="f in rowFlags()" :key="f">
+                  <div class="text-[11.5px] text-amber-900/90 leading-relaxed flex gap-1.5">
+                    <span class="shrink-0">&bull;</span><span x-text="f"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template x-for="g in detailGroups" :key="g.g">
+              <div class="mb-4">
+                <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5" x-text="g.g"></div>
+                <div class="rounded-lg border border-gray-200 divide-y divide-gray-100">
+                  <template x-for="c in g.cols" :key="c.id">
+                    <div class="flex items-start gap-3 px-3 py-2 hover:bg-gray-50/70">
+                      <span class="text-[11.5px] text-gray-500 w-40 shrink-0 leading-snug flex items-start gap-1">
+                        <span class="text-[10px] text-gray-300 w-3 shrink-0 text-center mt-px" x-text="typeIcon(c.t)"></span>
+                        <span x-text="c.k"></span>
+                      </span>
+                      <span class="text-[12px] flex-1 min-w-0 break-words leading-snug"
+                            :class="isBad(row(), c.id) ? 'text-amber-800 font-medium' : (disp(row(), c) ? 'text-gray-900' : 'text-gray-300')"
+                            x-text="disp(row(), c) || 'Empty'"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template x-if="pane === 'Response'">
+          <div class="scroll flex-1 overflow-y-auto px-5 py-4">
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3">
+              <div class="text-[11px] font-semibold text-emerald-900 uppercase tracking-wide">Cycle 2027 H1</div>
+              <div class="text-[13px] font-semibold text-emerald-900 mt-1" x-text="row().resp + ' · renewal'"></div>
+              <div class="text-[11.5px] text-emerald-800/85 mt-1 leading-relaxed">
+                Answered by <span x-text="row().owner"></span>, 29 Sep 2026, as an email reply from the owner's mailbox.
+                Ellie read the reply and filled in the fields.
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Previous cycles</div>
+              <div class="rounded-lg border border-gray-200 divide-y divide-gray-100">
+                <template x-for="h in history" :key="h.cycle">
+                  <div class="px-3 py-2.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[12px] font-medium text-gray-800" x-text="h.cycle"></span>
+                      <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" x-text="h.answer"></span>
+                    </div>
+                    <div class="text-[11px] text-gray-500 mt-0.5"><span x-text="h.value"></span> &middot; <span x-text="h.by"></span></div>
+                  </div>
+                </template>
+              </div>
+              <div class="mt-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-[11.5px] text-amber-900 leading-relaxed">
+                Same value three cycles running, supplier untouched since March 2024. Ellie has asked
+                the owner to confirm this is still current.
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template x-if="pane === 'Comments'">
+          <div class="flex-1 flex flex-col min-h-0">
+            <div class="scroll flex-1 overflow-y-auto px-5 py-4 space-y-3">
+              <div class="text-[10.5px] text-gray-400 text-center pb-1">Same conversation as the email thread for this cycle</div>
+              <template x-for="m in thread" :key="m.i">
+                <div class="flex gap-2.5">
+                  <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white"
+                       :style="m.who === 'ellie' ? 'background: linear-gradient(135deg,#818cf8,#4f46e5)' : ''"
+                       :class="m.who === 'ellie' ? '' : (m.who === 'proc' ? 'bg-slate-600' : 'bg-emerald-600')"
+                       x-text="m.init"></div>
+                  <div class="min-w-0 flex-1">
+                    <div class="rounded-xl px-3 py-2 text-[12px] leading-relaxed border"
+                         :class="m.who === 'ellie' ? 'bg-indigo-50 border-indigo-100' : (m.who === 'proc' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100')"
+                         x-html="m.body"></div>
+                    <div class="text-[10px] text-gray-400 mt-1" x-text="m.meta"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div class="px-5 py-3 border-t border-gray-200 shrink-0">
+              <textarea rows="2" placeholder="Write a comment or clarifying question..."
+                        class="w-full text-[12px] px-3 py-2 border border-gray-300 rounded-lg resize-none"></textarea>
+              <div class="text-[10px] text-gray-400 mt-1">The business unit sees this in their email thread and can reply there.</div>
+            </div>
+          </div>
+        </template>
+
+        <template x-if="pane === 'Audit'">
+          <div class="scroll flex-1 overflow-y-auto px-5 py-4">
+            <p class="text-[11px] text-gray-500 leading-relaxed pb-3 mb-3 border-b border-gray-100">
+              Every entry records who made the change and how it arrived: signed in, an email
+              reply from the owner's mailbox, or a returned workbook.
+            </p>
+            <div class="space-y-3">
+              <template x-for="a in audit" :key="a.i">
+                <div class="flex gap-2.5">
+                  <div class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" :class="a.tone"></div>
+                  <div class="min-w-0">
+                    <div class="text-[12px] text-slate-800 leading-snug" x-html="a.what"></div>
+                    <div class="text-[10.5px] text-gray-400 mt-0.5">
+                      <span x-text="a.when"></span> &middot;
+                      <span class="font-medium" x-text="a.channel"></span> &middot;
+                      <span x-text="a.basis"></span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <div class="px-5 py-3 border-t border-gray-200 flex items-center gap-2 shrink-0">
+          <button class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Ask the owner</button>
+          <button class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Reassign</button>
+          <div class="flex-1"></div>
+          <button class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
+        </div>
+      </aside>
+    </div>
+  </template>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NEW VIEW
+       Deliberately small. A view is a filter, a grouping and a shape, and this
+       panel is the whole of it. It is also the honest answer to the question
+       Flutter will ask about a process of theirs we have not seen.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <template x-if="newView">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-gray-900/40" @click="newView = false"></div>
+      <div class="relative bg-white rounded-xl shadow-2xl w-[440px] p-5">
+        <h3 class="text-[15px] font-semibold text-gray-900">New view</h3>
+        <p class="text-[11.5px] text-gray-500 mt-1 leading-relaxed">
+          Over the same 4,793 lines.
+        </p>
+        <div class="mt-4 space-y-3">
+          <div>
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</label>
+            <input type="text" value="Above € 500K, not yet authorized"
+                   class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+          </div>
+          <div>
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Filter</label>
+            <div class="mt-1 flex gap-1.5">
+              <select class="flex-1 text-[12px] px-2 py-1.5 border border-gray-300 rounded-lg"><option>Yearly Contract Value</option></select>
+              <select class="text-[12px] px-2 py-1.5 border border-gray-300 rounded-lg"><option>is above</option></select>
+              <input type="text" value="500" class="w-16 text-[12px] px-2 py-1.5 border border-gray-300 rounded-lg">
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Group by</label>
+              <select class="w-full mt-1 text-[12px] px-2 py-1.5 border border-gray-300 rounded-lg">
+                <option>Legal Entity</option><option>Business Owner</option><option>Not grouped</option>
+              </select>
+            </div>
+            <div class="flex-1">
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Shown as</label>
+              <select class="w-full mt-1 text-[12px] px-2 py-1.5 border border-gray-300 rounded-lg">
+                <option>Grid</option><option>Board</option><option>Queue</option><option>Session</option><option>Report</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 flex items-center gap-2">
+          <span class="text-[11px] text-gray-400">Visible to everyone on this plan</span>
+          <div class="flex-1"></div>
+          <button @click="newView = false" class="text-[12px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600">Cancel</button>
+          <button @click="newView = false" class="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white">Create view</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ADD A LINE, INSIDE ALIGNMENT
+       Opened from the Needs not in the plan step. Fields match Procurement's own
+       plan-update request to business units (Product Work/Flutter Purchase Planning/
+       attachments/PP_Email_template.docx), not the plan's full 55-plus-7 columns: a
+       business unit can only tell us what that request actually asks for, the rest
+       (RFE deadlines, authorization rung, savings) is filled in later in the process.
+       Business Unit is not a field here, it is the session: the line is being raised
+       inside a specific unit's alignment, so it is fixed to alignBU rather than asked. -->
+  <template x-if="addLineOpen">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-6">
+      <div class="absolute inset-0 bg-gray-900/40" @click="addLineOpen = false"></div>
+      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-full flex flex-col">
+        <div class="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
+          <h2 class="text-[17px] font-semibold text-gray-900">Add a need raised in this alignment</h2>
+          <p class="text-[12px] text-gray-500 mt-1">For <strong x-text="alignBU"></strong>. Joins this business unit's alignment record and becomes a line in the next plan.</p>
+        </div>
+
+        <div class="px-6 py-4 overflow-y-auto space-y-4">
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">What</div>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="block col-span-2">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Subject Contract</span>
+                <input type="text" x-model="alNd.subject" placeholder="What is needed" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Product Category</span>
+                <select x-model="alNd.cat" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <option value="">Choose</option>
+                  <template x-for="o in categories" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Sub-category (if applicable)</span>
+                <input type="text" x-model="alNd.sub" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Project</span>
+                <input type="text" x-model="alNd.proj" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Status</span>
+                <select x-model="alNd.status" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <template x-for="o in alStatusOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
+              </label>
+              <label class="block col-span-3">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Detailed Activities</span>
+                <textarea x-model="alNd.act" rows="2" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg"></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Entity, ownership and spend</div>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal Entity</span>
+                <select x-model="alNd.ent" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <option value="">Choose</option>
+                  <template x-for="o in legalEntities" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Owner</span>
+                <select x-model="alNd.owner" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <option value="">Choose</option>
+                  <template x-for="o in ownersInAlignBU" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Unit</span>
+                <input type="text" readonly :value="alignBU" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500">
+              </label>
+              <div class="col-span-2 flex items-center gap-4">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 shrink-0">Applies to</span>
+                <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="alNd.sisal"> Sisal</label>
+                <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="alNd.pkr"> PokerStars Italy</label>
+                <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="alNd.snai"> Snaitech</label>
+              </div>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Opex / Capex</span>
+                <select x-model="alNd.opx" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <option value="">Choose</option>
+                  <template x-for="o in alOpxOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
+              </label>
+              <label class="flex items-center gap-1.5 text-[12px] text-gray-700 self-end pb-2"><input type="checkbox" x-model="alNd.fopp"> Flutter Opportunity</label>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Supplier and sourcing</div>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Potential Supplier</span>
+                <input type="text" x-model="alNd.sup" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Incumbent Supplier (if applicable)</span>
+                <input type="text" x-model="alNd.inc" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Sourcing Strategy</span>
+                <select x-model="alNd.strat" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <option value="">Choose</option>
+                  <template x-for="o in alStratOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
+              </label>
+              <label class="block col-span-3">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">
+                  Strategy Rationals
+                  <span x-show="alNd.strat === 'Direct Nego'" class="text-amber-600 normal-case font-normal">&middot; required for direct negotiation</span>
+                </span>
+                <textarea x-model="alNd.ratio" rows="2" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg"
+                          :class="alNd.strat === 'Direct Nego' && !alNd.ratio.trim() ? '!border-amber-300' : ''"></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Term and value</div>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Start Date</span>
+                <input type="date" x-model="alNd.start" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">End Date</span>
+                <input type="date" x-model="alNd.end" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Total Contract Value (€)</span>
+                <input type="number" min="0" x-model="alNd.value" placeholder="120000" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block col-span-3">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Rational Amount</span>
+                <input type="text" x-model="alNd.ramt" placeholder="Justification of the amount" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+              </label>
+              <label class="block col-span-3">
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Additional Notes</span>
+                <textarea x-model="alNd.notes" rows="2" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg"></textarea>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-200 flex items-center gap-2 shrink-0">
+          <span class="text-[11px] text-gray-400">Written to this business unit's alignment record when Review and close runs</span>
+          <div class="flex-1"></div>
+          <button @click="addLineOpen = false" class="text-[12px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600">Cancel</button>
+          <button @click="addAlignNeed()" :disabled="!canAddAlignNeed()"
+                  class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg"
+                  :class="canAddAlignNeed() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Add to alignment</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       THE COMMIT STEP
+       Not a renderer and not a screen. A session stages its decisions on the
+       record's own fields and writes none of them until this step, which lists
+       every write first and refuses to close while a line is undecided.
+
+       The authorization session and the category alignment both end here, and so
+       does the scheduling review on P0b. It is the same primitive in all three:
+       a set of staged changes, a preview, and a commit.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <template x-if="sView === 'summary' || sView === 'closed'">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-6">
+      <div class="absolute inset-0 bg-gray-900/40" @click="sView === 'closed' ? sReset() : sView = 'line'"></div>
+
+      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col">
+
+        <div class="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
+          <template x-if="sView === 'summary'">
+            <div>
+              <h2 class="text-[19px] font-semibold text-gray-900">Before closing</h2>
+              <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-2xl">
+                Everything this session will write to the plan. Nothing below has been written yet.
+              </p>
+            </div>
+          </template>
+          <template x-if="sView === 'closed'">
+            <div>
+              <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">CLOSED</span>
+              <h2 class="text-[19px] font-semibold text-gray-900 mt-2" x-text="sess().title + ' is closed'"></h2>
+              <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-2xl" x-text="sess().closedNote"></p>
+            </div>
+          </template>
+        </div>
+
+        <div class="scroll flex-1 overflow-y-auto px-6 py-4 min-h-0">
+          <div x-show="sView === 'summary'" class="grid grid-cols-4 gap-3 mb-4">
+            <template x-for="t in tally()" :key="t.k">
+              <div class="rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider text-gray-400" x-text="t.k"></div>
+                <div class="text-[22px] font-semibold text-gray-900 mt-0.5" x-text="t.n"></div>
+                <div class="text-[10.5px] text-gray-400 mono" x-text="t.v"></div>
+              </div>
+            </template>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 overflow-hidden">
+            <template x-for="band in stepBands()" :key="band.label">
+              <div>
+                <div x-show="band.label !== '__none__'" class="px-4 py-1.5 bg-gray-50 border-b border-gray-200 flex items-center gap-2.5">
+                  <span class="text-[11.5px] font-medium text-gray-700" x-text="band.label"></span>
+                  <span class="text-[10.5px] text-gray-400" x-text="band.rows.length + ' lines ' + band.note"></span>
+                </div>
+                <template x-for="r in band.rows" :key="r.n">
+                  <button @click="sView = 'line'; focusRow(r)"
+                          class="w-full text-left px-4 py-2 flex items-center gap-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                    <span class="text-[10.5px] text-gray-400 mono w-28 shrink-0" x-text="r.ref"></span>
+                    <span class="text-[12.5px] text-gray-800 flex-1 truncate" x-text="r.subj"></span>
+                    <span class="text-[11.5px] text-gray-500 mono shrink-0" x-text="'€ ' + fmtK(yearly(r)) + 'K'"></span>
+                    <span class="text-[10px] text-gray-400 shrink-0 w-24 text-right" x-text="decField().k"></span>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full border shrink-0 w-36 text-center"
+                          :class="decOf(r) ? chipClass(decField().id, decOf(r)) : 'border-gray-200 text-gray-400'"
+                          x-text="decOf(r) || 'not decided'"></span>
+                  </button>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <div x-show="sView === 'summary'" class="mt-4 rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-3">
+            <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">On closing</div>
+            <p class="text-[12px] text-gray-600 mt-1 leading-relaxed" x-text="sess().onClose"></p>
+          </div>
+        </div>
+
+        <div class="px-6 py-3.5 border-t border-gray-200 flex items-center gap-3 shrink-0">
+          <template x-if="sView === 'summary'">
+            <button @click="sView = 'line'" class="text-[12.5px] px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Back to the lines</button>
+          </template>
+          <div class="flex-1"></div>
+          <span x-show="sView === 'summary' && undecided()" class="text-[11.5px] text-amber-700"
+                x-text="undecided() + ' still undecided. A line with no outcome would drop out of the plan with no record.'"></span>
+          <template x-if="sView === 'summary'">
+            <button @click="commitSession()" :disabled="undecided() > 0"
+                    class="text-[12.5px] font-semibold px-4 py-2 rounded-lg transition-colors"
+                    :class="undecided() ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'">
+              Close the session and write to the plan
+            </button>
+          </template>
+          <template x-if="sView === 'closed'">
+            <button @click="sReset()" class="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Back to the plan</button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+
+<script>
+function planApp() {
+  return {
+    // ══ UI state ═══════════════════════════════════════════════════════════════════════
+    viewId: 'table',
+    renderer: 'Grid',
+    def: false,          // the view definition panel, opened by Filter or Group
+    menu: false,         // Fields popover
+    hidden: {},
+    onlyBad: false,
+    selected: null,
+    pane: 'Details',
+    newView: false,
+    // Add a line, inside an Alignment session's Needs not in the plan step.
+    // sess() rebuilds its whole agenda fresh on every call (it is a plain method,
+    // not a cached getter), so anything pushed into step().items directly would be
+    // gone on the next render. addedNeeds is the persistent side of it; sess() reads
+    // from it, filtered to the focused business unit, alongside the seeded item.
+    addedNeeds: [],
+    addLineOpen: false,
+    alNd: { subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
+            ent: '', sisal: false, pkr: false, snai: false, owner: '', opx: '',
+            sup: '', inc: '', fopp: false, strat: '', ratio: '',
+            value: '', start: '', end: '', ramt: '', notes: '' },
+    rulesOpen: false,
+    report: 'CEO compliance pack',
+    reportBy: 'cat',
+    sIdx: 0,             // session: which record
+    sStep: 0,            // session: which agenda item
+    sView: 'line',       // session: line | summary | closed
+
+    // Alignment runs one business unit at a time, never all of them together, so this is
+    // the switcher's value rather than a fixed category. Changing it changes what every
+    // agenda item in the alignment session filters to.
+    alignBU: 'Digital Operations',
+
+    // The demo's today. It differs by view because the cycle runs in September and October
+    // and the tracking and the sessions happen in November, which is their real calendar.
+    asOfByView: { responses: '29/09/2026', review: '16/10/2026' },
+    get asOf() { return this.asOfByView[this.viewId] || '23/11/2026'; },
+
+    rail: [
+      { k: 'Home', i: '⌂', on: false }, { k: 'Plan', i: '▤', on: true }, { k: 'Tasks', i: '☑', on: false },
+      { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false },
+      { k: 'Setup', i: '⚙', on: false }
+    ],
+
+    // ══ THE FOUR RENDERERS ═════════════════════════════════════════════════════════════
+    // Any view can be drawn by any of them. That is the point: a renderer is a shape,
+    // not a screen, so it knows nothing about procurement.
+    // Four shapes. A session used to be a fifth, which was wrong: running a view as a
+    // facilitated meeting is a mode, not a shape. The two are independent, so a session
+    // can now be run over the table, and any view can be run as a session.
+    renderers: [
+      { k: 'Grid',    hint: 'The spreadsheet surface. Density, direct edit, every field.' },
+      { k: 'Board',   hint: 'Gathered by one select field. Moving a card writes that field.' },
+      { k: 'Queue',   hint: 'One person\'s outstanding work, ordered by urgency.' },
+      { k: 'Report',  hint: 'Aggregation of whatever this view holds.' }
+    ],
+
+    // ══ THE VIEWS ══════════════════════════════════════════════════════════════════════
+    // This array is the configuration. It is what would be written once, during onboarding,
+    // from a customer's procedure and their spreadsheet. Six screens used to live here.
+    views: [
+      { id: 'table', k: 'All Items', n: '4,793', renderer: 'Grid',
+        def: 'no filter · not grouped · shown as Grid',
+        filter: 'all', groupLabel: '', group: null, fields: null,
+        action: 'Open a collection cycle' },
+
+      // Tab renamed from Responses in Session 18. The id stays 'responses' so filters,
+      // band pins and asOfByView keep working. Opens as its own report (the old P2).
+      { id: 'responses', k: 'Progress', n: '1,284', renderer: 'Report',
+        def: 'filter: in the open cycle · grouped by Business Owner · shown as Report',
+        filter: 'cycle',
+        groupLabel: 'Business Owner', group: 'owner',
+        fields: ['resp', 'owner', 'bu', 'sup', 'end', 'tot', 'strat', 'rfe', 'decide', 'ent', 'cat', 'status'],
+        report: 'cycle',     // the Report renderer draws the old P2 Cycle Workspace
+        action: 'Send reminders' },
+
+      // Briefly Changes Review in Session 18, back to Review on Alper's call. The id stays
+      // 'review'. Opens as its own report (the old P4); Grid is one click away on Shown as.
+      { id: 'review', k: 'Review', n: '1,284', renderer: 'Report',
+        def: 'filter: at the freeze · grouped by Response · shown as Report',
+        filter: 'frozen',
+        groupLabel: 'Response', group: 'resp',
+        fields: ['resp', 'status', 'owner', 'bu', 'sup', 'tot', 'strat', 'rung', 'end', 'cat', 'ent'],
+        report: 'review',    // the Report renderer draws the old P4 Consolidated Review
+        action: 'Freeze and hand to authorization' },
+
+      { id: 'auth', k: 'Authorization', n: '47', renderer: 'Grid', session: true,
+        def: 'filter: reaches an authorization rung · grouped by Authorization Rung · run as a session',
+        filter: 'needsAuth',
+        groupLabel: 'Authorization Rung', group: 'rung',
+        fields: ['rung', 'outcome', 'tot', 'strat', 'sup', 'owner', 'bu', 'ent', 'end'],
+        action: 'Export the pack for the meeting' },
+
+      { id: 'tracking', k: 'Tracking', n: '1,127', renderer: 'Board',
+        def: 'filter: authorized · grouped by Stage · shown as Board',
+        filter: 'authorized',
+        groupLabel: 'Stage', group: 'stage',
+        fields: ['stage', 'nextstep', 'nextdue', 'rfe', 'owner', 'buyer', 'sup', 'tot', 'cat', 'status'],
+        action: 'Add a next step' },
+
+      { id: 'align', k: 'Alignment', n: '', renderer: 'Grid', session: true,
+        def: 'filter: Business Unit is the focused unit · grouped by Business Unit · four agenda items, each its own filter · run as a session',
+        filter: 'align',
+        groupLabel: 'Business Unit', group: 'bu',
+        fields: ['stage', 'nextstep', 'resp', 'owner', 'sup', 'tot', 'end', 'strat'],
+        action: 'Email the attendees' }
+    ],
+
+    v()  { return this.views.find(x => x.id === this.viewId) || this.views[0]; },
+    go(id) {
+      this.viewId = id;
+      this.hidden = {}; this.shown = {};   // each view brings its own field set
+      this.renderer = this.v().renderer;
+      this.sReset();
+      this.selected = null;
+    },
+    // The Alignment tab's count depends on which business unit is focused; every other
+    // tab's count is fixed, so this reads straight through to the view's own n.
+    tabCount(vw) { return vw.id === 'align' ? this.rowsAll.filter(r => r.bu === this.alignBU).length : vw.n; },
+    // The business units on offer in the switcher, read from the plan itself rather than
+    // a list kept separately, so a new unit in the data shows up here without an edit.
+    get businessUnits() {
+      const set = new Set(this.rowsAll.map(r => r.bu).filter(Boolean));
+      return Array.from(set).sort();
+    },
+
+    // Same idea as businessUnits: read from the plan rather than a kept-separately list.
+    get legalEntities() {
+      const set = new Set(this.rowsAll.map(r => r.ent).filter(Boolean));
+      return Array.from(set).sort();
+    },
+    get categories() {
+      const set = new Set(this.rowsAll.map(r => r.cat).filter(Boolean));
+      return Array.from(set).sort();
+    },
+    // Owners already on file for the focused unit, so the picker offers the people the
+    // room actually knows. Falls back to every owner if this unit has none on file yet.
+    get ownersInAlignBU() {
+      const inBU = new Set(this.rowsAll.filter(r => r.bu === this.alignBU).map(r => r.owner).filter(Boolean));
+      if (inBU.size) return Array.from(inBU).sort();
+      return Array.from(new Set(this.rowsAll.map(r => r.owner).filter(Boolean))).sort();
+    },
+
+    // ══ ADD A LINE, INSIDE ALIGNMENT ══════════════════════════════════════════════════
+    // Sourcing Strategy, Status and Opex/Capex are hardcoded rather than read from the
+    // data, unlike legalEntities/categories/businessUnits above: the sample rows carry
+    // known defects in exactly these three fields (a lower-case "direct nego", one
+    // "Quote comparison" with no branch in the sheet formula, "Opex/Capex" written as one
+    // value), and deriving options from them would offer those defects back as choices
+    // for a line going into the plan clean. See Session 4 and 14 above.
+    alStatusOpts: ['To start', 'In progress', 'On hold', 'Closed', 'Canceled'],
+    alOpxOpts: ['Opex', 'Capex'],
+    alStratOpts: ['Direct Nego', 'Light Tender', 'Full Tender'],
+    emptyAlNd() {
+      return { subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
+               ent: '', sisal: false, pkr: false, snai: false, owner: '', opx: '',
+               sup: '', inc: '', fopp: false, strat: '', ratio: '',
+               value: '', start: '', end: '', ramt: '', notes: '' };
+    },
+    openAlignAddLine() { this.alNd = this.emptyAlNd(); this.addLineOpen = true; },
+    canAddAlignNeed() {
+      const n = this.alNd;
+      const stratOk = !!n.strat && (n.strat !== 'Direct Nego' || !!n.ratio.trim());
+      return !!(n.subject.trim() && n.cat && n.ent && n.owner && n.opx && stratOk && n.value && n.start);
+    },
+    // yyyy-mm-dd, what <input type="date"> gives, to dd/mm/yyyy, what this file's own
+    // dmy()/longDate() and every seeded row already use.
+    isoToDmy(iso) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+      return m ? (m[3] + '/' + m[2] + '/' + m[1]) : '';
+    },
+    addAlignNeed() {
+      if (!this.canAddAlignNeed()) return;
+      const n = this.alNd;
+      const brandFlags = [n.sisal && 'Sisal', n.pkr && 'PokerStars Italy', n.snai && 'Snaitech'].filter(Boolean);
+      const startDmy = this.isoToDmy(n.start), endDmy = this.isoToDmy(n.end);
+      const tot = Math.round(Number(n.value) / 1000 * 100) / 100;
+      this.addedNeeds.push({
+        // The five columns the Needs sheet already shows.
+        need: n.subject.trim(), owner: n.owner,
+        value: '€ ' + Math.round(Number(n.value)).toLocaleString('en-GB'),
+        by: this.longDate(startDmy) || startDmy, raised: 'Added in this session',
+        // Scope, so sess() can filter this to the unit it was raised for.
+        bu: this.alignBU,
+        // The rest of Required Information, kept under Plan.html's own `cols` ids so this
+        // reads correctly if it is ever promoted into a real plan line, per the onClose
+        // note: "A need becomes a line in the next plan, checked against the minimum
+        // notice table."
+        cat: n.cat, sub: n.sub.trim(), proj: n.proj.trim(), act: n.act.trim(), status: n.status,
+        ent: n.ent, sisal: n.sisal ? 'Y' : '', pkr: n.pkr ? 'Y' : '', snai: n.snai ? 'Y' : '',
+        brand: brandFlags.length > 1 ? 'Multi-brand' : (brandFlags[0] || ''),
+        opx: n.opx, sup: n.sup.trim() || 'Supplier not chosen', inc: n.inc.trim(),
+        fopp: n.fopp ? 'Y' : 'N', strat: n.strat, ratio: n.ratio.trim(),
+        start: startDmy, end: endDmy, tot: tot, ramt: n.ramt.trim(), notes: n.notes.trim(), itype: 'NEW'
+      });
+      this.addLineOpen = false;
+    },
+
+    // ══ FILTERS ════════════════════════════════════════════════════════════════════════
+    // Named, reusable filter definitions. A view is one of these plus a grouping, a set of
+    // visible fields and a renderer. An agenda item inside a session is the same thing plus
+    // a decision vocabulary. Nothing in the product filters records any other way, which is
+    // why a session can be pointed at a different set of lines without touching the renderer.
+    // fn takes the component as its second argument, because a rule may need the rule set.
+    filters: {
+      all:       { label: 'No filter. All 4,793 lines.',
+                   fn: (r, s) => true },
+      cycle:     { label: 'Contract End Date is between 1 Jan and 30 Jun 2027, and Status is not Canceled',
+                   fn: (r, s) => r.cycle && r.status !== 'Canceled' },
+      frozen:    { label: 'In the cycle frozen on 16 Oct 2026, canceled lines included',
+                   fn: (r, s) => r.cycle },
+      needsAuth: { label: 'Authorization Rung is not empty, and Status is not Canceled',
+                   fn: (r, s) => !!s.rungOf(r) && r.status !== 'Canceled' },
+      // In the product this reads the Authorization Outcome the session wrote. In the mockup
+      // the October session's outcomes are carried on the line as `tracked`, so Tracking can
+      // be shown before or after the session without the board emptying itself.
+      authorized:{ label: 'In the authorized plan: Authorization Outcome is Authorize or Derogation, or no authorization was needed',
+                   fn: (r, s) => r.tracked && r.status !== 'Canceled' },
+      // The alignment used to be scoped to one product category. Sessions run one business
+      // unit at a time instead, so these three read the BU switcher rather than a fixed
+      // category, and switching it changes what a session over this view sees.
+      align:        { label: 'Business Unit is the unit currently focused for alignment',
+                      fn: (r, s) => r.bu === s.alignBU },
+      alignInFlight:{ label: 'Business Unit is the unit currently focused for alignment, and Stage is past Not started',
+                      fn: (r, s) => r.bu === s.alignBU && r.stage !== 'Not started' && r.stage !== 'Canceled' },
+      alignNoAnswer:{ label: 'Business Unit is the unit currently focused for alignment, and Response is Awaiting answer or Needs changes',
+                      fn: (r, s) => r.bu === s.alignBU && (r.resp === 'Awaiting answer' || r.resp === 'Needs changes') }
+    },
+    filterLabelOf(key) { return (this.filters[key] || this.filters.all).label; },
+    applyFilter(key, rows) {
+      const f = this.filters[key] || this.filters.all;
+      return rows.filter(r => f.fn(r, this));
+    },
+
+    // ══ THE RULE SET ═══════════════════════════════════════════════════════════════════
+    // Session 22. Shown, as values only, in the Review strip's saved rule set; never cited
+    // by procedure name or section in a label. Sources, for the record:
+    //   methods by value   FSEA user guide (Italian), slide 9: single quote to 10K, two
+    //                      quotes to 50K, structured comparison to 100K, tender above
+    //   notice periods     their own spreadsheet formula: Direct Nego 30 / 40 / 60 working
+    //                      days at the 100K and 1M boundaries, Light Tender 40, Full Tender 60
+    //   authorizer ladder  Local Procurement Manager to 10K, Head of Procurement to 50K,
+    //                      Sr Procurement Director to 500K, FSEA CFO above. Matches the STH
+    //                      Turkey procedure; the Italian guide agrees above 50K and leaves
+    //                      10K to 50K unassigned. To confirm with Flutter.
+    //   derogation         a direct negotiation above 10K (Italian guide, slide 11)
+    ladder: [
+      { min: 0,      rung: 'Local Procurement Manager' },
+      { min: 10000,  rung: 'Head of Procurement' },
+      { min: 50000,  rung: 'Sr Procurement Director' },
+      { min: 500000, rung: 'FSEA CFO' }
+    ],
+
+    // An authorization is needed for a derogation (a direct negotiation above the tender
+    // threshold) or for anything above € 500,000 whatever the method. The rung then comes
+    // from the value band. Nobody types this: it is computed, which is the whole reason
+    // the Authorization view can be a filter rather than a screen.
+    yearly(r) {
+      if (!r) return 0;
+      const s = this.dmy(r.start), e = this.dmy(r.end);
+      const dur = (s && e) ? ((e.y - s.y) * 12 + (e.m - s.m) + 1) / 12 : null;
+      if (!dur || typeof r.tot !== 'number') return 0;
+      return r.tot / dur;                                   // K€
+    },
+    isDirect(r) { return /^direct/i.test(String(r.strat || '')); },
+    needsAuth(r) {
+      const v = (typeof r.tot === 'number' ? r.tot : 0) * 1000;
+      return this.isDirect(r) && v > 10000;
+    },
+    rungOf(r) {
+      if (!this.needsAuth(r)) return '';
+      const v = r.tot * 1000;
+      let out = '';
+      this.ladder.forEach(l => { if (v > l.min) out = l.rung; });
+      return out;
+    },
+    envelope(r) { const y = this.yearly(r); return y + Math.min(y * 0.10, 50); },   // K€
+
+    // ══ THE RECORD SET ═════════════════════════════════════════════════════════════════
+    // Their 55 columns, plus six of ours at the end. Types:
+    //   txt text · sel single select, fixed vocabulary · num number · pct percentage
+    //   dat date · per person · chk checkbox · cmp formula field, read-only
+    cols: [
+      // What
+      { id: 'cat',   k: 'Product Category',                 t: 'sel', w: 160, g: 'What' },
+      { id: 'sub',   k: 'Sub-category (if applicable)',     t: 'txt', w: 150, g: 'What' },
+      { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'What' },
+      { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'What' },
+      // Status. Theirs, then ours.
+      { id: 'status',k: 'Status',                           t: 'sel', w: 110, g: 'Status' },
+      { id: 'resp',  k: 'Response',                         t: 'sel', w: 135, g: 'Status', plat: true,
+        hint: 'Added by Eluvium, not in your sheet. What the business unit answered in the open collection cycle.' },
+      // Entity and brand
+      { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Entity and brand' },
+      { id: 'sisal', k: 'Sisal',                            t: 'chk', w: 70,  g: 'Entity and brand' },
+      { id: 'pkr',   k: 'PokerStars Italy',                 t: 'chk', w: 120, g: 'Entity and brand' },
+      { id: 'snai',  k: 'Snaitech',                         t: 'chk', w: 92,  g: 'Entity and brand' },
+      { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Entity and brand' },
+      // Ownership
+      { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Ownership', rule: true },
+      { id: 'bu',    k: 'Business Unit',                    t: 'txt', w: 160, g: 'Ownership' },
+      // Spend
+      { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Spend', rule: true },
+      { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Spend' },
+      // Supplier
+      { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Supplier' },
+      { id: 'inc',   k: 'Incumbent Supplier (if applicable)', t: 'txt', w: 200, g: 'Supplier' },
+      { id: 'fopp',  k: 'Flutter Opportunity',        t: 'chk', w: 120, g: 'Supplier' },
+      // Sourcing
+      { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Sourcing', rule: true },
+      { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Sourcing' },
+      { id: 'rfe',   k: 'RFE Deadline',                     t: 'dat', w: 110, g: 'Sourcing', rule: true },
+      { id: 'rdi',   k: 'RDI Deadline',                     t: 'dat', w: 110, g: 'Sourcing' },
+      // Term
+      { id: 'start', k: 'Contract Start Date',              t: 'dat', w: 120, g: 'Term', rule: true },
+      { id: 'end',   k: 'Contract End Date',                t: 'dat', w: 120, g: 'Term', rule: true },
+      { id: 'dur',   k: 'Duration (years)',                 t: 'cmp', w: 100, g: 'Term', al: 'r',
+        hint: 'Formula field. Calculated from the contract start and end dates.' },
+      // Value and budget
+      { id: 'tot',   k: 'Total Contract Value (K€)',        t: 'num', w: 130, g: 'Value and budget' },
+      { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Value and budget', al: 'r',
+        hint: 'Formula field. Total contract value divided by duration.' },
+      { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Value and budget' },
+      { id: 'tsav',  k: 'Target Saving %',                  t: 'pct', w: 100, g: 'Value and budget', rule: true },
+      { id: 'ramt',  k: 'Rational Amount',                  t: 'txt', w: 240, g: 'Value and budget' },
+      { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Value and budget' },
+      // Procurement
+      { id: 'rfeid', k: 'RFE ID',                           t: 'txt', w: 100, g: 'Procurement' },
+      { id: 'qtr',   k: 'Quarter',                          t: 'cmp', w: 90,  g: 'Procurement', al: 'l',
+        hint: 'Formula field. Quarter of the contract start date.' },
+      { id: 'tf',    k: 'Time Frame',                       t: 'cmp', w: 90,  g: 'Procurement', al: 'l',
+        hint: 'Formula field. Year of the contract start date.' },
+      { id: 'dgg',   k: 'Def Goods Group',                  t: 'txt', w: 170, g: 'Procurement' },
+      { id: 'head',  k: 'Head of / Manager',                 t: 'per', w: 160, g: 'Procurement' },
+      { id: 'buyer', k: 'Procurement Buyer',                t: 'per', w: 160, g: 'Procurement' },
+      { id: 'award', k: 'Awarding Value (K€)',              t: 'num', w: 120, g: 'Procurement' },
+      // Approvals
+      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 150, g: 'Approvals', rule: true },
+      { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Approvals' },
+      { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Approvals' },
+      { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Approvals' },
+      { id: 'qtr2',  k: 'Quarter (approval)',               t: 'txt', w: 130, g: 'Approvals',
+        hint: 'The second column called Quarter in your sheet. Typed by hand, in two formats. Name to confirm.' },
+      { id: 'rdn',   k: 'Reasons for DN / LT',              t: 'txt', w: 220, g: 'Approvals' },
+      { id: 'rlate', k: 'Reasons for Late / Back-dated Contract', t: 'txt', w: 260, g: 'Approvals' },
+      { id: 'det',   k: 'Additional Details',               t: 'txt', w: 210, g: 'Approvals' },
+      // Savings
+      { id: 'area',  k: 'Area',                             t: 'txt', w: 140, g: 'Savings' },
+      { id: 'key',   k: 'Key Initiative',             t: 'chk', w: 145, g: 'Savings' },
+      { id: 'sav',   k: 'Saving',                           t: 'sel', w: 100, g: 'Savings' },
+      { id: 'itype', k: 'Initiative Type (new vs. renew)',  t: 'sel', w: 140, g: 'Savings' },
+      { id: 'spct',  k: 'Saving %',                         t: 'pct', w: 90,  g: 'Savings' },
+      { id: 'base',  k: 'Baseline (12M Opex, full Capex)',  t: 'cmp', w: 150, g: 'Savings', al: 'r',
+        hint: 'Formula field. Twelve months of value for Opex, the full value for Capex.' },
+      { id: 'sfc',   k: 'Saving Forecast 12M (con floor 10%)', t: 'cmp', w: 170, g: 'Savings', al: 'r',
+        hint: 'A formula in your sheet. Shown read-only. The exact formula is still to be confirmed with Flutter.' },
+      { id: 's12',   k: 'Saving 12M (senza floor 10%)',     t: 'cmp', w: 170, g: 'Savings', al: 'r',
+        hint: 'A formula in your sheet. Shown read-only. The exact formula is still to be confirmed with Flutter.' }
+    ,
+      // ── Ours, not theirs. Six fields, tinted in the grid and marked OURS in Fields.
+      // Stage and Next step are what the Tracking screen used to be. Authorization Rung is a
+      // formula computed by the rule set, which is what lets Authorization be a filter rather
+      // than a screen. Response sits next to their Status, above, because that is where it reads.
+      { id: 'stage',   k: 'Stage',                  t: 'sel', w: 170, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium. Where the negotiation has got to. Writes your Status column.' },
+      { id: 'nextstep',k: 'Next Step',              t: 'txt', w: 260, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium. Typed by the buyer. This is what you keep on a separate list today.' },
+      { id: 'nextdue', k: 'Next Step Due',          t: 'dat', w: 120, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium.' },
+      { id: 'decide',  k: 'Decision Date',          t: 'dat', w: 120, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium. Proposed from the contract start date, then confirmable.' },
+      { id: 'rung',    k: 'Authorization Rung',     t: 'cmp', w: 185, g: 'Eluvium fields', plat: true,
+        hint: 'Formula field. Computed from the contract value and the sourcing method. Nobody types this.' },
+      { id: 'outcome', k: 'Authorization Outcome',  t: 'sel', w: 175, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium. Written by the authorization session, one line at a time.' }
+    ],
+
+
+    // ══ FIELD SETS ═════════════════════════════════════════════════════════════════════
+    // A renderer declares the slots it has; the view decides which fields fill them, and
+    // in which order. The Grid's slot budget is every field, so on the Table a view with
+    // no field set shows the whole schema, which is the point of that screen. A task view
+    // names the fields that task needs, leading with the ones it writes.
+    //
+    // Known gap, recorded rather than hidden: the Board card, the Queue row and the
+    // Session facts still name their fields in the markup instead of reading the view's
+    // set through slots. Three of the four renderers are Flutter-shaped underneath. It does
+    // not show in this demo and it is the next thing to fix.
+    get visCols() {
+      const f = this.v().fields;
+      if (!f) return this.cols.filter(c => !this.hidden[c.id]);
+      const inSet = this.cols.filter(c => f.includes(c.id) && !this.hidden[c.id]);
+      const rest  = this.cols.filter(c => !f.includes(c.id) && !this.hidden[c.id] && this.shown[c.id]);
+      inSet.sort((a, b) => f.indexOf(a.id) - f.indexOf(b.id));
+      return inSet.concat(rest);
+    },
+    // A field the person switched back on in Fields, on a view that has a field set.
+    shown: {},
+    get visGroups() {
+      const out = [];
+      this.visCols.forEach(c => {
+        const last = out[out.length - 1];
+        if (last && last.g === c.g) last.n++; else out.push({ g: c.g, n: 1 });
+      });
+      return out;
+    },
+    get starts()    {
+      const s = {}; let prev = null;
+      this.visCols.forEach(c => { if (c.g !== prev) s[c.id] = true; prev = c.g; });
+      return s;
+    },
+    get tableW()    { return 44 + 64 + 340 + this.visCols.reduce((a, c) => a + c.w, 0); },
+    get hiddenCount(){ return Object.values(this.hidden).filter(Boolean).length; },
+    get groupList() {
+      const out = [];
+      this.cols.forEach(c => {
+        let g = out.find(x => x.g === c.g);
+        if (!g) { g = { g: c.g, cols: [] }; out.push(g); }
+        g.cols.push(c);
+      });
+      return out;
+    },
+    fieldOn(c)   { return this.visCols.some(x => x.id === c.id); },
+    toggleField(c) {
+      if (this.fieldOn(c)) { this.hidden[c.id] = true; this.shown[c.id] = false; }
+      else { this.hidden[c.id] = false; this.shown[c.id] = true; }
+    },
+    groupShown(grp) { return grp.cols.filter(c => this.fieldOn(c)).length; },
+    toggleGroup(grp){
+      const allShown = this.groupShown(grp) === grp.cols.length;
+      grp.cols.forEach(c => { this.hidden[c.id] = allShown; this.shown[c.id] = !allShown; });
+    },
+
+    frozenCols: [
+      { id: 'id',   k: 'ID',               t: 'num' },
+      { id: 'subj', k: 'Subject Contract', t: 'txt' }
+    ],
+    get detailGroups() { return [{ g: 'Line', cols: this.frozenCols }].concat(this.groupList); },
+
+    panelTabs: [
+      { k: 'Details',  n: '' },
+      { k: 'Response', n: '' },
+      { k: 'Comments', n: '4' },
+      { k: 'Audit',    n: '9' }
+    ],
+
+    rowsAll: [
+      { n: 1, ref: 'PP-2027-0412', id: 412, subj: 'Cloud hosting, production estate', comments: 2,
+        cat: 'Technology', sub: 'IaaS', proj: 'Platform Modernization', act: 'Rinnovo contratto, estensione ai carichi Snai',
+        status: 'To start', resp: 'Awaiting answer',
+        ent: 'Sisal Italia', sisal: 'Y', snai: 'Y', brand: 'Multi-brand',
+        owner: 'Marco Ferretti', bu: 'Digital Operations', opx: 'Opex', svc: 'Hosting',
+        sup: 'Amazon Web Services EMEA', inc: 'Amazon Web Services EMEA', fopp: 'N',
+        strat: 'Direct Nego', ratio: 'Incumbent, costo di migrazione elevato', rfe: '05/01/2027', rdi: '05/01/2027',
+        start: '01/04/2025', end: '31/03/2027', tot: 2480, bud: 1300, tsav: 5,
+        head: 'Roberto Galli', buyer: 'Silvia Fontana',
+        appr: 'FSEA CFO', rdn: 'Migration cost, incumbent',
+        sav: 'Potential', itype: 'RENEW', spct: 5, sfc: 62,
+        bad: { strat: 'Direct negotiation at this value is a derogation. It needs authorization from the FSEA CFO.' } },
+
+      { n: 2, ref: 'PP-2027-0417', id: 417, subj: 'Application monitoring licences', comments: 4,
+        cat: 'Technology', sub: 'Observability', act: 'Rinnovo licenze annuali',
+        status: 'In progress', resp: 'Confirmed',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        owner: 'Marco Ferretti', bu: 'Digital Operations', opx: 'Opex', svc: 'Licenses',
+        sup: 'Datadog France SAS', inc: 'Datadog France SAS', fopp: 'N',
+        strat: 'Direct Nego', ratio: 'Fornitore unico, tooling integrato', rfe: '04/05/2027', rdi: '04/05/2027',
+        start: '01/07/2025', end: '30/06/2027', tot: 372, bud: 190, tsav: 'TBD',
+        head: 'Roberto Galli', buyer: 'Silvia Fontana',
+        appr: 'Proc. Director', sapp: 'Y', qtr2: '2026 Q3', rdn: 'Single source, integrated tooling',
+        sav: 'N', itype: 'RENEW',
+        bad: { tsav: 'Target Saving % holds free text. The column contains TBD, contract dates, Italian notes and one entry reading 5/%. It cannot be aggregated in this state.' } },
+
+      { n: 3, ref: 'PP-2027-0433', id: 433, subj: 'Penetration testing, annual programme', comments: 1,
+        cat: 'Professional Services', sub: 'Security', act: 'Rinnovo programma annuale',
+        status: 'To start', resp: 'Awaiting answer',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        owner: 'Elena Carbone', bu: 'Digital Operations', opx: 'Opex', svc: 'Consulting',
+        sup: 'Yarix Srl', inc: 'Yarix Srl', fopp: 'N',
+        strat: 'Direct Nego', ratio: "Continuità del tester, conoscenza dell'infrastruttura", rfe: '16/01/2027', rdi: '16/01/2027',
+        start: '01/03/2025', end: '28/02/2027', tot: 149, bud: 80, tsav: 7,
+        head: 'Roberto Galli', buyer: 'Andrea Leone',
+        appr: 'Local Proc. Manager', rdn: 'Continuity of tester',
+        sav: 'Y', itype: 'RENEW', spct: 7, sfc: 5.2, s12: 5.2,
+        bad: {} },
+
+      { n: 4, ref: 'PP-2027-0451', id: 451, subj: 'Developer tooling subscriptions', comments: 0,
+        cat: 'Technology', sub: 'Developer tools', act: 'Rinnovo abbonamenti',
+        status: 'In progress', resp: 'Confirmed',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        owner: 'Marco Ferretti', bu: 'Digital Operations', opx: 'Opex', svc: 'Licenses',
+        sup: 'JetBrains s.r.o.', inc: 'JetBrains s.r.o.', fopp: 'N',
+        strat: 'Direct Nego', ratio: 'Sotto soglia, listino ufficiale', rfe: '16/04/2027', rdi: '16/04/2027',
+        start: '01/06/2025', end: '31/05/2027', tot: 62.4, bud: 32, tsav: 4,
+        head: 'Roberto Galli', buyer: 'Andrea Leone',
+        appr: 'N/A', sapp: 'Y', qtr2: '2026 Q3',
+        sav: 'N', bad: {} },
+
+      { n: 5, ref: 'PP-2027-0468', id: 468, subj: 'Data warehouse capacity', comments: 0,
+        cat: 'Technology', sub: 'Data platform', proj: 'Data Platform', act: 'Nuova gara per capacità 2027-2029',
+        status: 'In progress', resp: 'Needs changes',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        owner: 'Paolo Rizzo', bu: 'Data & Analytics', opx: 'Opex', svc: 'Cloud',
+        sup: 'Snowflake Italy Srl', inc: 'Snowflake Italy Srl', fopp: 'N',
+        strat: 'Full Tender', ratio: 'Valore sopra soglia, gara completa con tre offerte', rfe: '03/02/2027', rdi: '03/02/2027',
+        start: '01/05/2025', end: '30/04/2027', tot: 840, bud: 400, tsav: 4,
+        rfeid: 'RFE-4520', head: 'Laura Monti', buyer: 'Silvia Fontana',
+        appr: 'Proc. Director', sapp: 'Y', qtr2: '2026 Q4',
+        sav: 'Y', itype: 'RENEW', spct: 4, sfc: 16.8, s12: 16.8, bad: {} },
+
+      { n: 6, ref: 'PP-2027-0504', id: 504, subj: 'Shop fitting, northern area', comments: 3,
+        cat: 'Facility Management', sub: 'Fit-out', proj: 'Rete Retail Nord', act: 'Restyling punti vendita, area nord',
+        status: 'Canceled', resp: 'Canceled',
+        ent: 'Snaitech', snai: 'Y', brand: 'SNAI',
+        owner: 'Davide Moretti', bu: 'Retail Estate', opx: 'Capex', svc: 'Fit-out',
+        sup: 'Arredo Nord Srl', inc: 'Arredo Nord Srl', fopp: 'N',
+        strat: 'Direct Nego', ratio: 'Standard di allestimento esistente', rfe: '20/02/2027', rdi: '20/02/2027',
+        start: '01/02/2025', end: '31/01/2027', tot: 374.8, bud: 190, tsav: 4,
+        rfeid: 'RFE-4471', dgg: 'Mobili Arredi P.V.', head: 'Marta Colombo', buyer: 'Paola Serra',
+        appr: 'Proc. Director', sapp: 'N', bdreq: 'Y', bdapp: 'Y', qtr2: '2026 Q1',
+        rdn: 'Existing fit-out standard', rlate: 'Business urgency with request for retroactive effect', det: 'Approved via email 25/03/2026',
+        sav: 'N',
+        bad: { rfe: 'This deadline falls after the contract start date. One of 18 lines where the formula produces a date that cannot be acted on, with no error raised.',
+               sup: 'Arredo Nord holds 6 lines in this plan, summing to € 418,400 over twelve months. Split like this, they may need to be bought together.' } },
+
+      { n: 7, ref: 'PP-2027-0537', id: 537, subj: 'National media buying, Q2', comments: 0,
+        cat: 'Marketing', sub: 'TV & press', proj: 'Brand Campaign 2027', act: 'Pianificazione media Q2',
+        status: 'In progress', resp: 'Confirmed',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        owner: 'Giulia Rinaldi', bu: 'Brand & Media', opx: 'Opex', svc: 'Marketing & communication',
+        sup: 'Publitalia 80', inc: 'Publitalia 80', fopp: 'N',
+        strat: 'Light Tender', ratio: 'Confronto tra concessionarie, tre offerte', rfe: '18/02/2027', rdi: '18/02/2027',
+        start: '01/04/2026', end: '31/03/2027', tot: 3100, bud: 3240, tsav: 4.5, ramt: 'Budget Q2, ripartito sui marchi', notes: 'Communication Budget',
+        head: 'Chiara Bellini', buyer: 'Andrea Leone',
+        appr: 'FSEA CFO', sapp: 'Y', qtr2: '2026 Q3',
+        area: 'Value Capture', key: 'Y', sav: 'Y', itype: 'RENEW', spct: 4.5, sfc: 139.5, s12: 139.5, bad: {} },
+
+      { n: 8, ref: 'PP-2027-0562', id: 562, subj: 'Regional press buying', comments: 0,
+        cat: 'Marketing',
+        status: 'On hold', resp: 'Awaiting answer',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        bu: 'Brand & Media', opx: 'Opex', svc: 'Marketing & communication',
+        sup: 'Manzoni & C.', inc: 'Manzoni & C.', fopp: 'N',
+        start: '01/01/2026', end: '31/12/2026', tot: 620, bud: 600,
+        head: 'Chiara Bellini',
+        bad: { strat: 'No sourcing strategy recorded, so the sheet formula produces no deadline and no error. One of 359 lines in this state.',
+               rfe: 'No deadline can be derived without a strategy. This line is invisible to every lead-time check today.',
+               owner: 'No business owner recorded. Nobody can be asked about this line.' } },
+
+      { n: 9, ref: 'PP-2027-0588', id: 588, subj: 'Facilities maintenance, Milan HQ', comments: 0,
+        cat: 'Facility Management', sub: 'Maintenance', proj: 'Sede Milano', act: 'Rinnovo manutenzione ordinaria',
+        status: 'In progress', resp: 'Confirmed',
+        ent: 'Sisal Italia', sisal: 'Y', brand: 'Sisal',
+        owner: 'Luca Bertani', bu: 'Facilities Italia', opx: 'Opex', svc: 'Maintenance',
+        sup: 'Manutencoop Srl', inc: 'Manutencoop Srl', fopp: 'N',
+        strat: 'Light Tender', ratio: 'Confronto preventivi, tre fornitori qualificati', rfe: '06/07/2027', rdi: '06/07/2027',
+        start: '01/09/2025', end: '31/08/2027', tot: 192.8, bud: 98, tsav: 4,
+        dgg: 'Ctr Man Imp elet B.T', head: 'Marta Colombo', buyer: 'Paola Serra', award: 188,
+        appr: 'Local Proc. Manager', sapp: 'Y', qtr2: '2026 Q3',
+        sav: 'N', bad: {} },
+
+      { n: 10, ref: 'PP-2027-0601', id: 601, subj: 'SRE consultancy, 2 FTE', comments: 2,
+        cat: 'Professional Services', sub: 'Engineering', proj: 'Platform Modernization', act: 'Proroga team SRE, 2 FTE',
+        status: 'To start', resp: 'Awaiting answer',
+        ent: 'Sisal Gaming', sisal: 'Y', brand: 'Sisal',
+        owner: 'Alessandro Conti', bu: 'Platform Engineering', opx: 'Opex', svc: 'Consulting',
+        sup: 'Bitrock Srl', inc: 'Bitrock Srl', fopp: 'N',
+        strat: 'Direct Nego', ratio: 'Continuità del team', rfe: '03/02/2027', rdi: '03/02/2027',
+        start: '01/05/2025', end: '30/04/2027', tot: 528, bud: 270, tsav: 4.5,
+        head: 'Roberto Galli', buyer: 'Silvia Fontana',
+        appr: 'Proc. Director', rdn: 'Team continuity',
+        sav: 'N',
+        bad: { sup: 'Third consecutive year with this supplier without a tender. Aggregated over twelve months this is € 792,000, more than any single year shows.' } },
+
+      { n: 11, ref: 'PP-2027-0644', id: 644, subj: 'Translation services', comments: 0,
+        cat: 'Professional Services', sub: 'Language',
+        status: 'Canceled', resp: 'Canceled',
+        ent: 'TSG Italy', brand: 'Flutter SEA',
+        owner: 'Federica Greco', bu: 'Legal & Compliance', opx: 'Opex', svc: 'Translation',
+        sup: 'Lionbridge Italy', inc: 'Lionbridge Italy', fopp: 'N',
+        strat: 'Quote comparison', ratio: 'Confronto preventivi',
+        start: '01/10/2025', end: '30/09/2026', tot: 28.9, bud: 30, tsav: 3,
+        head: 'Elisa Marchi', buyer: 'Paola Serra',
+        appr: 'N/A', sapp: 'Y', qtr2: '2026 Q1',
+        bad: { strat: 'Quote comparison has no branch in the sheet formula, which recognizes only Direct Nego, Light Tender and Full Tender by exact string match. This line silently receives no deadline.' } },
+
+      { n: 12, ref: 'PP-2027-0672', id: 672, subj: 'Retail EPOS hardware refresh', comments: 0,
+        cat: 'Technology', sub: 'Hardware', proj: 'EPOS Refresh', act: 'Sostituzione terminali di cassa',
+        status: 'To start', resp: 'Awaiting answer',
+        ent: 'Snaitech', snai: 'Y', brand: 'SNAI',
+        owner: 'Chiara Mancini', bu: 'Retail Network IT', opx: 'Capex', svc: 'Hardware',
+        sup: 'Diebold Nixdorf Italia', inc: 'Diebold Nixdorf Italia', fopp: 'N',
+        strat: 'Full Tender', ratio: 'Valore sopra soglia', rfe: '10/09/2026', rdi: '10/09/2026',
+        start: '01/12/2026', end: '30/11/2025', tot: 1480, bud: 1500, tsav: 5,
+        head: 'Stefano Riva', buyer: 'Andrea Leone',
+        appr: 'FSEA CFO',
+        sav: 'Potential', itype: 'NEW', spct: 5, sfc: 74,
+        bad: { end: 'The contract end date is before the start date. This feeds a negative duration into the derived yearly value. One of 38 lines in this state.',
+               dur: 'Negative duration, because the end date is before the start date.',
+               yr:  'The yearly value is total value divided by duration, so it takes the negative sign.' } },
+
+      { n: 13, ref: 'PP-2027-0689', id: 689, subj: 'Payment gateway processing', comments: 0,
+        cat: 'Professional Services', sub: 'Payments', proj: 'Payments',
+        status: 'In progress', resp: 'Confirmed',
+        ent: 'Snaitech', sisal: 'Y', pkr: 'Y', snai: 'Y', brand: 'Multi-brand',
+        owner: 'Elena Carbone', bu: 'Payments & Risk', opx: 'Opex', svc: 'Payments',
+        sup: 'Nexi Payments SpA', inc: 'Nexi Payments SpA', fopp: 'Y',
+        strat: 'Full Tender', ratio: 'Valore sopra soglia, gara completa', rfe: '05/10/2027', rdi: '05/10/2027',
+        start: '01/01/2026', end: '31/12/2027', tot: 1780, bud: 900, tsav: 4.5, ramt: 'Commissioni stimate su volumi 2026',
+        head: 'Stefano Riva', buyer: 'Silvia Fontana',
+        appr: 'FSEA CFO', sapp: 'Y', qtr2: '2026 Q4',
+        sav: 'Potential', itype: 'RENEW', spct: 4.5, sfc: 40.1, bad: {} },
+
+      { n: 14, ref: 'PP-2027-0703', id: 703, subj: 'Signage refresh, Lombardia', comments: 0,
+        cat: 'Facility Management', sub: 'Signage', proj: 'Rete Retail Nord', act: 'Sostituzione insegne, Lombardia',
+        status: 'To start', resp: 'Awaiting answer',
+        ent: 'Snaitech', snai: 'Y', brand: 'SNAI',
+        owner: 'Davide Moretti', bu: 'Retail Estate', opx: 'Opex/Capex', svc: 'Fit-out',
+        sup: 'Arredo Nord Srl', inc: 'Arredo Nord Srl', fopp: 'N',
+        strat: 'direct nego',
+        start: '01/03/2026', end: '28/02/2027', tot: 94.2, bud: 95, tsav: 3,
+        dgg: 'Int Man Edile su I.P', head: 'Marta Colombo', buyer: 'Paola Serra',
+        appr: 'Local Proc. Manager',
+        bad: { strat: 'Lower case variant of Direct Nego. The sheet matches strings exactly, so this line falls through and receives no deadline and no error.',
+               ratio: 'Direct negotiation with no justification recorded. One of 619 lines in this state.',
+               opx: 'Opex/Capex in one cell. 123 lines spell it this way and another 52 write Opex / Capex. The field holds one value, and the baseline cannot be calculated without knowing which.',
+               base: 'The baseline is twelve months of value for Opex and the full value for Capex. This line says both, so no baseline can be calculated.' } },
+
+      { n: 15, ref: 'PP-2027-0741', id: 741, subj: 'Kubernetes managed control plane', comments: 0,
+        cat: 'Technology', sub: 'Containers', proj: 'Platform Modernization', act: 'Gara per piano di controllo gestito',
+        status: 'In progress', resp: 'Confirmed',
+        ent: 'Sisal Gaming', sisal: 'Y', brand: 'Sisal',
+        owner: 'Alessandro Conti', bu: 'Platform Engineering', opx: 'Opex', svc: 'Cloud',
+        sup: 'Google Ireland Ltd', inc: 'Google Ireland Ltd', fopp: 'N',
+        strat: 'Full Tender', ratio: 'Valore sopra soglia', rfe: '05/01/2027', rdi: '05/01/2027',
+        start: '01/04/2025', end: '31/03/2027', tot: 624, bud: 320, tsav: 4.5,
+        head: 'Roberto Galli', buyer: 'Silvia Fontana', award: 590,
+        appr: 'Proc. Director', sapp: 'Y', qtr2: '2026 Q4',
+        area: 'Operations', key: 'N', sav: 'Y', itype: 'RENEW', spct: 4.5, sfc: 14, s12: 14, bad: {} }
+    ],
+
+
+    // Fields of ours, per line, merged in on load. In the product these are columns like
+    // any other; here they are kept apart so the 55 columns above stay exactly as they
+    // arrived from Purchasing Plan.xlsx and can be diffed against it.
+    extras: {
+      'PP-2027-0412': { cycle: true, tracked: true, stage: 'Sourcing and awarding', nextstep: 'Second negotiation round, migration credits', nextdue: '02/12/2026', decide: '05/01/2027' },
+      'PP-2027-0417': { cycle: true, tracked: true, stage: 'Not started', nextstep: '', nextdue: '', decide: '04/05/2027' },
+      'PP-2027-0433': { cycle: true, tracked: true, stage: 'Not started', nextstep: 'Ask the owner for the 2027 test scope', nextdue: '30/11/2026', decide: '02/01/2027' },
+      'PP-2027-0451': { cycle: true, tracked: true, stage: 'Not started', nextstep: '', nextdue: '', decide: '10/02/2027' },
+      'PP-2027-0468': { cycle: true, tracked: true, stage: 'RFE raised', nextstep: 'Tender documents to the business unit', nextdue: '30/11/2026', decide: '03/02/2027' },
+      'PP-2027-0504': { cycle: true, tracked: false, stage: 'Canceled', nextstep: '', nextdue: '', decide: '' },
+      'PP-2027-0537': { cycle: true, tracked: true, stage: 'Sourcing and awarding', nextstep: 'Offers due from three agencies', nextdue: '04/12/2026', decide: '18/02/2027' },
+      'PP-2027-0562': { cycle: true, tracked: true, stage: 'Not started', nextstep: 'Find an owner before anything else', nextdue: '25/11/2026', decide: '' },
+      'PP-2027-0588': { cycle: true, tracked: true, stage: 'Contract drafting', nextstep: 'Send the draft contract to the supplier', nextdue: '24/11/2026', decide: '12/01/2027' },
+      'PP-2027-0601': { cycle: true, tracked: true, stage: 'RFE raised', nextstep: 'Supplier confirms the 12 month price', nextdue: '27/11/2026', decide: '03/02/2027' },
+      'PP-2027-0644': { cycle: true, tracked: false, stage: 'Canceled', nextstep: '', nextdue: '', decide: '' },
+      'PP-2027-0672': { cycle: true, tracked: true, stage: 'Not started', nextstep: 'Restart when the specification arrives', nextdue: '', decide: '' },
+      'PP-2027-0689': { cycle: true, tracked: true, stage: 'Contract approval', nextstep: 'Signature pending', nextdue: '30/11/2026', decide: '19/01/2027' },
+      'PP-2027-0703': { cycle: true, tracked: true, stage: 'Not started', nextstep: '', nextdue: '', decide: '16/02/2027' },
+      'PP-2027-0741': { cycle: true, tracked: true, stage: 'Signed', nextstep: 'PO issued', nextdue: '', decide: '05/01/2027' }
+    },
+
+    init() {
+      this.rowsAll.forEach(r => {
+        const e = this.extras[r.ref] || {};
+        r.cycle    = e.cycle !== false;
+        r.tracked  = e.tracked !== false;
+        r.stage    = e.stage || 'Not started';
+        r.nextstep = e.nextstep || '';
+        r.nextdue  = e.nextdue || '';
+        r.decide   = e.decide || '';
+        r.outcome  = '';
+        // Decisions are held per session and per agenda item, so the authorization session
+        // and the category alignment do not overwrite each other on the same line.
+        r.decs     = {};
+      });
+    },
+
+    // ══ VIEW FILTERS ═══════════════════════════════════════════════════════════════════
+    // One predicate per view. In the product these are typed conditions on fields,
+    // written once at onboarding; here they are spelled out so they can be read.
+    get rows() {
+      // In a session the agenda item's filter is the view's filter for as long as that
+      // item is open, which is why an agenda item is a view and not a screen.
+      if (this.sessionOn() && this.step().kind === 'records') return this.stepRows();
+      let rs = this.applyFilter(this.v().filter, this.rowsAll);
+      if (this.onlyBad && this.viewId === 'table') rs = rs.filter(r => Object.keys(r.bad).length);
+      return rs;
+    },
+
+    // ══ GROUPING ═══════════════════════════════════════════════════════════════════════
+    // One function, used by the Grid's bands, the Board's columns and the Session's
+    // sections. Grouping is a property of a view, not of a renderer, so all three agree.
+    groupValue(r, g) {
+      if (!g) return '';
+      if (g === 'rung') return this.rungOf(r) || 'Not set';
+      return r[g] || 'Not set';
+    },
+    // Band order. A rung and a stage have a natural order and it is not alphabetical:
+    // the CFO lines are decided together and the board reads left to right.
+    bandOrder(g) {
+      if (g === 'rung')  return this.ladder.map(l => l.rung).filter(Boolean).reverse();
+      if (g === 'stage') return this.stages;
+      return null;
+    },
+    // A compensating-control band is not ordered, it is pinned. Not set on Responses is
+    // the line nobody can be asked about, so it always leads rather than falling wherever
+    // the Business Owner names happen to sort. Canceled on Review is the section that
+    // stands in for a review gate that does not otherwise exist, so it always trails, on
+    // its own, rather than sitting wherever the data order puts it. This is deliberate and
+    // separate from bandOrder above: those two fields have a genuine full ordering to
+    // declare, this is one label pinned to one edge of whatever order the rest fall into.
+    pinnedBand(g) {
+      if (g === 'owner') return { label: 'Not set', edge: 'first' };
+      if (g === 'resp')  return { label: 'Canceled', edge: 'last' };
+      return null;
+    },
+    bandsOf(rows, g) {
+      if (!g) return [{ label: '__none__', rows: rows, note: '' }];
+      const out = [];
+      rows.forEach(r => {
+        const key = this.groupValue(r, g);
+        let b = out.find(x => x.label === key);
+        if (!b) { b = { label: key, rows: [], note: '' }; out.push(b); }
+        b.rows.push(r);
+      });
+      const order = this.bandOrder(g);
+      if (order) out.sort((a, b) => {
+        const ia = order.indexOf(a.label), ib = order.indexOf(b.label);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      });
+      const pin = this.pinnedBand(g);
+      if (pin) {
+        const i = out.findIndex(b => b.label === pin.label);
+        if (i > -1) {
+          const [b] = out.splice(i, 1);
+          if (pin.edge === 'first') out.unshift(b); else out.push(b);
+        }
+      }
+      out.forEach(b => { b.note = '· € ' + this.fmtK(b.rows.reduce((a, r) => a + this.yearly(r), 0)) + 'K a year'; });
+      return out;
+    },
+    banded() {
+      if (this.sessionOn() && this.step().kind === 'records') return this.stepBands();
+      return this.bandsOf(this.rows, this.v().group);
+    },
+
+    // ══ BOARD ══════════════════════════════════════════════════════════════════════════
+    // Gathered by one select field. The stage vocabulary is the customer's, and each
+    // stage writes their Status, which is why Tracking is not a second table.
+    stages: ['Not started', 'RFE raised', 'Sourcing and awarding', 'Contract drafting', 'Contract approval', 'Signed', 'On hold'],
+    boardColumns() {
+      const g = this.v().group || 'stage';
+      const bands = this.bandsOf(this.rows, g);
+      // An empty stage still shows as a column, because a board with a missing column
+      // reads as data rather than as a stage nobody has reached yet.
+      const order = this.bandOrder(g);
+      const cols = (order || bands.map(b => b.label)).map(k => {
+        const b = bands.find(x => x.label === k);
+        const rs = b ? b.rows : [];
+        return { label: k, rows: rs, value: rs.length ? '€ ' + this.fmtK(rs.reduce((a, r) => a + this.yearly(r), 0)) + 'K' : '' };
+      });
+      bands.forEach(b => { if (!cols.find(x => x.label === b.label)) cols.push({ label: b.label, rows: b.rows, value: b.note.replace('· ', '').replace(' a year', '') }); });
+      return cols;
+    },
+
+    // Flags come from dates and amounts only. Everything else on a card is typed.
+    flagOf(r) {
+      if (r.stage === 'On hold')  return { text: 'On hold', cls: 'bg-slate-100 text-slate-600 border-slate-200' };
+      if (r.stage === 'Signed')   return { text: 'Signed',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      if (r.stage === 'Canceled') return { text: 'Canceled', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+      const d = this.daysTo(r, r.rfe);
+      if (d === null) return null;
+      if (d < 0)  return { text: 'Late RFE', cls: 'bg-rose-50 text-rose-700 border-rose-200' };
+      if (d <= 45) return { text: 'RFE due soon', cls: 'bg-amber-50 text-amber-700 border-amber-200' };
+      return null;
+    },
+
+    // ══ QUEUE ══════════════════════════════════════════════════════════════════════════
+    // Urgency, not plan order. A sixty-four line queue read in plan order is a spreadsheet
+    // with worse ergonomics, which is the thing the app is supposed to beat.
+    queueGroups() {
+      const rs = this.rows;
+      const near = rs.filter(r => { const d = this.daysTo(r); return d !== null && d <= 30; });
+      const mid  = rs.filter(r => { const d = this.daysTo(r); return d !== null && d > 30 && d <= 90; });
+      const far  = rs.filter(r => { const d = this.daysTo(r); return d === null || d > 90; });
+      const g = [];
+      if (near.length) g.push({ label: 'Decision needed within 30 days', sub: 'these go late first', tone: 'text-rose-600', rows: near });
+      if (mid.length)  g.push({ label: 'Within 90 days', sub: '', tone: 'text-amber-600', rows: mid });
+      if (far.length)  g.push({ label: 'Later in the window, or no date yet', sub: '', tone: 'text-gray-500', rows: far });
+      return g;
+    },
+
+    // ══ REPORT ═════════════════════════════════════════════════════════════════════════
+    reports: ['CEO compliance pack', 'CFO pack', 'Progress by business unit', 'Spend and savings against budget', 'Cycle completion', 'Plan coverage'],
+    get reportByLabel() { return ({ cat: 'Product Category', bu: 'Business Unit', ent: 'Legal Entity', strat: 'Sourcing Strategy' })[this.reportBy]; },
+    reportRows() {
+      const out = [];
+      this.rows.forEach(r => {
+        const k = r[this.reportBy] || 'Not set';
+        let g = out.find(x => x.k === k);
+        if (!g) { g = { k: k, n: 0, v: 0, bad: 0, pct: 0 }; out.push(g); }
+        g.n++; g.v += this.yearly(r);
+        if (Object.keys(r.bad).length) g.bad++;
+      });
+      const max = Math.max.apply(null, out.map(g => g.v).concat([1]));
+      out.forEach(g => { g.pct = Math.round(g.v / max * 100); });
+      return out.sort((a, b) => b.v - a.v);
+    },
+    reportTiles() {
+      const rs = this.rows;
+      const flagged = rs.filter(r => Object.keys(r.bad).length).length;
+      const auth    = rs.filter(r => this.rungOf(r)).length;
+      return [
+        { k: 'Lines in view',   v: rs.length.toLocaleString(), sub: 'of 4,793 in the plan', tone: 'text-gray-900' },
+        { k: 'Yearly value',    v: '€ ' + this.fmtK(rs.reduce((a, r) => a + this.yearly(r), 0)) + 'K', sub: 'computed, not typed', tone: 'text-gray-900' },
+        { k: 'Flagged',  v: flagged, sub: 'lines with a flagged cell', tone: 'text-amber-600' },
+        { k: 'Need authorizing', v: auth, sub: 'rung computed, never typed', tone: 'text-rose-600' }
+      ];
+    },
+
+    // ══ SESSIONS ══════════════════════════════════════════════════════════════════════
+    // A session is a MODE, not a shape. Running a view as a facilitated meeting and
+    // choosing how its records are drawn are independent, so the CFO authorization and
+    // the category alignment are the plan table, grouped, with a session running over it.
+    //
+    // What a session adds to a view: an agenda (each item a filter, a grouping and the
+    // field the room is deciding), staged writes that go to the record's own fields, and
+    // a commit step that lists every write before any of them happen.
+    //
+    // Two invented vocabularies died in this change. The alignment used to offer Moving,
+    // Blocked and At risk for a negotiation, and Renew, Change, Do not renew for an
+    // expiring contract. Neither was a field. The room now writes Stage and Response,
+    // which are the fields an email answer and a buyer's update write, so the alignment
+    // and the cycle put the same values in the same places.
+    sessionOn() { return !!this.v().session; },
+
+    sess() {
+      if (this.viewId === 'align') {
+        return {
+          title: 'Alignment with ' + this.alignBU,
+          sub: 'Tue 24 Nov 2026, 10:00 · ' + this.alignBU + ' business owners',
+          onClose: 'Each staged value is written to its line. A stage change writes Status with it. A decision on an expiring contract writes the same Response fields an owner\'s email answer writes. A need becomes a line in the next plan.',
+          closedNote: 'The plan has been written and a summary has gone to the ' + this.alignBU + ' attendees.',
+          agenda: [
+            // Not grouped: Stage bands made sense when this was every business unit's
+            // negotiations at once, but one unit's in-flight lines don't need banding.
+            { k: 'Progress of the main negotiations', kind: 'records', prompt: 'Where has this one got to?',
+              filter: 'alignInFlight', field: 'stage', options: this.stages },
+            { k: 'Expiring contracts', kind: 'records', prompt: 'What happens to this contract?',
+              filter: 'alignNoAnswer', group: 'resp', field: 'resp',
+              options: ['Confirmed', 'Needs changes', 'Canceled', 'Awaiting answer'] },
+            // A sheet, not a note: these are needs raised for this business unit that are not
+            // lines yet, so kind is its own value rather than reusing records, but the room
+            // still works it the way it works steps 1 and 2, row by row.
+            { k: 'Needs not in the plan', kind: 'needs',
+              items: [ { need: 'Managed Kubernetes platform', owner: 'Alessandro Conti', value: '€ 120,000', by: '1 Jun 2027', raised: '8 Sep alignment' } ]
+                .concat(this.addedNeeds.filter(x => x.bu === this.alignBU)),
+              add: 'Add a need raised in this session...' },
+            { k: 'Feedback and actions', kind: 'note',
+              blurb: 'What the business unit says about the process, and what Procurement will do about it. Kept with the alignment record rather than on a line.',
+              items: [ { t: 'Share the RFE deadlines for next quarter with the business unit\'s owners', sub: 'by 8 Dec' } ],
+              add: '+ Add an action' }
+          ]
+        };
+      }
+      return {
+        title: 'Authorization session',
+        sub: 'Tue 27 Oct 2026, 14:00 · FSEA CFO present',
+        onClose: 'Each staged outcome is written to its line. Closing notifies every business owner of their line\'s outcome, moves authorized lines into the approved plan, rolls deferred lines to the next cycle, closes rejected lines and starts monitoring the 10% and € 50,000 tolerance.',
+        closedNote: 'The authorizations have been formalized and every business owner has been told the outcome of their line.',
+        agenda: [
+          { k: 'Decisions', kind: 'records', prompt: 'What is the decision?',
+            filter: 'needsAuth', group: 'rung', field: 'outcome',
+            options: ['Authorize', 'Derogation', 'Defer', 'Reject'] }
+        ]
+      };
+    },
+    step() {
+      const a = this.sess().agenda;
+      return a[Math.min(this.sStep, a.length - 1)];
+    },
+    decField() { return this.cols.find(c => c.id === this.step().field) || { id: '', k: '' }; },
+
+    // The agenda item's own filter and grouping decide the rows, exactly as a view's do.
+    stepBands() {
+      const st = this.step();
+      if (st.kind !== 'records') return [];
+      return this.bandsOf(this.applyFilter(st.filter, this.rowsAll), st.group);
+    },
+    stepRows() {
+      const out = [];
+      this.stepBands().forEach(b => b.rows.forEach(r => out.push(r)));
+      return out;
+    },
+    bandAt(i) {
+      let n = 0;
+      const bs = this.stepBands();
+      for (let k = 0; k < bs.length; k++) {
+        if (i < n + bs[k].rows.length) return { band: bs[k], index: k, start: n, count: bs.length };
+        n += bs[k].rows.length;
+      }
+      return { band: null, index: 0, start: 0, count: bs.length };
+    },
+    // ── Staged writes ──────────────────────────────────────────────────────────────────
+    // A decision is a value for a field on a line, held here until the session closes.
+    // Nothing is written to the record before the commit step, which is what lets the
+    // close list every write first.
+    pending: {},
+    pKey(r)     { return r.ref + '|' + this.step().field; },
+    decOf(r)    { return this.pending[this.pKey(r)] || ''; },
+    setDecision(r, val) { this.pending[this.pKey(r)] = (this.decOf(r) === val ? '' : val); },
+    // True where a cell is showing something the session has staged but not yet written.
+    isStaged(r, c) { return this.sessionOn() && c.id === this.step().field && !!this.decOf(r); },
+
+    decidedCount() { return this.stepRows().filter(r => this.decOf(r)).length; },
+    undecided()    { return this.stepRows().filter(r => !this.decOf(r)).length; },
+    nextStepOrClose() {
+      if (this.sStep < this.sess().agenda.length - 1) { this.sStep++; this.focus = null; }
+      else this.sView = 'summary';
+    },
+    tally() {
+      const rs = this.stepRows();
+      return (this.step().options || []).map(o => {
+        const m = rs.filter(r => this.decOf(r) === o);
+        return { k: o, n: m.length, v: '€ ' + this.fmtK(m.reduce((a, r) => a + this.yearly(r), 0)) + 'K' };
+      });
+    },
+    commitSession() {
+      if (this.undecided()) return;
+      const f = this.step().field;
+      this.stepRows().forEach(r => {
+        const v = this.decOf(r);
+        if (!v) return;
+        r[f] = v;
+        // A stage writes their Status with it, which is the rule the procedure implies
+        // and the reason Tracking is not a second table.
+        if (f === 'stage') r.status = this.stageStatus[v] || r.status;
+        delete this.pending[r.ref + '|' + f];
+      });
+      this.sView = 'closed';
+    },
+    stageStatus: { 'Not started': 'To start', 'RFE raised': 'In progress', 'Sourcing and awarding': 'In progress',
+                   'Contract drafting': 'In progress', 'Contract approval': 'In progress', 'Signed': 'Closed',
+                   'On hold': 'On hold', 'Canceled': 'Canceled' },
+
+    // ── Reading the room ───────────────────────────────────────────────────────────────
+    // The only thing the dark screen did that a table cannot is be legible across a room.
+    // That is a density setting, not a screen: Projection raises the row height and the
+    // type size and leaves everything else exactly where it was.
+    density: 'normal',
+    sReset() { this.sStep = 0; this.sView = 'line'; this.focus = null; this.density = 'normal'; },
+    focus: null,
+    focusRow(r) { this.focus = r.n; },
+
+    // ══ SUMMARY BAR ════════════════════════════════════════════════════════════════════
+    totalYearly() { return this.rows.reduce((a, r) => a + this.yearly(r), 0); },
+    totalBudget() { return this.rows.reduce((a, r) => a + (typeof r.bud === 'number' ? r.bud : 0), 0); },
+    flaggedCount(){ return this.rows.filter(r => Object.keys(r.bad).length).length; },
+
+    // ══ CYCLE AND REVIEW CHROME ════════════════════════════════════════════════════════
+    // The denominator moves when a business unit adds a line, so completion is a fraction
+    // and an added-lines count, never a percentage that falls when the product is working.
+    cycleStats: [
+      { label: 'In the cycle', value: '1,284', sub: '', tone: 'text-gray-900' },
+      { label: 'Answered',     value: '742',   sub: 'of a total still moving', tone: 'text-emerald-600' },
+      { label: 'Waiting',      value: '412',   sub: '96 past their deadline',  tone: 'text-amber-600' },
+      { label: 'Escalated',    value: '130',   sub: '41 with the BU manager',  tone: 'text-rose-600' }
+    ],
+    // The rule set saved with this plan at the freeze (Session 23). Same values as THE RULE
+    // SET above and as O2; the lines column counts are illustrative plan-scale numbers.
+    frozenBands: [
+      { band: 'Up to € 10,000',       method: 'A quote from a single supplier',        auth: 'Local Procurement Manager', n: '290' },
+      { band: '€ 10,000 – € 50,000',  method: 'At least two quotes',                   auth: 'Head of Procurement',       n: '313' },
+      { band: '€ 50,000 – € 100,000', method: 'Structured competitive comparison',     auth: 'Sr Procurement Director',   n: '167' },
+      { band: '€ 100,000 – € 500,000',method: 'Tender',                                auth: 'Sr Procurement Director',   n: '316' },
+      { band: 'Above € 500,000',      method: 'Tender',                                auth: 'FSEA CFO',                  n: '222' }
+    ],
+    frozenNotice: [
+      { strat: 'Direct Nego',  amt: 'Below € 100,000',         days: 30 },
+      { strat: 'Direct Nego',  amt: '€ 100,000 – € 1,000,000', days: 40 },
+      { strat: 'Direct Nego',  amt: 'Above € 1,000,000',       days: 60 },
+      { strat: 'Light Tender', amt: 'Any',                     days: 40 },
+      { strat: 'Full Tender',  amt: 'Any',                     days: 60 }
+    ],
+    outcomeMix: [
+      { k: 'Confirmed', n: 806 }, { k: 'Needs changes', n: 289 },
+      { k: 'Canceled', n: 63 }, { k: 'Not mine, reassigned', n: 112 }, { k: 'Frozen unanswered', n: 38 }
+    ],
+
+    // ══ VIEW-OWNED REPORTS ═════════════════════════════════════════════════════════════
+    // Responses and Review each name their own report (views[].report), which is what the
+    // Report renderer draws for them instead of the generic aggregation. Ported from the
+    // old P2 Cycle Workspace and P4 Consolidated Review. Illustrative numbers, carried
+    // over as they were, not computed from the fifteen sample rows.
+    cwFilter: 'All',
+    cwFilters: ['All', 'Behind', 'Escalated', 'Silent', 'Complete'],
+    cwChannels: [
+      { k: 'Email link, signed in', n: 431, pct: 58, tone: 'bg-indigo-500' },
+      { k: 'Email reply',           n: 164, pct: 22, tone: 'bg-sky-400' },
+      { k: 'Workbook',              n: 104, pct: 14, tone: 'bg-emerald-400' },
+      { k: 'In the platform',       n: 43,  pct: 6,  tone: 'bg-slate-400' }
+    ],
+    cwAgeing: [
+      { band: '0 to 3 days',   n: 88,  pct: 22, tone: 'bg-emerald-400', note: 'within first reminder' },
+      { band: '4 to 7 days',   n: 126, pct: 31, tone: 'bg-amber-300',   note: 'second reminder sent' },
+      { band: '8 to 14 days',  n: 102, pct: 25, tone: 'bg-amber-500',   note: 'backup notified' },
+      { band: '15 to 21 days', n: 62,  pct: 15, tone: 'bg-rose-400',    note: 'consequence stated' },
+      { band: 'Over 21 days',  n: 34,  pct: 8,  tone: 'bg-rose-600',    note: 'with BU manager' }
+    ],
+    cwUnits: [
+      { unit: 'Digital Operations',   cat: 'Technology',            owner: 'Marco Ferretti',   entity: 'Sisal Italia', done: 47,  total: 52,  added: 3, ageDays: 4,  chase: 'Reminded ×1',     challenges: 2,  suppressed: null },
+      { unit: 'Retail Network IT',    cat: 'Technology',            owner: 'Chiara Mancini',   entity: 'Snaitech',     done: 0,   total: 38,  added: 0, ageDays: 22, chase: 'BU manager',      challenges: 0,  suppressed: null },
+      { unit: 'Brand & Media',        cat: 'Marketing',             owner: 'Giulia Rinaldi',   entity: 'Sisal Italia', done: 61,  total: 74,  added: 6, ageDays: 6,  chase: 'Reminded ×2',     challenges: 9,  suppressed: null },
+      { unit: 'Platform Engineering', cat: 'Technology',            owner: 'Alessandro Conti', entity: 'Sisal Gaming', done: 118, total: 251, added: 2, ageDays: 9,  chase: 'Backup notified', challenges: 14, suppressed: null },
+      { unit: 'Facilities Italia',    cat: 'Facility Management',   owner: 'Luca Bertani',     entity: 'Sisal Italia', done: 29,  total: 31,  added: 0, ageDays: 2,  chase: 'Not yet chased',  challenges: 1,  suppressed: null },
+      { unit: 'Legal & Compliance',   cat: 'Professional Services', owner: 'Federica Greco',   entity: 'TSG Italy',    done: 8,   total: 9,   added: 1, ageDays: 3,  chase: 'Reminded ×1',     challenges: 0,  suppressed: null },
+      { unit: 'Sisal Gaming Malta',   cat: 'Technology',            owner: 'Stefano Villa',    entity: 'Sisal Gaming', done: 0,   total: 17,  added: 0, ageDays: 19, chase: 'Paused',          challenges: 0,  suppressed: 'owner on leave until 6 Oct' },
+      { unit: 'Payments & Risk',      cat: 'Professional Services', owner: 'Elena Carbone',    entity: 'Snaitech',     done: 22,  total: 22,  added: 4, ageDays: 0,  chase: 'Complete',        challenges: 0,  suppressed: null },
+      { unit: 'Retail Estate',        cat: 'Facility Management',   owner: 'Davide Moretti',   entity: 'Snaitech',     done: 34,  total: 88,  added: 0, ageDays: 12, chase: 'Backup notified', challenges: 6,  suppressed: null },
+      { unit: 'Data & Analytics',     cat: 'Technology',            owner: 'Paolo Rizzo',      entity: 'Sisal Italia', done: 40,  total: 44,  added: 2, ageDays: 5,  chase: 'Reminded ×1',     challenges: 3,  suppressed: null }
+    ],
+    cwVisible() {
+      const f = this.cwFilter, us = this.cwUnits;
+      if (f === 'Complete')  return us.filter(u => u.done === u.total);
+      if (f === 'Silent')    return us.filter(u => u.done === 0);
+      if (f === 'Escalated') return us.filter(u => ['BU manager', 'Backup notified'].includes(u.chase));
+      if (f === 'Behind')    return us.filter(u => u.done / u.total < 0.8);
+      return us;
+    },
+    cwChase(state) {
+      if (state === 'Complete')        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      if (state === 'Not yet chased')  return 'bg-gray-50 text-gray-500 border-gray-200';
+      if (state === 'Paused')          return 'bg-slate-100 text-slate-500 border-slate-200';
+      if (state === 'BU manager')      return 'bg-rose-50 text-rose-700 border-rose-200';
+      if (state === 'Backup notified') return 'bg-orange-50 text-orange-700 border-orange-200';
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    },
+
+    rvOutcomes: [
+      { k: 'Confirmed as planned', n: 806, pct: 62, bar: 'bg-emerald-500' },
+      { k: 'Needs changes',        n: 289, pct: 22, bar: 'bg-amber-400' },
+      { k: 'Canceled',             n: 63,  pct: 5,  bar: 'bg-rose-500' },
+      { k: 'Not mine, reassigned', n: 112, pct: 8,  bar: 'bg-sky-400' },
+      { k: 'Frozen unanswered',    n: 38,  pct: 3,  bar: 'bg-slate-400' }
+    ],
+    rvRoutes: [
+      { k: 'Renewal',             n: 742, sub: 'tagged Renew for reporting' },
+      { k: 'Addendum',            n: 193, sub: 'tagged Renew' },
+      { k: 'New, no contract',    n: 160, sub: 'tagged New' },
+      { k: 'Framework agreement', n: 118, sub: '71 skip the RFE entirely' }
+    ],
+    // The three rungs a derogation can reach (see THE RULE SET). Local Procurement
+    // Manager sits below the 10K derogation floor, so it never appears here.
+    rvAuth: [
+      { rung: 'Head of Procurement',     n: 14, value: '€ 0.4M' },
+      { rung: 'Sr Procurement Director', n: 22, value: '€ 5.7M' },
+      { rung: 'FSEA CFO',                n: 11, value: '€ 15.3M' }
+    ],
+    rvCanceled: [
+      { ref: 'PP-2027-1184', desc: 'Load testing platform',       supplier: 'Neustar Inc',      bu: 'Platform Engineering', reason: 'Moved in-house',              value: '€ 41,000',  by: 'A. Conti',   channel: 'workbook, confirmed in thread' },
+      { ref: 'PP-2027-0788', desc: 'Regional press buying',       supplier: 'Publitalia 80',    bu: 'Brand & Media',        reason: 'Budget withdrawn',            value: '€ 620,000', by: 'G. Rinaldi', channel: 'email link, signed in' },
+      { ref: 'PP-2027-0904', desc: 'Shop fitting, northern area', supplier: 'Arredo Nord Srl',  bu: 'Retail Estate',        reason: 'Covered by another contract', value: '€ 187,400', by: 'D. Moretti', channel: 'workbook, confirmed in thread' },
+      { ref: 'PP-2027-0911', desc: 'Signage refresh, Lombardia',  supplier: 'Arredo Nord Srl',  bu: 'Retail Estate',        reason: 'Covered by another contract', value: '€ 94,200',  by: 'D. Moretti', channel: 'workbook, confirmed in thread' },
+      { ref: 'PP-2027-0638', desc: 'Translation services',        supplier: 'Lionbridge Italy', bu: 'Legal & Compliance',   reason: 'Service no longer required',  value: '€ 28,900',  by: 'F. Greco',   channel: 'in the platform' }
+    ],
+    rvFrozen: [
+      { bu: 'Retail Network IT',  owner: 'Chiara Mancini', n: 22, value: '€ 3.1M',    reached: 'BU manager, no response', notice: '9 Jan 2027',  urgent: true },
+      { bu: 'Sisal Gaming Malta', owner: 'Stefano Villa',  n: 11, value: '€ 840,000', reached: 'Backup, then BU manager', notice: '2 Mar 2027',  urgent: false },
+      { bu: 'Retail Estate',      owner: 'Davide Moretti', n: 5,  value: '€ 412,000', reached: 'BU manager acknowledged', notice: '20 Feb 2027', urgent: false }
+    ],
+
+    // ══ ROW PANEL ══════════════════════════════════════════════════════════════════════
+    openRow(r) { this.selected = r.n; this.pane = 'Details'; },
+    row()      { return this.rowsAll.find(r => r.n === this.selected) || this.rowsAll[0]; },
+    rowFlags() { const r = this.row(); return r && r.bad ? Object.values(r.bad) : []; },
+    isBad(r, k)     { return !!(r && r.bad && r.bad[k]); },
+    badReason(r, k) { return (r && r.bad && r.bad[k]) || ''; },
+
+    // ══ FIELD TYPES AND VALUES ═════════════════════════════════════════════════════════
+    typeIcon(t) { return ({ txt: 'A', sel: '◎', num: '#', pct: '%', dat: '☷', per: '○', chk: '☑', cmp: 'ƒ' })[t] || 'A'; },
+    typeName(t) { return ({ txt: 'Text', sel: 'Single select, fixed vocabulary', num: 'Number', pct: 'Percentage', dat: 'Date', per: 'Person', chk: 'Checkbox', cmp: 'Formula, read-only' })[t] || 'Text'; },
+    headTitle(c){ return c.hint ? c.k + '. ' + c.hint : c.k + ' · ' + this.typeName(c.t); },
+    al(c)       { return c.al || ((c.t === 'num' || c.t === 'pct') ? 'r' : (c.t === 'chk' ? 'c' : 'l')); },
+    isMono(c)   { return c.t === 'num' || c.t === 'pct' || (c.t === 'cmp' && this.al(c) === 'r'); },
+    initials(n) { return n && n.length < 30 ? n.split(' ').map(x => x[0]).join('').slice(0, 2) : '?'; },
+
+    fmtK(x) {
+      if (x === '' || x === null || x === undefined) return '';
+      const n = Number(x);
+      if (isNaN(n)) return String(x);
+      return n.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    },
+    dmy(s) {
+      const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s || '');
+      return m ? { d: +m[1], m: +m[2], y: +m[3] } : null;
+    },
+    jsDate(s) { const p = this.dmy(s); return p ? new Date(p.y, p.m - 1, p.d) : null; },
+    longDate(s) {
+      const p = this.dmy(s); if (!p) return '';
+      return p.d + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][p.m - 1] + ' ' + p.y;
+    },
+    // Calendar days from the demo's today to a date on the row. Used for the queue's
+    // urgency bands and the board's late and due-soon flags.
+    daysTo(r, which) {
+      const target = this.jsDate(which === undefined ? r.decide : which);
+      const now = this.jsDate(this.asOf);
+      if (!target || !now) return null;
+      return Math.round((target - now) / 86400000);
+    },
+
+    calc(r, id) {
+      const s = this.dmy(r.start), e = this.dmy(r.end);
+      const dur = (s && e) ? ((e.y - s.y) * 12 + (e.m - s.m) + 1) / 12 : null;
+      const yr  = (dur && typeof r.tot === 'number') ? r.tot / dur : null;
+      if (id === 'dur')  return dur === null ? '' : dur.toFixed(1);
+      if (id === 'yr')   return yr === null ? '' : this.fmtK(yr);
+      if (id === 'qtr')  return s ? s.y + ' Q' + Math.ceil(s.m / 3) : '';
+      if (id === 'tf')   return s ? String(s.y) : '';
+      if (id === 'rung') return this.rungOf(r) || '';
+      if (id === 'base') {
+        if (r.opx === 'Capex') return this.fmtK(r.tot);
+        if (r.opx === 'Opex' && yr !== null) return this.fmtK(yr);
+        return '';
+      }
+      return this.fmtK(r[id]);
+    },
+    val(r, c) {
+      if (c.t === 'cmp') return this.calc(r, c.id);
+      if (c.t === 'num') return this.fmtK(r[c.id]);
+      if (c.t === 'pct') return typeof r[c.id] === 'number' ? r[c.id] + '%' : (r[c.id] || '');
+      return r[c.id] || '';
+    },
+    disp(r, c) {
+      if (c.t === 'chk') return r[c.id] === 'Y' ? '☑ Yes' : (r[c.id] === 'N' ? '☐ No' : '');
+      if (c.id === 'id' || c.id === 'subj') return r[c.id];
+      return this.val(r, c);
+    },
+
+    chipClass(col, val) {
+      if (col === 'status') return ({
+        'Closed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'In progress': 'bg-sky-50 text-sky-700 border-sky-200',
+        'On hold': 'bg-amber-50 text-amber-700 border-amber-200',
+        'Canceled': 'bg-rose-50 text-rose-700 border-rose-200',
+        'To start': 'bg-slate-100 text-slate-600 border-slate-200'
+      })[val] || 'bg-slate-100 text-slate-600 border-slate-200';
+      if (col === 'resp') return ({
+        'Confirmed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'Needs changes': 'bg-amber-50 text-amber-700 border-amber-200',
+        'Canceled': 'bg-rose-50 text-rose-700 border-rose-200',
+        'Awaiting answer': 'bg-slate-100 text-slate-600 border-slate-200'
+      })[val] || 'bg-slate-100 text-slate-600 border-slate-200';
+      if (col === 'stage') return ({
+        'Signed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'On hold': 'bg-slate-100 text-slate-600 border-slate-200',
+        'Canceled': 'bg-gray-100 text-gray-500 border-gray-200'
+      })[val] || 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      if (col === 'outcome') return ({
+        'Authorize': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'Derogation': 'bg-amber-50 text-amber-700 border-amber-200',
+        'Defer': 'bg-sky-50 text-sky-700 border-sky-200',
+        'Reject': 'bg-rose-50 text-rose-700 border-rose-200'
+      })[val] || 'bg-gray-50 text-gray-500 border-gray-200';
+      if (col === 'cat') return 'bg-slate-50 text-slate-600 border-slate-200';
+      if (col === 'strat') {
+        if (val === 'Full Tender')  return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+        if (val === 'Light Tender') return 'bg-sky-50 text-sky-700 border-sky-200';
+        return 'bg-violet-50 text-violet-700 border-violet-200';
+      }
+      if (col === 'appr') {
+        if (val === 'FSEA CFO') return 'bg-rose-50 text-rose-700 border-rose-200';
+        if (val === 'N/A')      return 'bg-gray-50 text-gray-500 border-gray-200';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      }
+      if (col === 'sav') {
+        if (val === 'Y')         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        if (val === 'Potential') return 'bg-sky-50 text-sky-700 border-sky-200';
+        return 'bg-gray-50 text-gray-500 border-gray-200';
+      }
+      if (col === 'itype') return val === 'NEW' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-gray-50 text-gray-600 border-gray-200';
+      return 'bg-gray-50 text-gray-600 border-gray-200';
+    },
+
+    history: [
+      { cycle: 'Cycle 2026 H2', answer: 'Confirmed', value: '€ 186,000', by: 'answered by email link' },
+      { cycle: 'Cycle 2026 H1', answer: 'Confirmed', value: '€ 186,000', by: 'answered by email link' },
+      { cycle: 'Cycle 2025 H2', answer: 'Confirmed', value: '€ 186,000', by: 'workbook returned' }
+    ],
+
+    thread: [
+      { i: 1, who: 'ellie', init: 'E', meta: 'Ellie · 22 Sep, 08:15 · sent by email',
+        body: 'This contract ends 31 March 2027. A decision is needed by <strong>5 January</strong> to keep the standard process.' },
+      { i: 2, who: 'bu', init: 'MF', meta: 'Marco Ferretti · 29 Sep, 16:40 · written reply, parsed',
+        body: 'The AWS one is going to tender, we already started talking to the team about it.' },
+      { i: 3, who: 'ellie', init: 'E', meta: 'Ellie · 29 Sep, 16:41 · confidence: high',
+        body: 'Recorded as <strong>confirmed, new tender</strong>. One thing: the strategy on file still says Direct Nego at € 1,240,000, which needs a CFO derogation. Shall I change it to Full Tender, or is the derogation the intent?' },
+      { i: 4, who: 'proc', init: 'GR', meta: 'Giulia Rinaldi, Procurement · 30 Sep, 09:12 · in the platform',
+        body: 'Leave it. It goes to the October session either way and the CFO will want to see why we did not tender last time.' }
+    ],
+
+    audit: [
+      { i: 1, what: 'Line imported from Purchasing Plan master, row 412', when: '4 Aug 2026', channel: 'Import', basis: 'file, mapped by Procurement', tone: 'bg-slate-300' },
+      { i: 2, what: 'Validation: <strong>Sourcing Strategy</strong> flagged: direct negotiation at this value is a derogation', when: '4 Aug 2026', channel: 'Agent', basis: 'validation on import', tone: 'bg-amber-400' },
+      { i: 3, what: 'Owner set to <strong>Marco Ferretti</strong>', when: '4 Aug 2026', channel: 'Import', basis: 'owner field in the plan', tone: 'bg-slate-300' },
+      { i: 4, what: 'Assigned to cycle <strong>2027 H1</strong>, deadline 16 Oct 2026', when: '22 Sep 2026', channel: 'Agent', basis: 'contract end date falls inside the window', tone: 'bg-indigo-400' },
+      { i: 5, what: 'Request sent, one email with a link per line', when: '22 Sep 2026', channel: 'Email', basis: 'sent to marco.ferretti@sisal.it', tone: 'bg-indigo-400' },
+      { i: 6, what: 'Email reply read as <strong>confirmed, new tender</strong>', when: '29 Sep 2026', channel: 'Email reply', basis: 'from the owner\'s mailbox', tone: 'bg-emerald-400' },
+      { i: 7, what: 'Challenge raised on Sourcing Strategy', when: '29 Sep 2026', channel: 'Agent', basis: 'sourcing strategy and value', tone: 'bg-amber-400' },
+      { i: 8, what: 'Comment added by <strong>Giulia Rinaldi</strong>, Procurement', when: '30 Sep 2026', channel: 'Platform', basis: 'signed in with Microsoft', tone: 'bg-emerald-400' },
+      { i: 9, what: 'Routed to authorization at <strong>FSEA CFO</strong>', when: '16 Oct 2026', channel: 'Agent', basis: 'rung computed from value and method', tone: 'bg-rose-400' }
+    ]
+  };
+}
+</script>
+</body>
+</html>

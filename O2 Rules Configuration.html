@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<!--
+  O2 · Rules Configuration  (Procurement administrator)  Phase 1
+  ==============================================================
+  Source: `Tiered Solution/Scope and Flow.md` → "Rules Are Configuration, Owned By Flutter",
+                                                "Decisions Locked" (Session 22 rule set)
+
+  Where rules are administered. Since Session 22 no label, flag or message elsewhere names
+  a procedure or a section number; the only other place rule values appear is the rule set
+  saved with each plan, opened from Plan.html's Review strip (Session 23). A settings screen reached from the rail, not a plan
+  tab, because rules belong to the legal entity and outlive any single plan.
+
+  The Session 22 rule set, shown with its source and status on every row:
+    - Sourcing method by amount: FSEA user guide (Italian), slide 9. Confirmed.
+    - Minimum notice: their own plan's RFE deadline formula (Direct Nego 30 / 40 / 60 at
+      the 100K and 1M boundaries, Light Tender 40, Full Tender 60). To confirm: the
+      Italian guide has no notice table.
+    - Derogation: a direct negotiation or other derogation above 10K (guide, slide 11).
+    - Ladder: Local Procurement Manager to 10K, Head of Procurement to 50K (both from the
+      STH Turkey procedure, to confirm), Sr Procurement Director to 500K and FSEA CFO above
+      (the Italian guide and the STH procedure agree).
+    - Lapse conditions: STH procedure.
+
+  Removed in Session 22: the entity warning built on the Turkey-only premise, the
+  formula-versus-rules demo panel (its "contradicts the procedure" argument depended on
+  Turkey's 50K boundary), the objection box and the footnote.
+
+  Properties the screen carries: per legal entity with inheritance, effective dated with
+  prior versions retained, audited.
+
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O2 · Rules Configuration</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  [x-cloak] { display: none !important; }
+  .scroll::-webkit-scrollbar { width: 9px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+</style>
+</head>
+
+<body class="bg-gray-100 h-screen overflow-hidden text-slate-800" x-data="rules()" x-cloak>
+<div class="flex h-screen">
+
+  <nav class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-2 shrink-0">
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center mb-3">
+      <span class="text-white text-xs font-bold">E</span>
+    </div>
+    <template x-for="item in rail" :key="item.k">
+      <button class="w-10 h-11 rounded-lg flex flex-col items-center justify-center gap-0.5 text-[8px] leading-tight"
+              :class="item.on ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-gray-400 hover:bg-gray-100'">
+        <span class="text-[15px]" x-text="item.i"></span><span x-text="item.k"></span>
+      </button>
+    </template>
+  </nav>
+
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <header class="bg-white border-b border-gray-200 px-6 pt-4 pb-0 shrink-0">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-[11px] text-gray-400 mb-0.5">Settings · Procurement rules · FSEA</p>
+          <h1 class="text-lg font-semibold text-gray-900">Procurement rules</h1>
+          <p class="text-xs text-gray-500 mt-1">
+            Owned and edited by Procurement, per legal entity, effective dated and audited.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select x-model="entity" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-700 bg-white font-medium">
+            <template x-for="e in entities" :key="e.k">
+              <option :value="e.k" x-text="e.k + (e.inherits ? ' (inherits)' : '')"></option>
+            </template>
+          </select>
+          <button class="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50">Change history</button>
+          <button class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Propose a change</button>
+        </div>
+      </div>
+      <div class="flex gap-1 mt-3 -mb-px">
+        <template x-for="t in tabs" :key="t">
+          <button @click="tab = t" class="px-3 py-2 text-xs font-medium border-b-2 transition-colors"
+                  :class="tab === t ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                  x-text="t"></button>
+        </template>
+      </div>
+    </header>
+
+    <div class="scroll flex-1 overflow-y-auto px-6 py-5">
+
+      <!-- Pending confirmation. Two values are not in any Italian document we hold. -->
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-4 flex items-center gap-3">
+        <span class="text-amber-600 text-base leading-none shrink-0">&#9888;</span>
+        <div class="text-[12px] text-amber-900">
+          <strong>2 values pending confirmation by Procurement:</strong>
+          the minimum notice periods, and the approvers below &euro; 50,000.
+        </div>
+      </div>
+
+      <!-- ══════════ TAB · Methods and notice ══════════ -->
+      <template x-if="tab === 'Methods and notice'">
+        <div class="space-y-4">
+
+          <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h2 class="text-[13.5px] font-semibold text-gray-900">Sourcing method by purchase amount</h2>
+              <div class="text-right">
+                <div class="text-[10.5px] text-gray-400">Effective from</div>
+                <div class="text-[12px] font-medium text-gray-800">1 Jan 2026</div>
+              </div>
+            </div>
+            <table class="w-full text-xs">
+              <thead class="bg-gray-50 text-gray-500">
+                <tr class="text-left">
+                  <th class="px-4 py-2.5 font-medium">Purchase amount</th>
+                  <th class="px-3 py-2.5 font-medium">Required method</th>
+                  <th class="px-3 py-2.5 font-medium">Source</th>
+                  <th class="px-3 py-2.5 font-medium">Status</th>
+                  <th class="px-3 py-2.5 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <template x-for="b in bands" :key="b.band">
+                  <tr class="hover:bg-gray-50/70">
+                    <td class="px-4 py-2.5 font-medium text-gray-900 mono" x-text="b.band"></td>
+                    <td class="px-3 py-2.5 text-gray-700" x-text="b.method"></td>
+                    <td class="px-3 py-2.5 text-gray-500" x-text="b.src"></td>
+                    <td class="px-3 py-2.5"><span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass(b.st)" x-text="b.st"></span></td>
+                    <td class="px-3 py-2.5 text-right"><button class="text-[11px] font-medium text-indigo-600">Edit</button></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h2 class="text-[13.5px] font-semibold text-gray-900">Minimum notice before the contract starts</h2>
+              <div class="text-right">
+                <div class="text-[10.5px] text-gray-400">Effective from</div>
+                <div class="text-[12px] font-medium text-gray-800">1 Jan 2026</div>
+              </div>
+            </div>
+            <table class="w-full text-xs">
+              <thead class="bg-gray-50 text-gray-500">
+                <tr class="text-left">
+                  <th class="px-4 py-2.5 font-medium">Sourcing strategy</th>
+                  <th class="px-3 py-2.5 font-medium">Amount</th>
+                  <th class="px-3 py-2.5 font-medium text-right">Working days</th>
+                  <th class="px-3 py-2.5 font-medium">Source</th>
+                  <th class="px-3 py-2.5 font-medium">Status</th>
+                  <th class="px-3 py-2.5 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <template x-for="n in notice" :key="n.strat + n.amt">
+                  <tr class="hover:bg-gray-50/70">
+                    <td class="px-4 py-2.5 font-medium text-gray-900" x-text="n.strat"></td>
+                    <td class="px-3 py-2.5 text-gray-700 mono" x-text="n.amt"></td>
+                    <td class="px-3 py-2.5 text-right font-medium text-gray-800" x-text="n.days"></td>
+                    <td class="px-3 py-2.5 text-gray-500" x-text="n.src"></td>
+                    <td class="px-3 py-2.5"><span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass(n.st)" x-text="n.st"></span></td>
+                    <td class="px-3 py-2.5 text-right"><button class="text-[11px] font-medium text-indigo-600">Edit</button></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══════════ TAB · Authorization ══════════ -->
+      <template x-if="tab === 'Authorization'">
+        <div class="space-y-4">
+          <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 flex items-center gap-6">
+            <div>
+              <div class="text-[10.5px] text-gray-400 uppercase tracking-wide">Needs authorization</div>
+              <div class="text-[13px] font-medium text-gray-900 mt-0.5">A direct negotiation, or any other derogation, above &euro; 10,000</div>
+            </div>
+            <div class="flex-1"></div>
+            <div class="text-[11px] text-gray-500">Source: FSEA user guide</div>
+            <span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass('Confirmed')">Confirmed</span>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200">
+              <h2 class="text-[13.5px] font-semibold text-gray-900">Who authorizes, by purchase amount</h2>
+            </div>
+            <div class="p-4 space-y-2.5">
+              <template x-for="(r, i) in ladder" :key="r.rung">
+                <div class="flex items-stretch gap-3">
+                  <div class="flex flex-col items-center shrink-0">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" :class="r.tone" x-text="i + 1"></div>
+                    <div x-show="i < ladder.length - 1" class="flex-1 w-px bg-gray-200 mt-1"></div>
+                  </div>
+                  <div class="flex-1 rounded-lg border border-gray-200 px-4 py-3 mb-1">
+                    <div class="flex items-start justify-between gap-4">
+                      <div>
+                        <div class="text-[13px] font-semibold text-gray-900" x-text="r.rung"></div>
+                        <div class="text-[11.5px] text-gray-600 mt-0.5 mono" x-text="r.when"></div>
+                        <div class="text-[11px] text-gray-400 mt-1" x-text="'Source: ' + r.src"></div>
+                      </div>
+                      <div class="flex items-center gap-3 shrink-0">
+                        <span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass(r.st)" x-text="r.st"></span>
+                        <button class="text-[11px] font-medium text-indigo-600">Edit</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-white p-4">
+            <div class="flex items-baseline justify-between">
+              <h2 class="text-[13.5px] font-semibold text-gray-900">When an authorization lapses</h2>
+              <span class="text-[11px] text-gray-400">Source: STH procurement procedure</span>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mt-3">
+              <template x-for="v in validity" :key="v.k">
+                <div class="rounded-lg border border-gray-200 bg-gray-50/60 px-3.5 py-3">
+                  <div class="text-[12.5px] font-medium text-gray-800" x-text="v.k"></div>
+                  <div class="text-[19px] font-semibold text-gray-900 mt-1" x-text="v.v"></div>
+                  <div class="text-[10.5px] text-gray-500 mt-0.5 leading-snug" x-text="v.sub"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══════════ TAB · Change history ══════════
+           Effective dating and audit, drawn as the same object because they are. -->
+      <template x-if="tab === 'Change history'">
+        <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <table class="w-full text-xs">
+            <thead class="bg-gray-50 text-gray-500">
+              <tr class="text-left">
+                <th class="px-4 py-2.5 font-medium">Effective from</th>
+                <th class="px-3 py-2.5 font-medium">What changed</th>
+                <th class="px-3 py-2.5 font-medium">Entity</th>
+                <th class="px-3 py-2.5 font-medium">Changed by</th>
+                <th class="px-3 py-2.5 font-medium text-right">Lines affected</th>
+                <th class="px-3 py-2.5 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <template x-for="h in history" :key="h.i">
+                <tr class="hover:bg-gray-50/70">
+                  <td class="px-4 py-2.5">
+                    <div class="font-medium text-gray-900" x-text="h.from"></div>
+                    <div class="text-[10px] text-gray-400" x-text="h.status"></div>
+                  </td>
+                  <td class="px-3 py-2.5 text-gray-700" x-text="h.what"></td>
+                  <td class="px-3 py-2.5 text-gray-600" x-text="h.entity"></td>
+                  <td class="px-3 py-2.5 text-gray-600" x-text="h.by"></td>
+                  <td class="px-3 py-2.5 text-right font-medium text-gray-800" x-text="h.n"></td>
+                  <td class="px-3 py-2.5 text-right"><button class="text-[11px] font-medium text-indigo-600">View rules as of this date</button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>
+
+<script>
+function rules() {
+  return {
+    tab: 'Methods and notice',
+    tabs: ['Methods and notice', 'Authorization', 'Change history'],
+    entity: 'Sisal Italia',
+
+    rail: [
+      { k: 'Home', i: '⌂', on: false }, { k: 'Plan', i: '▤', on: false }, { k: 'Tasks', i: '☑', on: false },
+      { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false }, { k: 'Setup', i: '⚙', on: true }
+    ],
+
+    // Session 22: the Italian entities share one configuration. Turkey keeps its own.
+    entities: [
+      { k: 'Group default',     inherits: false },
+      { k: 'Sisal Italia',      inherits: true },
+      { k: 'Snaitech',          inherits: true },
+      { k: 'Sisal Gaming',      inherits: true },
+      { k: 'TSG Italy',         inherits: true },
+      { k: 'Sisal Tech Turkey', inherits: false },
+      { k: 'Albania',           inherits: true },
+      { k: 'Morocco',           inherits: true },
+      { k: 'Tunisia',           inherits: true }
+    ],
+
+    // The decided values (Tiered Solution/Scope and Flow.md, Decisions Locked, Session 22).
+    bands: [
+      { band: 'Up to € 10,000',        method: 'A quote from a single supplier',                        src: 'FSEA user guide', st: 'Confirmed' },
+      { band: '€ 10,000 – € 50,000',   method: 'At least two quotes from different suppliers',           src: 'FSEA user guide', st: 'Confirmed' },
+      { band: '€ 50,000 – € 100,000',  method: 'Structured competitive comparison, three suppliers',     src: 'FSEA user guide', st: 'Confirmed' },
+      { band: 'Above € 100,000',       method: 'Tender through the Procurement portal, three suppliers', src: 'FSEA user guide', st: 'Confirmed' }
+    ],
+
+    notice: [
+      { strat: 'Direct Nego',  amt: 'Below € 100,000',          days: 30, src: 'Your plan’s RFE deadline formula', st: 'To confirm' },
+      { strat: 'Direct Nego',  amt: '€ 100,000 – € 1,000,000',  days: 40, src: 'Your plan’s RFE deadline formula', st: 'To confirm' },
+      { strat: 'Direct Nego',  amt: 'Above € 1,000,000',        days: 60, src: 'Your plan’s RFE deadline formula', st: 'To confirm' },
+      { strat: 'Light Tender', amt: 'Any',                      days: 40, src: 'Your plan’s RFE deadline formula', st: 'To confirm' },
+      { strat: 'Full Tender',  amt: 'Any',                      days: 60, src: 'Your plan’s RFE deadline formula', st: 'To confirm' }
+    ],
+
+    ladder: [
+      { rung: 'Local Procurement Manager', when: 'Up to € 10,000',        src: 'STH procurement procedure',                     st: 'To confirm', tone: 'bg-slate-400' },
+      { rung: 'Head of Procurement',       when: '€ 10,000 – € 50,000',   src: 'STH procurement procedure',                     st: 'To confirm', tone: 'bg-sky-500' },
+      { rung: 'Sr Procurement Director',   when: '€ 50,000 – € 500,000',  src: 'FSEA user guide, STH procurement procedure',    st: 'Confirmed',  tone: 'bg-amber-500' },
+      { rung: 'FSEA CFO',                  when: 'Above € 500,000',       src: 'FSEA user guide, STH procurement procedure',    st: 'Confirmed',  tone: 'bg-rose-500' }
+    ],
+
+    validity: [
+      { k: 'Value tolerance',      v: '10%',      sub: 'authorization voids if the final amount exceeds the authorized amount by more' },
+      { k: 'Absolute tolerance',   v: '€ 50,000', sub: 'or by more than this, whichever binds first' },
+      { k: 'Threshold crossing',   v: 'Re-route', sub: 'if the final amount crosses the authorizer’s threshold, it goes back up the ladder' }
+    ],
+
+    history: [
+      { i: 1, from: '1 Jan 2026', status: 'current', what: 'Sourcing methods by amount set from the FSEA user guide', entity: 'Italian entities', by: 'Imported at onboarding', n: '4,413' },
+      { i: 2, from: '1 Jan 2026', status: 'current', what: 'Notice periods set from the plan’s RFE deadline formula', entity: 'Italian entities', by: 'Imported at onboarding', n: '4,413' },
+      { i: 3, from: '1 Jan 2026', status: 'current', what: 'Authorization ladder defined, four rungs; derogation above € 10,000', entity: 'Italian entities', by: 'Imported at onboarding', n: '2,308' },
+      { i: 4, from: '1 Apr 2026', status: 'current', what: 'Derogations section updated (procedure version 2.0)', entity: 'Sisal Tech Turkey', by: 'Imported at onboarding', n: '112' }
+    ],
+
+    statusClass(st) {
+      return st === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200';
+    }
+  };
+}
+</script>
+</body>
+</html>

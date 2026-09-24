@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<!--
+  P0b · Review Before Scheduling  (Procurement, in the platform)  Phase 1
+  =======================================================================
+  Source: Procedure (STH Turkey, FlutterSEA layout) → 3.1 "Purchasing plan": the plan is prepared quarterly
+          with a six month horizon; Local Procurement extracts the contracts expiring in the reference quarter
+          and the next; "Engagement requests that do not refer to purchases previously included in the purchase
+          plan will be included in the subsequent purchasing plan". Product categories and column names come
+          from `Purchasing Plan.xlsx`. `Tiered Solution/Screen Inventory.md` → "P0b. Review before scheduling".
+          Reached from P0 (the next-cycle card, its row, and Create Purchasing Plan).
+
+  What it has to prove:
+    Before a quarter is scheduled, Procurement can see exactly what is in it, take lines out, add lines
+    that are missing, and only then set the dates. Scheduling stays a confirmation, not a build, because the
+    agent has already picked the lines, but nobody is asked to confirm a scope they cannot see.
+
+  THE DECISION THAT SHAPES THIS SCREEN (session 6, made with Alper):
+    A FULL REVIEW SCREEN BEFORE CONFIRMING. Proposed lines are grouped by product category, each with
+    remove and restore, and a whole category can be left out. Lines are added from existing contracts that
+    end outside the window, or as a new need. Two steps: 1 Lines, 2 Dates. Confirming schedules the plan and
+    returns to P0. Nothing is scheduled, and no business owner is emailed, before that.
+
+  REASONS ARE CAPTURED, NOT COMPELLED (changed in session 8, with Alper):
+    Removing a line or leaving out a category offers a reason and does not require one. An earlier version
+    blocked confirming until every removal had one, which was wrong on two counts. Justifying a removal is
+    not in Flutter's procedure; we invented the obligation and then enforced it on them, which is us writing
+    their policy. And a toll in front of tidying the plan discourages the tidying, so the control produced
+    the opposite of what it exists for: junk lines left in, and business units asked about contracts that
+    were already renewed.
+    What is left is the value without the friction. Ellie fills the reason in where the data already says
+    why. What is missing is shown as a consequence, not a barrier: lines removed with no reason are lines
+    plan coverage cannot explain. Whether removals should be justified, and who would read that, is now a
+    question for Flutter rather than a rule we set. See Tiered Solution/Questions for Flutter.md.
+
+  IMPORT (added in session 6, on Alper's request): the contracts they already hold in Appian or SAP can be
+    brought in as an export instead of being added one at a time. Add lines > Import a file. Choose where the
+    export came from, then the file, and the screen shows what it read before anything is added: rows that
+    match a line already in the plan (recognized, not added twice), rows that end outside the window (offered,
+    off by default), and rows it cannot place yet (an owner or a category it does not know), which are fixed
+    once in a lookup rather than row by row. Only the rows you tick are added, marked "Imported from Appian" or
+    "Imported from SAP", and each can be removed like any other line.
+    THE FILE IS NOT PARSED IN THIS MOCKUP. Whatever file is chosen, or the sample button, shows a built-in
+    example for the chosen source. The column names in it are examples of what such exports look like; the real
+    ones depend on their reports and are to be confirmed with Flutter.
+
+  WHAT IS SOURCED AND WHAT IS NOT:
+    Sourced: the window and its six month horizon, contracts picked by end date, needs outside the plan go to
+    the subsequent plan, the categories, the notice table for the standard method (4.1.1: up to 1K 25 working
+    days, up to 10K 30, up to 50K 40, above 50K 60).
+    Ours, illustrative: every count, value, name and supplier below, the import columns and values, the removal reasons
+    (which their procedure does not ask for at all, so they are offered and never required), the mark for contracts
+    that also sit in the previous plan, the two step layout, and the rule that the notice check counts from the
+    authorization session.
+    Open for Flutter: because windows overlap by a quarter, a contract ending Apr to Jun sits in two plans.
+    This screen marks those lines and leaves them in. It does not decide how the process avoids asking twice.
+
+  TIME: about Tue 29 Sep 2026, the same moment as P0. Lines deferred at the 27 Oct session (P5) do not exist yet,
+  and join this plan by themselves when they do.
+
+  The lines shown are a sample: each category shows its largest lines and a count for the rest.
+
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans. Wireframe, not the real UI.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P0b · Review Before Scheduling</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  [x-cloak] { display: none !important; }
+  .scroll::-webkit-scrollbar { width: 9px; height: 9px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+  .fld { font-size: 12.5px; padding: 6px 9px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; width: 100%; }
+  .fld:focus { outline: none; border-color: #a5b4fc; box-shadow: 0 0 0 3px #e0e7ff; }
+  .fade { animation: f .2s ease-out; }
+  @keyframes f { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  /* one column template for the header row and every line, so they cannot drift apart */
+  .irow { display: grid; grid-template-columns: 22px minmax(170px, 1.5fr) minmax(110px, 1fr) minmax(110px, 1fr) 70px 64px 84px; column-gap: 10px; align-items: center; }
+  .lrow { display: grid; grid-template-columns: minmax(190px, 1.5fr) 120px 92px 70px minmax(120px, 1fr) 76px; column-gap: 12px; align-items: center; }
+
+  /* ── The sheet ─────────────────────────────────────────────────────────────────────
+     The same table as the plan. Fixed layout: widths come from <colgroup> only, never
+     from cell content. Named `sheet`, NOT `grid`: Tailwind's .grid is display:grid and
+     it splits the header from the body. */
+  table.sheet { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  table.sheet th, table.sheet td {
+    border-right: 1px solid #e8e9ed; border-bottom: 1px solid #e8e9ed;
+    white-space: nowrap; overflow: hidden;
+  }
+  table.sheet td { vertical-align: middle; }
+  table.sheet tbody td { height: 36px; }
+  table.sheet .gs { border-left: 1px solid #d5d7de; }
+  table.sheet thead th { position: sticky; z-index: 20; background: #f6f7f9; }
+  table.sheet thead tr.hg th { top: 0;    height: 24px; background: #eceef3; border-bottom: 1px solid #dcdee5; }
+  table.sheet thead tr.hc th { top: 24px; height: 40px; border-bottom: 1px solid #d9dbe1; }
+  table.sheet th.gh { overflow: visible; padding: 0 10px; text-align: left; border-left: 1px solid #d5d7de;
+    font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
+  .glabel { position: sticky; left: 388px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+  .hn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        white-space: normal; line-height: 1.2; min-width: 0; }
+
+  /* Frozen: the row number (44) and the line itself (300). The plan freezes their sheet ID
+     too; a draft line does not have one yet. */
+  .fz { position: sticky; z-index: 15; background: #fff; }
+  .f0 { left: 0; }
+  .f1b { left: 44px; border-right: 1px solid #d0d3db !important; }
+  table.sheet thead th.fz { z-index: 30; background: #f6f7f9; }
+  table.sheet thead tr.hg th.fz { z-index: 35; background: #eceef3; }
+  tr:hover td.fz { background: #fafbfc; }
+
+  /* A product category band, carrying the bulk action for the group. Sticky to the left
+     so the label and its Leave out control stay reachable while the sheet scrolls
+     sideways, the same way the Subject Contract column does.
+     Two things have to both be true for this to work: every cell in this sheet is
+     overflow:hidden, and overflow:hidden on an ancestor silently kills position:sticky
+     on a descendant, so the label's own td has to opt back in to overflow:visible. And
+     the sticky element has to be the label itself, not the td: Chromium does not honor
+     position:sticky on a <td> that carries a colspan, which this one does to span the
+     full row. */
+  td.gband { background: #f3f4f7; height: 30px !important; border-bottom: 1px solid #dcdee5; }
+  table.sheet td.gbandmain { overflow: visible; }
+  /* 56px, not 12: the offset is against the scrollport, not against this td, so it has to
+     clear the frozen row-number column (44px) or the label renders half-hidden under it. */
+  .gbandlabel { position: sticky; left: 56px; display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Ours, next to theirs. */
+  table.sheet thead th.plat { background: #eef2ff; color: #4338ca; }
+  td.platcell { background: rgba(238, 242, 255, .45); }
+
+  /* A cell that fails a rule. Marked, never blocking. This is the thing the old list
+     could not show at all. */
+  .badcell { background: #fff7ed !important; box-shadow: inset 0 0 0 1px #fdba74; }
+  .badcell::after { content: ''; position: absolute; top: 0; right: 0;
+    border-width: 0 6px 6px 0; border-style: solid; border-color: transparent #f97316 transparent transparent; }
+  .cellrel { position: relative; }
+
+  .gwrap::-webkit-scrollbar { width: 11px; height: 11px; }
+  .gwrap::-webkit-scrollbar-thumb { background: #c8cad1; border-radius: 8px; border: 2px solid #fff; }
+  .gwrap::-webkit-scrollbar-track { background: #f6f7f9; }
+  .gwrap::-webkit-scrollbar-corner { background: #f6f7f9; }
+</style>
+</head>
+
+<body class="bg-gray-100 h-screen overflow-hidden text-slate-800" x-data="review()" x-cloak>
+<div class="flex h-screen">
+
+  <!-- ══════════ Left icon rail (same shell as P0) ══════════ -->
+  <nav class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-2 shrink-0">
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center mb-3">
+      <span class="text-white text-xs font-bold">E</span>
+    </div>
+    <template x-for="item in rail" :key="item.k">
+      <button class="w-10 h-11 rounded-lg flex flex-col items-center justify-center gap-0.5 text-[8px] leading-tight"
+              :class="item.on ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-gray-400 hover:bg-gray-100'">
+        <span class="text-[15px]" x-text="item.i"></span>
+        <span x-text="item.k"></span>
+      </button>
+    </template>
+  </nav>
+
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- ══════════ Header ══════════ -->
+    <header class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 z-30 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5 min-w-0">
+        <a href="P0%20Purchasing%20Plans.html" class="text-[12.5px] font-medium px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 shrink-0">
+          <span aria-hidden="true">&larr;</span> Purchasing Plans
+        </a>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-[16px] font-semibold text-gray-900">Purchasing Plan Q2&ndash;Q3 2027</h1>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white text-indigo-600 border border-dashed border-indigo-300">PROPOSED</span>
+          </div>
+          <div class="text-[11.5px] text-gray-500">Review before scheduling &middot; contracts expiring 1 Apr &ndash; 30 Sep 2027</div>
+        </div>
+      </div>
+
+      <!-- steps -->
+      <div class="flex items-center gap-2 shrink-0">
+        <template x-for="(s, i) in ['Lines', 'Dates']" :key="s">
+          <div class="flex items-center gap-2">
+            <button @click="i === 0 ? step = 1 : (step = 2)"
+                    class="flex items-center gap-2 text-[12px] px-2.5 py-1 rounded-lg"
+                    :class="step === i + 1 ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">
+              <span class="w-5 h-5 rounded-full text-[10.5px] font-semibold flex items-center justify-center"
+                    :class="step === i + 1 ? 'bg-indigo-600 text-white' : (i + 1 < step ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600')"
+                    x-text="i + 1 < step ? '✓' : i + 1"></span>
+              <span x-text="s"></span>
+            </button>
+            <span x-show="i === 0" class="text-gray-300">&mdash;</span>
+          </div>
+        </template>
+      </div>
+    </header>
+
+    <div class="flex-1 min-h-0 flex">
+
+      <!-- ══════════ Main column ══════════ -->
+      <div class="flex-1 min-w-0 flex flex-col">
+        <!-- One vertical scroll per step (Session 26). On step 1 #main does not scroll: the
+             table fills what is left under the agent card and the filter row and scrolls on
+             its own, so its sticky header and horizontal scrollbar stay in view. Step 2 is a
+             form, so #main scrolls. -->
+        <div class="scroll flex-1 min-h-0 px-5 py-5" id="main" :class="step === 1 ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'">
+
+          <!-- The agent, and what it did. Shown on both steps. -->
+          <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 mb-4 shrink-0">
+            <div class="flex gap-3">
+              <div class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-[11px] font-bold"
+                   style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+              <div class="min-w-0">
+                <template x-if="step === 1">
+                  <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Nothing is scheduled yet</div>
+                    <p class="text-sm text-slate-800 leading-relaxed mt-1">
+                      I picked the contracts that end between <span class="font-semibold">1 Apr and 30 Sep 2027</span>:
+                      <span class="font-semibold">1,146 lines</span> in nine product categories. Three needs raised in earlier alignments are already in.
+                      Take out what does not belong, add what is missing, then set the dates.
+                      If the contracts are kept in Appian or SAP, you can import an export from there instead of adding them one by one.
+                    </p>
+                    <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
+                      Contracts that end in April to June also sit in the Q1&ndash;Q2 2027 plan. I marked them and left them in.
+                      Lines deferred at the 27 Oct authorization session will join by themselves.
+                    </p>
+                  </div>
+                </template>
+                <template x-if="step === 2">
+                  <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Last step</div>
+                    <p class="text-sm text-slate-800 leading-relaxed mt-1">
+                      The dates below are what I proposed. Business owners are emailed on the morning the cycle opens, not before.
+                    </p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════ STEP 1 · LINES ══════════ -->
+          <div x-show="step === 1" class="flex-1 min-h-0 flex flex-col">
+
+            <!-- filter row -->
+            <div class="flex items-center justify-between gap-3 mb-3 shrink-0">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <template x-for="f in filters" :key="f.k">
+                  <button @click="filter = f.k"
+                          class="text-[11.5px] px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5"
+                          :class="filter === f.k ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-200/60'">
+                    <span x-text="f.label"></span>
+                    <span class="text-[10px] px-1.5 rounded-full" :class="filter === f.k ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-500'" x-text="filterCount(f.k).toLocaleString('en-GB')"></span>
+                  </button>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <!-- Hide fields, the same control the plan carries. The step opens on the
+                     fields that matter for scheduling; the rest of the schema is behind it. -->
+                <div class="relative" @click.outside="fmenu = false" @keydown.escape.window="fmenu = false">
+                  <button @click="fmenu = !fmenu"
+                          class="text-[11.5px] px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors"
+                          :class="fmenu ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-200/60'">
+                    <span class="text-[12px]">&#9707;</span><span x-text="visCols.length + 1 + ' of ' + (cols.length + 1) + ' fields'"></span>
+                  </button>
+                  <div x-show="fmenu" x-cloak
+                       class="absolute right-0 top-full mt-1 w-[300px] max-h-[440px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl z-50 pb-1.5 text-left">
+                    <div class="sticky top-0 bg-white px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                      <span class="text-[11px] text-gray-500">Fields for this step</span>
+                      <button @click="hidden = {}" class="text-[11px] font-medium text-indigo-600 hover:underline">Show all</button>
+                    </div>
+                    <template x-for="grp in groupList" :key="grp.g">
+                      <div>
+                        <div class="px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400" x-text="grp.g"></div>
+                        <template x-for="c in grp.cols" :key="c.id">
+                          <label class="flex items-center gap-2 px-3 py-1 text-[11.5px] text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="accent-indigo-600 w-3 h-3 shrink-0" :checked="!hidden[c.id]" @change="hidden[c.id] = !hidden[c.id]">
+                            <span class="text-gray-400 text-[10px] w-3 text-center shrink-0" x-text="typeIcon(c.t)"></span>
+                            <span class="truncate" x-text="c.k"></span>
+                            <span x-show="c.plat" class="ml-auto text-[9px] font-semibold text-indigo-600 shrink-0">OURS</span>
+                          </label>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+                <button @click="toggleAll()" class="text-[11.5px] text-gray-500 hover:text-gray-800" x-show="false"></button>
+                <button @click="addOpen = !addOpen"
+                        class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg border"
+                        :class="addOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'">
+                  <span class="text-[13px] leading-none">&#43;</span> Add lines
+                </button>
+              </div>
+            </div>
+
+            <!-- add panel -->
+            <div x-show="addOpen" x-transition.opacity class="rounded-xl border border-indigo-100 bg-white p-4 mb-4 shrink-0 max-h-[55%] overflow-y-auto scroll">
+              <div class="flex items-center gap-1 mb-3">
+                <button @click="addMode = 'existing'" class="text-[12px] px-3 py-1 rounded-md"
+                        :class="addMode === 'existing' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">From existing contracts</button>
+                <button @click="addMode = 'need'" class="text-[12px] px-3 py-1 rounded-md"
+                        :class="addMode === 'need' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">A new need</button>
+                <button @click="addMode = 'import'" class="text-[12px] px-3 py-1 rounded-md"
+                        :class="addMode === 'import' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">Import a file</button>
+              </div>
+
+              <div x-show="addMode === 'existing'">
+                <p class="text-[11.5px] text-gray-500 mb-2">Contracts that end after 30 Sep 2027. Adding one brings its renewal forward into this plan.</p>
+                <input type="text" x-model="q" placeholder="Search contract, supplier or owner" class="fld mb-2">
+                <div class="border border-gray-100 rounded-lg divide-y divide-gray-100">
+                  <template x-for="c in candidates()" :key="c.id">
+                    <div class="flex items-center gap-3 px-3 py-2">
+                      <div class="min-w-0 flex-1">
+                        <div class="text-[12.5px] font-medium text-gray-900 truncate" x-text="c.contract"></div>
+                        <div class="text-[11px] text-gray-500 truncate" x-text="c.supplier + ' · ' + c.owner + ' · ' + c.cat"></div>
+                      </div>
+                      <div class="text-[11.5px] text-gray-600 shrink-0">ends <span x-text="fmt(c.ends)"></span></div>
+                      <div class="text-[11.5px] mono text-gray-700 w-16 text-right shrink-0" x-text="kfmt(c.value)"></div>
+                      <button @click="addExisting(c)" :disabled="isAdded(c.id)"
+                              class="text-[11.5px] font-semibold px-3 py-1 rounded-md shrink-0"
+                              :class="isAdded(c.id) ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'"
+                              x-text="isAdded(c.id) ? 'Added' : 'Add'"></button>
+                    </div>
+                  </template>
+                  <div x-show="candidates().length === 0" class="px-3 py-4 text-center text-[12px] text-gray-400">No contract matches.</div>
+                </div>
+              </div>
+
+              <div x-show="addMode === 'need'">
+                <p class="text-[11.5px] text-gray-500 mb-3">Something the business will buy that has no contract behind it yet.</p>
+
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">What</div>
+                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
+                  <label class="block col-span-2">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Subject Contract</span>
+                    <input type="text" x-model="nd.subject" placeholder="What is needed" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Product Category</span>
+                    <select x-model="nd.cat" class="fld mt-1">
+                      <option value="">Choose</option>
+                      <template x-for="g in groups" :key="g.k"><option :value="g.k" x-text="g.k"></option></template>
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Sub-category (if applicable)</span>
+                    <input type="text" x-model="nd.sub" placeholder="Optional" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Project</span>
+                    <input type="text" x-model="nd.proj" placeholder="If it belongs to one" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Status</span>
+                    <select x-model="nd.status" class="fld mt-1">
+                      <template x-for="o in statusOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                    </select>
+                  </label>
+                  <label class="block col-span-3">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Detailed Activities</span>
+                    <textarea x-model="nd.act" rows="2" placeholder="What this initiative actually covers" class="fld mt-1"></textarea>
+                  </label>
+                </div>
+
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-4 mb-1.5">Entity, ownership and spend</div>
+                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal Entity</span>
+                    <select x-model="nd.ent" class="fld mt-1">
+                      <option value="">Choose</option>
+                      <template x-for="o in entities" :key="o"><option :value="o" x-text="o"></option></template>
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Owner</span>
+                    <select x-model="nd.owner" class="fld mt-1">
+                      <option value="">Choose</option>
+                      <template x-for="o in owners" :key="o"><option :value="o" x-text="o"></option></template>
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Unit</span>
+                    <select x-model="nd.bu" class="fld mt-1">
+                      <option value="">Choose</option>
+                      <template x-for="o in businessUnits" :key="o"><option :value="o" x-text="o"></option></template>
+                    </select>
+                  </label>
+                  <div class="col-span-2 flex items-center gap-4 pt-1">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 shrink-0">Applies to</span>
+                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.sisal"> Sisal</label>
+                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.pkr"> PokerStars Italy</label>
+                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.snai"> Snaitech</label>
+                  </div>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Opex / Capex</span>
+                    <select x-model="nd.opx" class="fld mt-1">
+                      <option value="">Choose</option>
+                      <template x-for="o in opxOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                    </select>
+                  </label>
+                  <label class="flex items-center gap-1.5 text-[12px] text-gray-700 pt-4"><input type="checkbox" x-model="nd.fopp"> Flutter Opportunity</label>
+                </div>
+
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-4 mb-1.5">Supplier and sourcing</div>
+                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Potential Supplier</span>
+                    <input type="text" x-model="nd.sup" placeholder="If known" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Incumbent Supplier (if applicable)</span>
+                    <input type="text" x-model="nd.inc" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Sourcing Strategy</span>
+                    <select x-model="nd.strat" class="fld mt-1">
+                      <option value="">Choose</option>
+                      <template x-for="o in stratOpts" :key="o"><option :value="o" x-text="o"></option></template>
+                    </select>
+                  </label>
+                  <label class="block col-span-3">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">
+                      Strategy Rationals
+                      <span x-show="nd.strat === 'Direct Nego'" class="text-amber-600 normal-case font-normal">&middot; required for direct negotiation</span>
+                    </span>
+                    <textarea x-model="nd.ratio" rows="2" placeholder="Why this sourcing approach" class="fld mt-1"
+                              :class="nd.strat === 'Direct Nego' && !nd.ratio.trim() ? '!border-amber-300' : ''"></textarea>
+                  </label>
+                </div>
+
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-4 mb-1.5">Term and value</div>
+                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Start Date</span>
+                    <input type="date" x-model="nd.by" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">End Date</span>
+                    <input type="date" x-model="nd.end" class="fld mt-1">
+                  </label>
+                  <label class="block">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Total Contract Value (€)</span>
+                    <input type="number" min="0" x-model="nd.value" placeholder="120000" class="fld mt-1">
+                  </label>
+                  <label class="block col-span-3">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Rational Amount</span>
+                    <input type="text" x-model="nd.ramt" placeholder="Justification of the amount" class="fld mt-1">
+                  </label>
+                  <label class="block col-span-3">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Additional Notes</span>
+                    <textarea x-model="nd.notes" rows="2" class="fld mt-1"></textarea>
+                  </label>
+                </div>
+
+                <div x-show="nd.value && nd.by" class="mt-3 text-[12px] rounded-lg border px-3 py-2"
+                     :class="short(nd) ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'">
+                  <span x-text="noticeText(nd)"></span>
+                  <span x-show="short(nd)" class="block mt-1 text-[11px] opacity-80">It can still be added. Procurement declares the delivery time.</span>
+                </div>
+                <div class="mt-3 flex justify-end">
+                  <button @click="addNeed()" :disabled="!canAdd()"
+                          class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg"
+                          :class="canAdd() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Add to plan</button>
+                </div>
+              </div>
+
+              <!-- ══════════ Import a file ══════════ -->
+              <div x-show="addMode === 'import'" id="import-panel">
+
+                <!-- 1 · choose the source and the file -->
+                <div x-show="imp.stage === 'choose'">
+                  <p class="text-[11.5px] text-gray-500 mb-3">
+                    Bring in an export of the contracts instead of adding them one by one. Nothing is added until you have seen what was read,
+                    and rows that match a line already in the plan are recognized, so nothing is listed twice.
+                  </p>
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 mr-1">Exported from</span>
+                    <template x-for="k in ['appian', 'sap']" :key="k">
+                      <button @click="imp.source = k" class="text-[12px] px-3 py-1 rounded-md border"
+                              :class="imp.source === k ? 'bg-indigo-50 text-indigo-700 border-indigo-200 font-semibold' : 'text-gray-600 border-gray-200 hover:bg-gray-50'"
+                              x-text="sources[k].label"></button>
+                    </template>
+                  </div>
+                  <label for="imp-file" class="block rounded-lg border border-dashed border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50/60 cursor-pointer px-4 py-6 text-center">
+                    <span class="block text-[13px] font-medium text-gray-800">Drop the export here, or choose a file</span>
+                    <span class="block text-[11.5px] text-gray-500 mt-1" x-text="'CSV or Excel. ' + srcDef().hint"></span>
+                  </label>
+                  <input id="imp-file" type="file" accept=".csv,.xlsx,.xls" class="hidden" @change="pickFile($event)">
+                  <div class="mt-3 text-[11.5px] text-gray-500">
+                    No file to hand?
+                    <button @click="useSample()" class="font-medium text-indigo-600 hover:text-indigo-800">Try it with a sample export</button>
+                  </div>
+                </div>
+
+                <!-- 2 · what was read -->
+                <div x-show="imp.stage === 'preview'">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="text-[13px] font-semibold text-gray-900 truncate" x-text="imp.file"></div>
+                      <div class="text-[11.5px] text-gray-500" x-text="'Exported from ' + srcDef().label + ' · ' + imp.rows.length + ' rows read'"></div>
+                    </div>
+                    <button @click="resetImport()" class="text-[11.5px] font-medium text-gray-500 hover:text-gray-800 shrink-0">Choose another file</button>
+                  </div>
+
+                  <div class="mt-3 flex flex-wrap gap-2 text-[11.5px]" id="imp-summary">
+                    <span class="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100" x-text="impCount('new') + ' new'"></span>
+                    <span class="px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 border border-gray-200" x-text="impCount('dup') + ' already in the plan'"></span>
+                    <span class="px-2.5 py-1 rounded-md bg-sky-50 text-sky-800 border border-sky-100" x-text="impCount('out') + ' outside the window'"></span>
+                    <span class="px-2.5 py-1 rounded-md border" :class="impCount('fix') ? 'bg-amber-50 text-amber-900 border-amber-200' : 'bg-gray-50 text-gray-400 border-gray-100'" x-text="impCount('fix') + ' need a fix'"></span>
+                  </div>
+
+                  <!-- how the columns and the values were read -->
+                  <div class="mt-3 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2.5">
+                    <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Columns read</div>
+                    <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-gray-700">
+                      <template x-for="c in srcDef().cols" :key="c[0]">
+                        <span><span class="text-gray-500" x-text="c[0]"></span> <span class="text-gray-300">&rarr;</span> <span class="font-medium" x-text="c[1]"></span></span>
+                      </template>
+                    </div>
+
+                    <div class="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500" x-text="srcDef().catLabel"></div>
+                    <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] items-center" id="cat-lookup">
+                      <template x-for="m in imp.catMap" :key="m.from">
+                        <span class="flex items-center gap-1.5">
+                          <span class="mono text-gray-600" x-text="m.from"></span> <span class="text-gray-300">&rarr;</span>
+                          <template x-if="m.to"><span class="font-medium text-gray-800" x-text="m.to"></span></template>
+                          <template x-if="!m.to">
+                            <select x-model="m.to" class="fld !w-[170px] !py-0.5 !text-[11.5px] !border-amber-300 !bg-amber-50">
+                              <option value="">Choose a category</option>
+                              <template x-for="g in groups" :key="g.k"><option :value="g.k" x-text="g.k"></option></template>
+                            </select>
+                          </template>
+                        </span>
+                      </template>
+                    </div>
+
+                    <template x-if="imp.ownerMap.length">
+                      <div>
+                        <div class="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Purchasing groups, matched to a Business Owner</div>
+                        <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] items-center" id="owner-lookup">
+                          <template x-for="m in imp.ownerMap" :key="m.from">
+                            <span class="flex items-center gap-1.5">
+                              <span class="mono text-gray-600" x-text="m.from"></span> <span class="text-gray-300">&rarr;</span>
+                              <template x-if="m.to"><span class="font-medium text-gray-800" x-text="m.to"></span></template>
+                              <template x-if="!m.to">
+                                <select x-model="m.to" class="fld !w-[170px] !py-0.5 !text-[11.5px] !border-amber-300 !bg-amber-50">
+                                  <option value="">Choose an owner</option>
+                                  <template x-for="o in owners" :key="o"><option :value="o" x-text="o"></option></template>
+                                </select>
+                              </template>
+                            </span>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- the rows -->
+                  <div class="mt-3 border border-gray-100 rounded-lg overflow-hidden">
+                    <div class="irow px-3 py-1.5 bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                      <div></div><div>Line</div><div>Business Owner</div><div>Category</div><div>Ends</div><div class="text-right">Value</div><div>Result</div>
+                    </div>
+                    <template x-for="r in imp.rows" :key="r.id">
+                      <div class="irow px-3 py-2 border-t border-gray-100" :class="canPick(r) ? '' : 'bg-gray-50/60'" data-imp-row>
+                        <div>
+                          <input type="checkbox" class="w-3.5 h-3.5 accent-indigo-600" :checked="pickOf(r)" :disabled="!canPick(r)" @change="r.pick = $event.target.checked">
+                        </div>
+                        <div class="min-w-0">
+                          <div class="text-[12px] font-medium truncate" :class="canPick(r) ? 'text-gray-900' : 'text-gray-500'" x-text="r.title"></div>
+                          <div class="text-[10.5px] text-gray-500 truncate"><span class="mono" x-text="r.ref"></span> · <span x-text="r.sup"></span></div>
+                        </div>
+                        <div class="min-w-0 text-[11.5px]">
+                          <template x-if="ownerOf(r)"><span class="text-gray-700 truncate block" x-text="ownerOf(r)"></span></template>
+                          <template x-if="!ownerOf(r) && srcDef().ownerMode === 'name'">
+                            <select x-model="r.ownerFix" class="fld !py-0.5 !text-[11.5px] !border-amber-300 !bg-amber-50">
+                              <option value="">Choose an owner</option>
+                              <template x-for="o in owners" :key="o"><option :value="o" x-text="o"></option></template>
+                            </select>
+                          </template>
+                          <template x-if="!ownerOf(r) && srcDef().ownerMode !== 'name'"><span class="text-amber-700">Owner not matched</span></template>
+                        </div>
+                        <div class="text-[11.5px] min-w-0">
+                          <span x-show="catOf(r)" class="text-gray-700 truncate block" x-text="catOf(r)"></span>
+                          <span x-show="!catOf(r)" class="text-amber-700">Category not matched</span>
+                        </div>
+                        <div class="text-[11.5px] text-gray-700" x-text="fmt(r.ends).replace(/ 20(\d\d)$/, ' ’$1')"></div>
+                        <div class="text-[11.5px] mono text-right text-gray-800" x-text="kfmt(r.value)"></div>
+                        <div class="text-[10.5px] font-medium">
+                          <span x-show="statusOf(r) === 'new'" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">New</span>
+                          <span x-show="statusOf(r) === 'dup'" class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200" :title="'Same contract as ' + r.match">In the plan</span>
+                          <span x-show="statusOf(r) === 'out'" class="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-100" x-text="r.ends > dates.to ? 'Ends after' : 'Ends before'"></span>
+                          <span x-show="statusOf(r) === 'fix'" class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">Needs a fix</span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                  <p class="mt-2 text-[11px] text-gray-500 leading-relaxed">
+                    A line ending after the window brings its renewal forward, and one ending before it belongs to the previous plan, so both start unticked.
+                  </p>
+
+                  <div class="mt-3 flex items-center justify-between gap-3">
+                    <div class="text-[11.5px] text-gray-500" x-text="impCount('fix') ? pl(impCount('fix'), 'row') + ' cannot be added until the choice above is made.' : ''"></div>
+                    <button @click="addImported()" :disabled="pickedImport().length === 0"
+                            class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg shrink-0"
+                            :class="pickedImport().length ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'"
+                            x-text="pickedImport().length ? 'Add ' + pl(pickedImport().length, 'line') + ' to the plan' : 'Nothing ticked'"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════════════
+                 THE DRAFT PLAN, AS THE PLAN TABLE
+                 This was a list of category cards with five columns of its own. It is now the
+                 same Grid the plan uses, over the same field schema, because Procurement is
+                 previewing the table that will be in force for the next six months and a
+                 preview in a different shape is a screen designed for a task again.
+
+                 What that buys, beyond consistency: the validation is here. The old list could
+                 not show that an incoming line proposes a direct negotiation where the value
+                 band requires a tender, or that it carries no sourcing strategy at all, so the
+                 scope was confirmed blind to the quality of what was in it.
+
+                 The field set is the step's, not the table's. Fourteen of fifty-eight fields
+                 are showing, chosen for scheduling; Hide fields has the rest. A renderer
+                 declares the slots it has, and the view decides which fields fill them.
+                 ══════════════════════════════════════════════════════════════════════ -->
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden flex-1 min-h-0 flex flex-col">
+              <div class="gwrap overflow-auto flex-1 min-h-0">
+                <table class="sheet text-[12px]" :style="'width:' + tableW + 'px'">
+                  <colgroup>
+                    <col style="width:44px">
+                    <col style="width:330px">
+                    <template x-for="c in visCols" :key="c.id"><col :style="'width:' + c.w + 'px'"></template>
+                  </colgroup>
+
+                  <thead>
+                    <tr class="hg">
+                      <th colspan="2" class="fz gh f0" style="border-left: 0"><span class="text-gray-500">Line</span></th>
+                      <!-- Keyed by position, NOT by the group name. A view that orders its
+                           fields can put the same group on screen twice, for example Term
+                           before and after Value and budget, and a name key makes Alpine
+                           drop the second one and shift every band left of it. -->
+                      <template x-for="(g, gi) in visGroups" :key="gi">
+                        <th :colspan="g.n" class="gh"><span class="glabel" x-text="g.g"></span></th>
+                      </template>
+                    </tr>
+                    <tr class="hc">
+                      <th class="fz f0 px-1 text-[10px] font-semibold text-gray-400 text-center">#</th>
+                      <th class="fz f1b px-2.5 text-left text-[11.5px] font-semibold text-gray-600">
+                        <div class="flex items-center gap-1.5"><span class="text-gray-400 text-[10px]">A</span><span>Subject Contract</span></div>
+                      </th>
+                      <template x-for="c in visCols" :key="c.id">
+                        <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600"
+                            :class="[starts[c.id] ? 'gs' : '', c.plat ? 'plat' : '']" :title="headTitle(c)">
+                          <div class="flex items-center gap-1.5"
+                               :class="al(c) === 'r' ? 'justify-end' : (al(c) === 'c' ? 'justify-center' : '')">
+                            <span x-show="c.plat" class="w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center text-white text-[8px] font-bold"
+                                  style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</span>
+                            <span x-show="!c.plat" class="text-gray-400 text-[10px] shrink-0" x-text="typeIcon(c.t)"></span>
+                            <span class="hn" x-text="c.k"></span>
+                            <span x-show="c.rule" class="text-[9px] text-indigo-500 shrink-0">&#9679;</span>
+                          </div>
+                        </th>
+                      </template>
+                    </tr>
+                  </thead>
+
+                  <!-- One tbody per product category. The band carries what the category card
+                       used to: the counts, the value, and Leave out, which is a bulk action on
+                       a group rather than a feature of this screen. -->
+                  <template x-for="g in shownGroups()" :key="g.k">
+                    <tbody>
+                      <tr>
+                        <td class="gband fz f0" style="left:0"></td>
+                        <td class="gband gbandmain" :colspan="visCols.length + 1">
+                          <div class="gbandlabel">
+                            <span class="text-[11.5px] font-semibold" :class="g.excluded ? 'text-gray-400 line-through' : 'text-gray-700'" x-text="g.k"></span>
+                            <span x-show="g.excluded" class="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">LEFT OUT</span>
+                            <span class="text-[10.5px] text-gray-400" x-text="groupLines(g).toLocaleString('en-GB') + ' lines · ' + mfmt(groupValue(g))"></span>
+                            <span x-show="!g.excluded && changes(g)" class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100" x-text="changes(g)"></span>
+                            <button @click="toggleGroup(g)"
+                                    class="text-[10.5px] font-medium px-2 py-0.5 rounded border"
+                                    :class="g.excluded ? 'border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50' : 'border-gray-300 text-gray-600 bg-white hover:bg-gray-50'"
+                                    x-text="g.excluded ? 'Include' : 'Leave out'"></button>
+                            <template x-if="g.excluded">
+                              <span class="flex items-center gap-1.5">
+                                <span class="text-[10.5px] text-gray-500">Reason (optional)</span>
+                                <select x-model="g.reason" class="fld !w-[210px] !py-0.5 !text-[10.5px]">
+                                  <option value="">Not recorded</option>
+                                  <template x-for="o in groupReasons" :key="o"><option :value="o" x-text="o"></option></template>
+                                </select>
+                              </span>
+                            </template>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <template x-for="r in rowsOf(g)" :key="r.id">
+                        <tr class="group" :class="[g.excluded ? 'opacity-40' : '', r.removed ? 'opacity-60' : 'hover:bg-gray-50/70']">
+                          <td class="fz f0 px-1 text-center text-[10.5px] text-gray-400" x-text="rowNo(r)"></td>
+                          <td class="fz f1b px-2.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="truncate min-w-0 flex-1 font-medium"
+                                    :class="r.removed ? 'line-through text-gray-500' : 'text-gray-900'" x-text="r.contract"></span>
+                              <span x-show="r.src === 'need'" class="shrink-0 text-[9.5px] font-medium px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-100">Alignment</span>
+                              <span x-show="r.src === 'added'" class="shrink-0 text-[9.5px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">Added</span>
+                              <span x-show="r.src === 'import'" class="shrink-0 text-[9.5px] font-medium px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-100" x-text="r.imp"></span>
+                              <span x-show="overlap(r)" class="shrink-0 text-[9.5px] font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200"
+                                    title="This contract ends inside the previous plan's window too, so it sits in both plans.">Both plans</span>
+                              <!-- Always present, quiet until the row is under the cursor. The
+                                   first version appeared only on hover and could not be found
+                                   at all, which is worse than a little noise on every row. -->
+                              <button @click="r.removed ? restore(r) : remove(r)" :disabled="g.excluded"
+                                      class="shrink-0 text-[10px] px-1.5 py-0.5 rounded border bg-white transition-colors disabled:hidden"
+                                      :class="r.removed ? 'border-indigo-200 text-indigo-500 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50'
+                                                        : 'border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50'"
+                                      x-text="r.removed ? 'Restore' : 'Remove'"></button>
+                            </div>
+                          </td>
+
+                          <template x-for="c in visCols" :key="c.id">
+                            <td class="px-2.5 cellrel"
+                                :class="[isBad(r, c.id) ? 'badcell' : '', starts[c.id] ? 'gs' : '', c.plat ? 'platcell' : '',
+                                         al(c) === 'r' ? 'text-right' : (al(c) === 'c' ? 'text-center' : ''), isMono(c) ? 'mono' : '']"
+                                :title="isBad(r, c.id) ? badReason(r, c.id) : ''">
+
+                              <!-- In plan. Ours, and the working column of this step: removing a
+                                   line is a value in a field, not an action that lives on a screen. -->
+                              <!-- In plan is a select field, so its cell has to read as one:
+                                   a chip that is plainly a control, with the caret a typed
+                                   cell shows and the alternative named on hover. The first
+                                   build drew it as a status and nobody could tell it was
+                                   clickable, which is the whole point of the column. -->
+                              <template x-if="c.id === 'inplan'">
+                                <button @click="r.removed ? restore(r) : remove(r)" :disabled="g.excluded"
+                                        class="group/ip inline-flex items-center gap-1 text-[10.5px] pl-2 pr-1.5 py-0.5 rounded-full border transition-colors disabled:opacity-50 disabled:cursor-default"
+                                        :class="r.removed ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'"
+                                        :title="g.excluded ? 'This whole category is left out' : (r.removed ? 'Put this line back in the plan' : 'Take this line out of the plan')">
+                                  <span x-text="r.removed ? 'Removed' : 'In plan'"></span>
+                                  <span class="text-[8px] opacity-50 group-hover/ip:opacity-100">&#9662;</span>
+                                </button>
+                              </template>
+
+                              <template x-if="c.id === 'reason'">
+                                <span x-show="r.removed" class="flex items-center gap-1 min-w-0">
+                                  <select x-model="r.reason" @change="r.proposed = false"
+                                          class="fld !w-[150px] !py-0.5 !text-[10.5px]">
+                                    <option value="">Not recorded</option>
+                                    <template x-for="o in reasons" :key="o"><option :value="o" x-text="o"></option></template>
+                                  </select>
+                                  <span x-show="r.proposed && r.reason" title="Ellie filled this in from the plan. Change it or clear it."
+                                        class="w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center text-white text-[7px] font-bold"
+                                        style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</span>
+                                </span>
+                              </template>
+
+                              <template x-if="c.t === 'sel' && c.id !== 'inplan'">
+                                <span x-show="r[c.id]" class="inline-block max-w-full truncate align-middle text-[10.5px] px-2 py-0.5 rounded-full border"
+                                      :class="chipClass(c.id, r[c.id])" x-text="r[c.id]"></span>
+                              </template>
+
+                              <template x-if="c.t === 'per'">
+                                <span x-show="r[c.id]" class="flex items-center gap-1.5 min-w-0">
+                                  <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-600 text-[8px] font-semibold flex items-center justify-center shrink-0" x-text="initials(r[c.id])"></span>
+                                  <span class="text-gray-700 truncate min-w-0" x-text="r[c.id]"></span>
+                                </span>
+                              </template>
+
+                              <template x-if="c.t === 'chk'">
+                                <span class="text-[12px]" :class="r[c.id] === 'Y' ? 'text-emerald-600' : 'text-gray-300'"
+                                      x-text="r[c.id] === 'Y' ? '☑' : (r[c.id] === 'N' ? '☐' : '')"></span>
+                              </template>
+
+                              <template x-if="!['sel','per','chk'].includes(c.t) && c.id !== 'reason'">
+                                <div class="truncate" :class="c.t === 'cmp' ? 'text-gray-600' : 'text-gray-700'" x-text="cellVal(r, c)"></div>
+                              </template>
+                            </td>
+                          </template>
+                        </tr>
+                      </template>
+
+                      <!-- Add a line, at the foot of its own category, the way a new row goes
+                           at the bottom of a range in a spreadsheet rather than through a
+                           panel above the whole table. Opens the same Add lines flow the
+                           toolbar button does, on the new-need tab and already scoped to
+                           this category. -->
+                      <tr>
+                        <td class="fz f0 px-1 text-center text-gray-300 text-[13px]">+</td>
+                        <td class="fz f1b px-2.5">
+                          <button @click="quickAdd(g)"
+                                  class="text-[11.5px] text-gray-400 hover:text-indigo-600"
+                                  x-text="'Add a line to ' + g.k + '...'"></button>
+                        </td>
+                        <template x-for="c in visCols" :key="c.id"><td :class="starts[c.id] ? 'gs' : ''"></td></template>
+                      </tr>
+
+                      <tr x-show="filter === 'all' || filter === 'exp'">
+                        <td class="fz f0"></td>
+                        <!-- In the frozen Subject column (Session 26), so it stays in view when the
+                             table is scrolled sideways, the same way the Add a line row does. -->
+                        <td class="fz f1b px-2.5 py-1.5 text-[10.5px] text-gray-400 leading-snug"
+                            x-text="'Showing the largest ' + shownContracts(g) + ' of ' + g.count.toLocaleString('en-GB') + ' contract lines in this category.'"></td>
+                        <template x-for="c in visCols" :key="c.id"><td :class="starts[c.id] ? 'gs' : ''"></td></template>
+                      </tr>
+
+                    </tbody>
+                  </template>
+                </table>
+              </div>
+
+              <div x-show="shownGroups().length === 0" class="px-4 py-8 text-center text-[12px] text-gray-400">Nothing in this view.</div>
+
+              <div class="border-t border-gray-200 px-4 py-1.5 flex items-center gap-5 text-[11.5px] text-gray-500 bg-white shrink-0">
+                <span><strong class="text-gray-800" x-text="totalLines().toLocaleString('en-GB')"></strong> lines in the draft plan</span>
+                <span>Contract value <strong class="text-gray-800" x-text="mfmt(totalValue())"></strong></span>
+                <div class="flex-1"></div>
+                <span x-show="flaggedRows()" class="text-amber-600" x-text="pl(flaggedRows(), 'line') + ' with a flagged cell'"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════ STEP 2 · DATES ══════════ -->
+          <div x-show="step === 2">
+            <div class="rounded-xl border border-gray-200 bg-white p-4">
+              <div class="grid grid-cols-3 gap-x-5 gap-y-4">
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Plan</span>
+                  <input type="text" readonly value="Purchasing Plan Q2–Q3 2027" class="fld mt-1 !bg-gray-50 !text-gray-600">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Covers contracts expiring from</span>
+                  <input type="date" x-model="dates.from" class="fld mt-1">
+                  <span class="block text-[10.5px] text-gray-400 mt-1" x-text="longDate(dates.from)"></span>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Until</span>
+                  <input type="date" x-model="dates.to" class="fld mt-1">
+                  <span class="block text-[10.5px] text-gray-400 mt-1" x-text="longDate(dates.to)"></span>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Cycle opens</span>
+                  <input type="date" x-model="dates.opens" class="fld mt-1" id="d-opens">
+                  <span class="block text-[10.5px] mt-1" :class="weekend(dates.opens) ? 'text-amber-600' : 'text-gray-400'" x-text="longDate(dates.opens) + (weekend(dates.opens) ? ' is a weekend' : '')"></span>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Freeze date</span>
+                  <input type="date" x-model="dates.freeze" class="fld mt-1" id="d-freeze">
+                  <span class="block text-[10.5px] mt-1" :class="weekend(dates.freeze) ? 'text-amber-600' : 'text-gray-400'"
+                        x-text="longDate(dates.freeze) + (weekend(dates.freeze) ? ' is a weekend' : '') + '. ' + gap(dates.opens, dates.freeze) + ' days after opening. The usual gap is 25, and the holiday break falls inside this one.'"></span>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization session</span>
+                  <input type="date" x-model="dates.session" class="fld mt-1" id="d-session">
+                  <span class="block text-[10.5px] mt-1" :class="weekend(dates.session) ? 'text-amber-600' : 'text-gray-400'"
+                        x-text="longDate(dates.session) + (weekend(dates.session) ? ' is a weekend' : '') + '. ' + gap(dates.freeze, dates.session) + ' days after the freeze, as in the last four cycles.'"></span>
+                </label>
+              </div>
+              <div x-show="!orderOk()" class="mt-4 text-[12px] rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2" id="date-err">
+                The dates need to run in order: the cycle opens, then the freeze, then the authorization session.
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white p-4 mt-4">
+              <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">What you are scheduling</div>
+              <div class="mt-2 grid grid-cols-4 gap-4">
+                <div><div class="text-xl font-semibold text-gray-900" x-text="totalLines().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500">lines</div></div>
+                <div><div class="text-xl font-semibold text-gray-900" x-text="mfmt(totalValue())"></div><div class="text-[11.5px] text-gray-500">contract value</div></div>
+                <div><div class="text-xl font-semibold text-gray-900" x-text="includedGroups().length + ' of 9'"></div><div class="text-[11.5px] text-gray-500">product categories</div></div>
+                <div><div class="text-xl font-semibold text-gray-900" x-text="removedCount() + ' out, ' + (addedCount() + importedCount()) + ' in'"></div><div class="text-[11.5px] text-gray-500">changed by you</div></div>
+              </div>
+              <p class="text-[12px] text-gray-500 mt-3 leading-relaxed">
+                Lines that a business unit adds later join the cycle, as in every cycle. Lines deferred at the 27 Oct authorization session join by themselves.
+              </p>
+              <p x-show="noReasonText()" class="text-[12px] text-gray-500 mt-1.5 leading-relaxed" x-text="noReasonText()"></p>
+              <button @click="step = 1" class="mt-2 text-[12px] font-medium text-indigo-600 hover:text-indigo-800">&larr; Back to the lines</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══════════ Footer bar ══════════ -->
+        <div class="shrink-0 bg-white border-t border-gray-200 px-5 py-3 flex items-center justify-between gap-4">
+          <div class="text-[11.5px] text-gray-500">
+            <template x-if="step === 1">
+              <span x-text="noReasonText() || 'Nothing is scheduled and nobody is emailed until you confirm on the next step.'"></span>
+            </template>
+            <template x-if="step === 2">
+              <span x-text="blockReason() || 'Business owners are emailed on the morning the cycle opens. That is the step that cannot be undone.'"
+                    :class="blockReason() ? 'text-amber-700 font-medium' : ''"></span>
+            </template>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <a x-show="step === 1" href="P0%20Purchasing%20Plans.html" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Cancel</a>
+            <button x-show="step === 2" @click="step = 1" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Back</button>
+            <button x-show="step === 1" @click="toDates()"
+                    class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to dates</button>
+            <button x-show="step === 2" @click="confirm()" :disabled="!!blockReason()"
+                    class="text-[12px] font-semibold px-4 py-2 rounded-lg"
+                    :class="blockReason() ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Confirm and schedule</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ Right: scope, live ══════════ -->
+      <aside class="w-[264px] shrink-0 bg-white border-l border-gray-200 px-4 py-4 overflow-y-auto scroll">
+        <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Scope</div>
+        <div class="mt-2 text-[26px] leading-none font-semibold text-gray-900" id="total" x-text="totalLines().toLocaleString('en-GB')"></div>
+        <div class="text-[11.5px] text-gray-500 mt-1">lines, <span x-text="mfmt(totalValue())"></span> of contract value</div>
+
+        <div class="mt-4 space-y-1.5">
+          <template x-for="g in groups" :key="g.k">
+            <div class="flex items-center justify-between text-[12px]">
+              <span :class="g.excluded ? 'text-gray-300 line-through' : 'text-gray-700'" x-text="g.k"></span>
+              <span class="mono" :class="g.excluded ? 'text-gray-300' : 'text-gray-800'" x-text="groupLines(g).toLocaleString('en-GB')"></span>
+            </div>
+          </template>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-gray-100">
+          <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Your changes</div>
+          <div class="mt-2 space-y-1 text-[12px] text-gray-700">
+            <div class="flex justify-between"><span>Lines removed</span><span class="mono" x-text="removedCount()"></span></div>
+            <div class="flex justify-between"><span>Lines added</span><span class="mono" x-text="addedCount()"></span></div>
+            <div class="flex justify-between"><span>Lines imported</span><span class="mono" x-text="importedCount()"></span></div>
+            <div class="flex justify-between"><span>Categories left out</span><span class="mono" x-text="groups.filter(g => g.excluded).length"></span></div>
+          </div>
+          <!-- Information, not a warning. Amber would read as an error on a field nobody is
+               required to fill, and the rail is where the scope is tallied rather than policed. -->
+          <div x-show="noReasonText()" class="mt-3 text-[11.5px] rounded-lg border border-gray-200 bg-gray-50 text-gray-600 px-2.5 py-2" x-text="noReasonText()"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- toast -->
+<div x-show="toast" x-transition.opacity class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-[12px] px-4 py-2 rounded-lg shadow-lg" x-text="toast" id="toast"></div>
+
+<script>
+function review() {
+  return {
+    rail: [
+      { k: 'Home', i: '⌂', on: false }, { k: 'Plan', i: '▤', on: true }, { k: 'Tasks', i: '☑', on: false },
+      { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false }, { k: 'Setup', i: '⚙', on: false }
+    ],
+
+    step: 1,
+    filter: 'all',
+    addOpen: false,
+    addMode: 'existing',
+    q: '',
+    toast: '',
+    toastT: null,
+
+    filters: [
+      { k: 'all',     label: 'All lines' },
+      { k: 'exp',     label: 'Expiring contracts' },
+      { k: 'need',    label: 'Needs from alignments' },
+      { k: 'added',   label: 'Added by you' },
+      { k: 'import',  label: 'Imported' },
+      { k: 'removed', label: 'Removed' }
+    ],
+
+    reasons: ['Contract already renewed', 'Being ended, no replacement', 'Handled outside the plan', 'Already in the Q1 to Q2 2027 plan', 'Other'],
+    groupReasons: ['Contracts already renewed', 'Being ended, no replacement', 'Handled outside the plan', 'Not part of this cycle', 'Other'],
+
+    owners: ['Alessandro Conti', 'Giulia Ferri', 'Paolo Riva', 'Davide Sala', 'Elena Marchetti', 'Chiara Monti', 'Luca Greco',
+             'Sofia Neri', 'Andrea Villa', 'Marta Longo', 'Sara Bianchi', 'Giorgio Fabbri', 'Matteo Carli', 'Federica Poli', 'Ilaria Costa', 'Nicola Testa'],
+
+    // The dates the agent proposed. ISO, so they can be checked; shown in long form.
+    dates: { from: '2027-04-01', to: '2027-09-30', opens: '2026-12-14', freeze: '2027-01-15', session: '2027-01-26' },
+
+    // Product categories are the ones in their Purchasing Plan spreadsheet.
+    // count = contract lines the agent picked; valueM = their value in € M. Both illustrative.
+    groups: [
+      { k: 'Technology',            count: 298, valueM: 22.4, open: true,  excluded: false, reason: '' },
+      { k: 'Marketing',             count: 204, valueM: 14.8, open: true,  excluded: false, reason: '' },
+      { k: 'Professional Services', count: 176, valueM: 9.6,  open: false, excluded: false, reason: '' },
+      { k: 'Facility Management',   count: 128, valueM: 6.1,  open: false, excluded: false, reason: '' },
+      { k: 'Retail',                count: 112, valueM: 5.2,  open: false, excluded: false, reason: '' },
+      { k: 'Human Resources',       count: 86,  valueM: 3.1,  open: false, excluded: false, reason: '' },
+      { k: 'Content Feeds',         count: 72,  valueM: 4.9,  open: false, excluded: false, reason: '' },
+      { k: 'Customer Operations',   count: 44,  valueM: 1.2,  open: false, excluded: false, reason: '' },
+      { k: 'Affiliation',           count: 26,  valueM: 0.9,  open: false, excluded: false, reason: '' }
+    ],
+
+    // Vocab for the new-need panel. Static lists here, unlike Plan.html's businessUnits,
+    // because a draft plan's rows do not carry ent/bu, so there is nothing to read them
+    // from yet. Matches Plan.html's own entity, business unit, status, opex/capex and
+    // sourcing strategy vocabulary so a line added here lines up with the live grid.
+    entities: ['Sisal Italia', 'Snaitech', 'PokerStars Italy', 'Sisal Albania', 'Sisal Technology Turkey',
+               'Sisal Jeux Maroc', 'Sisal Loterie Tunisie/Maroc', 'TSG Italy'],
+    businessUnits: ['Digital Operations', 'Data & Analytics', 'Retail Estate', 'Brand & Media',
+                     'Facilities Italia', 'Platform Engineering', 'Legal & Compliance',
+                     'Retail Network IT', 'Payments & Risk'],
+    statusOpts: ['To start', 'In progress', 'On hold', 'Closed', 'Canceled'],
+    opxOpts: ['Opex', 'Capex'],
+    stratOpts: ['Direct Nego', 'Light Tender', 'Full Tender'],
+
+    // [category, contract, supplier, owner, ends, value in k€]
+    seed: [
+      ['Technology', 'Cloud hosting, EU regions', 'AWS EMEA', 'Alessandro Conti', '2027-06-30', 3400],
+      ['Technology', 'Data warehouse licenses', 'Northwind Data', 'Giulia Ferri', '2027-08-31', 1850],
+      ['Technology', 'Endpoint security', 'Bastion Security', 'Paolo Riva', '2027-04-30', 620],
+      ['Technology', 'Service desk platform', 'Deskly', 'Davide Sala', '2027-09-30', 480],
+      ['Marketing', 'Programmatic media buying', 'Northfield Media', 'Elena Marchetti', '2027-05-31', 2600],
+      ['Marketing', 'Creative agency retainer', 'Brightline Creative', 'Chiara Monti', '2027-07-31', 1400],
+      ['Marketing', 'Market research panel', 'Panelio', 'Elena Marchetti', '2027-09-15', 380],
+      ['Professional Services', 'Audit support', 'Harlow & Finch', 'Luca Greco', '2027-06-30', 1200],
+      ['Professional Services', 'Legal counsel, gaming regulation', 'Studio Ardenti', 'Sofia Neri', '2027-08-15', 950],
+      ['Professional Services', 'Management consulting framework', 'Kestrel Partners', 'Luca Greco', '2027-09-30', 720],
+      ['Facility Management', 'Facility services, Milan HQ', 'Cleanwave', 'Paolo Riva', '2027-05-31', 1650],
+      ['Facility Management', 'Building maintenance, Rome', 'Solida Servizi', 'Davide Sala', '2027-08-31', 890],
+      ['Facility Management', 'Security guarding', 'Vigilis', 'Paolo Riva', '2027-07-15', 640],
+      ['Retail', 'Point-of-sale terminal lease', 'Tillpoint', 'Andrea Villa', '2027-06-30', 980],
+      ['Retail', 'Store signage', 'Signa', 'Andrea Villa', '2027-09-15', 310],
+      ['Retail', 'Cash handling', 'Vaultline', 'Marta Longo', '2027-04-30', 560],
+      ['Human Resources', 'Payroll processing', 'Payflow', 'Sara Bianchi', '2027-06-30', 720],
+      ['Human Resources', 'Recruitment agency panel', 'Talento', 'Sara Bianchi', '2027-08-31', 540],
+      ['Human Resources', 'Learning platform', 'Learnly', 'Giorgio Fabbri', '2027-09-30', 260],
+      ['Content Feeds', 'Sports data feed', 'Statline', 'Matteo Carli', '2027-06-30', 1300],
+      ['Content Feeds', 'Odds feed', 'Oddsworks', 'Matteo Carli', '2027-09-30', 900],
+      ['Content Feeds', 'Live streaming rights', 'Streamhaus', 'Federica Poli', '2027-07-31', 1100],
+      ['Customer Operations', 'Contact center outsourcing', 'Callnest', 'Ilaria Costa', '2027-06-30', 780],
+      ['Customer Operations', 'Chat support software', 'Talkwell', 'Ilaria Costa', '2027-08-15', 240],
+      ['Customer Operations', 'Identity verification', 'Verifid', 'Nicola Testa', '2027-09-30', 190],
+      ['Affiliation', 'Affiliate network fees', 'Linkbridge', 'Elena Marchetti', '2027-07-31', 420],
+      ['Affiliation', 'Partner tracking platform', 'Trackmate', 'Elena Marchetti', '2027-09-15', 210],
+      ['Affiliation', 'Affiliate payments', 'Payout Pro', 'Chiara Monti', '2027-06-30', 150]
+    ],
+
+    // Needs raised in earlier alignments (3.2). They are new lines for the subsequent plan (3.1).
+    needSeed: [
+      ['Technology', 'Managed Kubernetes platform', 'Supplier not chosen', 'Alessandro Conti', '2027-06-01', 120],
+      ['Marketing', 'Influencer campaign platform', 'Supplier not chosen', 'Elena Marchetti', '2027-07-15', 85],
+      ['Facility Management', 'Office fit-out, Milan', 'Supplier not chosen', 'Paolo Riva', '2027-09-01', 340]
+    ],
+
+    // Contracts that end after the window. Adding one brings its renewal forward.
+    pool: [
+      { id: 'X1', cat: 'Technology', contract: 'Data center colocation', supplier: 'Colohub', owner: 'Alessandro Conti', ends: '2027-10-31', value: 1900 },
+      { id: 'X2', cat: 'Marketing', contract: 'Brand sponsorship, football club', supplier: 'Calcio Media', owner: 'Chiara Monti', ends: '2027-11-30', value: 2400 },
+      { id: 'X3', cat: 'Professional Services', contract: 'Tax advisory retainer', supplier: 'Harlow & Finch', owner: 'Luca Greco', ends: '2027-12-31', value: 680 },
+      { id: 'X4', cat: 'Facility Management', contract: 'Cleaning services, Rome', supplier: 'Solida Servizi', owner: 'Davide Sala', ends: '2027-10-15', value: 310 },
+      { id: 'X5', cat: 'Content Feeds', contract: 'Odds compliance monitoring', supplier: 'Statline', owner: 'Matteo Carli', ends: '2027-11-15', value: 450 }
+    ],
+
+    rows: [],
+    imp: { source: 'appian', stage: 'choose', file: '', rows: [], catMap: [], ownerMap: [] },
+    // Required Information, per Procurement's own plan-update request
+    // (Product Work/Flutter Purchase Planning/attachments/PP_Email_template.docx).
+    nd: { subject: '', owner: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
+          ent: '', sisal: false, pkr: false, snai: false, bu: '', opx: '',
+          sup: '', inc: '', fopp: false, strat: '', ratio: '',
+          value: '', by: '', end: '', ramt: '', notes: '' },
+    seq: 0,
+
+    // ══ THE DRAFT PLAN IS THE PLAN TABLE ═══════════════════════════════════════════════
+    // Same field schema, same types, same validation. The lines are a draft record set:
+    // they do not exist in the plan yet and they commit when the quarter is scheduled.
+    fmenu: false,
+    hidden: {},
+
+    // The fields this step opens on. Everything else in the schema is behind Hide fields.
+    // A renderer declares the slots it has; the view decides which fields fill them, and
+    // the Grid's slot budget is all of them, so for this step the choice is the view's.
+    // Order matters as much as the set. The fields a rule can fail on sit near the front,
+    // because the point of reviewing in the table is seeing what is wrong with the lines
+    // before the quarter is scheduled, and a flag two screens to the right is not seen.
+    fieldSet: ['inplan', 'reason', 'owner', 'strat', 'rfe', 'end', 'tot', 'start', 'ent', 'bu', 'sup', 'opx'],
+
+    cols: [
+      // What
+      { id: 'cat',   k: 'Product Category',                 t: 'sel', w: 160, g: 'What' },
+      { id: 'sub',   k: 'Sub-category (if applicable)',     t: 'txt', w: 150, g: 'What' },
+      { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'What' },
+      { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'What' },
+      // Status. Theirs, then ours.
+      { id: 'status',k: 'Status',                           t: 'sel', w: 110, g: 'Status' },
+      // Entity and brand
+      { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Entity and brand' },
+      { id: 'sisal', k: 'Sisal',                            t: 'chk', w: 70,  g: 'Entity and brand' },
+      { id: 'pkr',   k: 'PokerStars Italy',                 t: 'chk', w: 120, g: 'Entity and brand' },
+      { id: 'snai',  k: 'Snaitech',                         t: 'chk', w: 92,  g: 'Entity and brand' },
+      { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Entity and brand' },
+      // Ownership
+      { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Ownership', rule: true },
+      { id: 'bu',    k: 'Business Unit',                    t: 'txt', w: 160, g: 'Ownership' },
+      // Spend
+      { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Spend', rule: true },
+      { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Spend' },
+      // Supplier
+      { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Supplier' },
+      { id: 'inc',   k: 'Incumbent Supplier (if applicable)', t: 'txt', w: 200, g: 'Supplier' },
+      { id: 'fopp',  k: 'Flutter Opportunity',        t: 'chk', w: 120, g: 'Supplier' },
+      // Sourcing
+      { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Sourcing', rule: true },
+      { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Sourcing' },
+      { id: 'rfe',   k: 'RFE Deadline',                     t: 'dat', w: 110, g: 'Sourcing', rule: true },
+      { id: 'rdi',   k: 'RDI Deadline',                     t: 'dat', w: 110, g: 'Sourcing' },
+      // Term
+      { id: 'start', k: 'Contract Start Date',              t: 'dat', w: 120, g: 'Term', rule: true },
+      { id: 'end',   k: 'Contract End Date',                t: 'dat', w: 120, g: 'Term', rule: true },
+      { id: 'dur',   k: 'Duration (years)',                 t: 'cmp', w: 100, g: 'Term', al: 'r',
+        hint: 'Formula field. Calculated from the contract start and end dates.' },
+      // Value and budget
+      { id: 'tot',   k: 'Total Contract Value (K€)',        t: 'num', w: 130, g: 'Value and budget' },
+      { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Value and budget', al: 'r',
+        hint: 'Formula field. Total contract value divided by duration.' },
+      { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Value and budget' },
+      { id: 'tsav',  k: 'Target Saving %',                  t: 'pct', w: 100, g: 'Value and budget', rule: true },
+      { id: 'ramt',  k: 'Rational Amount',                  t: 'txt', w: 240, g: 'Value and budget' },
+      { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Value and budget' },
+      // Procurement
+      { id: 'rfeid', k: 'RFE ID',                           t: 'txt', w: 100, g: 'Procurement' },
+      { id: 'qtr',   k: 'Quarter',                          t: 'cmp', w: 90,  g: 'Procurement', al: 'l',
+        hint: 'Formula field. Quarter of the contract start date.' },
+      { id: 'tf',    k: 'Time Frame',                       t: 'cmp', w: 90,  g: 'Procurement', al: 'l',
+        hint: 'Formula field. Year of the contract start date.' },
+      { id: 'dgg',   k: 'Def Goods Group',                  t: 'txt', w: 170, g: 'Procurement' },
+      { id: 'head',  k: 'Head of / Manager',                 t: 'per', w: 160, g: 'Procurement' },
+      { id: 'buyer', k: 'Procurement Buyer',                t: 'per', w: 160, g: 'Procurement' },
+      { id: 'award', k: 'Awarding Value (K€)',              t: 'num', w: 120, g: 'Procurement' },
+      // Approvals
+      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 150, g: 'Approvals', rule: true },
+      { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Approvals' },
+      { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Approvals' },
+      { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Approvals' },
+      { id: 'qtr2',  k: 'Quarter (approval)',               t: 'txt', w: 130, g: 'Approvals',
+        hint: 'The second column called Quarter in your sheet. Typed by hand, in two formats. Name to confirm.' },
+      { id: 'rdn',   k: 'Reasons for DN / LT',              t: 'txt', w: 220, g: 'Approvals' },
+      { id: 'rlate', k: 'Reasons for Late / Back-dated Contract', t: 'txt', w: 260, g: 'Approvals' },
+      { id: 'det',   k: 'Additional Details',               t: 'txt', w: 210, g: 'Approvals' },
+      // Savings
+      { id: 'area',  k: 'Area',                             t: 'txt', w: 140, g: 'Savings' },
+      { id: 'key',   k: 'Key Initiative',             t: 'chk', w: 145, g: 'Savings' },
+      { id: 'sav',   k: 'Saving',                           t: 'sel', w: 100, g: 'Savings' },
+      { id: 'itype', k: 'Initiative Type (new vs. renew)',  t: 'sel', w: 140, g: 'Savings' },
+      { id: 'spct',  k: 'Saving %',                         t: 'pct', w: 90,  g: 'Savings' },
+      { id: 'base',  k: 'Baseline (12M Opex, full Capex)',  t: 'cmp', w: 150, g: 'Savings', al: 'r',
+        hint: 'Formula field. Twelve months of value for Opex, the full value for Capex.' },
+      { id: 'sfc',   k: 'Saving Forecast 12M (con floor 10%)', t: 'cmp', w: 170, g: 'Savings', al: 'r',
+        hint: 'A formula in your sheet. Shown read-only. The exact formula is still to be confirmed with Flutter.' },
+      { id: 's12',   k: 'Saving 12M (senza floor 10%)',     t: 'cmp', w: 170, g: 'Savings', al: 'r',
+        hint: 'A formula in your sheet. Shown read-only. The exact formula is still to be confirmed with Flutter.' }
+    ,
+      // ── Ours. A draft plan carries different fields of ours than a live one: there is no
+      // Response, Stage or Authorization Outcome until the cycle runs, and there is an
+      // In plan, because on a draft the question is whether the line is in at all.
+      { id: 'inplan', k: 'In Plan',  t: 'sel', w: 110, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium. Removing a line is a value in a field, which is why it survives into the plan with who changed it and when.' },
+      { id: 'reason', k: 'Reason If Removed', t: 'txt', w: 200, g: 'Eluvium fields', plat: true,
+        hint: 'Added by Eluvium, and optional. Ellie fills it in where the data already says why.' }
+    ],
+
+    // A view owns the order of its fields as well as the set. On a draft the working
+    // columns are ours (In plan, and the reason if it was taken out), so they lead; the
+    // customer's own columns follow in the customer's own order, as they do in the plan.
+    get visCols() {
+      const shown = this.cols.filter(c => !this.hidden[c.id]);
+      const rank = c => { const i = this.fieldSet.indexOf(c.id); return i === -1 ? 999 : i; };
+      return shown.slice().sort((a, b) => rank(a) - rank(b));
+    },
+    get visGroups() {
+      const out = [];
+      this.visCols.forEach(c => {
+        const last = out[out.length - 1];
+        if (last && last.g === c.g) last.n++; else out.push({ g: c.g, n: 1 });
+      });
+      return out;
+    },
+    get starts() {
+      const s = {}; let prev = null;
+      this.visCols.forEach(c => { if (c.g !== prev) s[c.id] = true; prev = c.g; });
+      return s;
+    },
+    get tableW()   { return 44 + 330 + this.visCols.reduce((a, c) => a + c.w, 0); },
+    get groupList() {
+      const out = [];
+      this.cols.forEach(c => {
+        let g = out.find(x => x.g === c.g);
+        if (!g) { g = { g: c.g, cols: [] }; out.push(g); }
+        g.cols.push(c);
+      });
+      return out;
+    },
+    shownGroups() { return this.groups.filter(g => this.filter === 'all' || this.filter === 'exp' || this.rowsOf(g).length > 0); },
+    rowNo(r) { return this.rows.filter(x => !x.removedHidden).indexOf(r) + 1; },
+
+    // ── Field types, copied from the plan because they are the same fields ──
+    typeIcon(t) { return ({ txt: 'A', sel: '◎', num: '#', pct: '%', dat: '☷', per: '○', chk: '☑', cmp: 'ƒ' })[t] || 'A'; },
+    typeName(t) { return ({ txt: 'Text', sel: 'Single select, fixed vocabulary', num: 'Number', pct: 'Percentage', dat: 'Date', per: 'Person', chk: 'Checkbox', cmp: 'Formula, read-only' })[t] || 'Text'; },
+    headTitle(c) { return c.hint ? c.k + '. ' + c.hint : c.k + ' · ' + this.typeName(c.t); },
+    al(c)     { return c.al || ((c.t === 'num' || c.t === 'pct') ? 'r' : (c.t === 'chk' ? 'c' : 'l')); },
+    isMono(c) { return c.t === 'num' || c.t === 'pct' || (c.t === 'cmp' && this.al(c) === 'r'); },
+    initials(n) { return n ? n.split(' ').map(x => x[0]).join('').slice(0, 2) : ''; },
+    fmtK(x) {
+      if (x === '' || x === null || x === undefined) return '';
+      const n = Number(x);
+      if (isNaN(n)) return String(x);
+      return n.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    },
+    cellVal(r, c) {
+      if (c.t === 'num') return this.fmtK(r[c.id]);
+      if (c.t === 'pct') return typeof r[c.id] === 'number' ? r[c.id] + '%' : (r[c.id] || '');
+      return r[c.id] || '';
+    },
+    chipClass(col, val) {
+      if (col === 'strat') {
+        if (/tender/i.test(val)) return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+        if (/quote/i.test(val))  return 'bg-sky-50 text-sky-700 border-sky-200';
+        return 'bg-violet-50 text-violet-700 border-violet-200';
+      }
+      if (col === 'status') return 'bg-slate-100 text-slate-600 border-slate-200';
+      if (col === 'opx')    return val === 'Capex' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-gray-50 text-gray-600 border-gray-200';
+      return 'bg-gray-50 text-gray-600 border-gray-200';
+    },
+
+    // ══ THE DRAFT LINES, AS PLAN RECORDS ═══════════════════════════════════════════════
+    // The seed carries what a contract extract carries: category, title, supplier, owner,
+    // end date and value. Everything else on the line is derived the way the agent would
+    // derive it, so the draft can be validated before anyone is asked anything.
+    entOf:  { 'Technology': 'Sisal Italia', 'Marketing': 'Sisal Italia', 'Professional Services': 'Sisal Italia',
+              'Facility Management': 'Snaitech', 'Retail': 'Snaitech', 'Human Resources': 'Sisal Italia',
+              'Content Feeds': 'Sisal Gaming', 'Customer Operations': 'Snaitech', 'Affiliation': 'Sisal Gaming' },
+    buOf:   { 'Technology': 'Digital Operations', 'Marketing': 'Brand & Media', 'Professional Services': 'Legal & Compliance',
+              'Facility Management': 'Facilities Italia', 'Retail': 'Retail Estate', 'Human Resources': 'People & Culture',
+              'Content Feeds': 'Data & Analytics', 'Customer Operations': 'Customer Care', 'Affiliation': 'Affiliation' },
+
+    // The defects. Every one is a shape that exists in their master file, put on a named
+    // line here so the review shows what the old list could not.
+    defects: {
+      'Cloud hosting, EU regions':      { strat: 'Direct Nego' },
+      'Programmatic media buying':      { strat: 'direct nego' },
+      'Endpoint security':              { owner: '' },
+      'Service desk platform':          { strat: '' },
+      'Market research panel':          { rfeLate: true },
+      'Creative agency retainer':       { startAfterEnd: true }
+    },
+
+    toDMY(iso) { const d = this.d(iso); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); },
+    isoMinusMonths(iso, m) {
+      const d = this.d(iso); d.setMonth(d.getMonth() - m);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    },
+    subWd(iso, n) {
+      const x = this.d(iso); let k = 0;
+      while (k < n) { x.setDate(x.getDate() - 1); const g = x.getDay(); if (g !== 0 && g !== 6) k++; }
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    },
+    wdBetween(a, b) {
+      const x = this.d(a), y = this.d(b); if (x > y) return -1;
+      let n = 0;
+      while (x.toDateString() !== y.toDateString()) { x.setDate(x.getDate() + 1); const g = x.getDay(); if (g !== 0 && g !== 6) n++; }
+      return n;
+    },
+    // Total contract value is in K€ and a seeded contract runs two years, so the yearly
+    // value the rule set bands against is half of it.
+    yearlyEur(r) { return (Number(r.value) || 0) * 1000 / 2; },
+
+    enrich(r) {
+      const d = this.defects[r.contract] || {};
+      r.subj  = r.contract;
+      r.sup   = r.supplier;
+      r.cat   = r.cat;
+      r.ent   = this.entOf[r.cat] || 'Sisal Italia';
+      r.bu    = this.buOf[r.cat]  || '';
+      r.opx   = 'Opex';
+      r.status = 'To start';
+      r.tot   = Number(r.value) || 0;
+      r.endISO   = r.ends;
+      r.end      = this.toDMY(r.ends);
+      r.startISO = d.startAfterEnd ? this.isoMinusMonths(r.ends, -3) : this.isoMinusMonths(r.ends, 24);
+      r.start    = this.toDMY(r.startISO);
+      if ('owner' in d) r.owner = d.owner;
+      r.strat = ('strat' in d) ? d.strat : this.stratFor(this.yearlyEur(r));
+      const need = this.noticeFor(this.yearlyEur(r), r.strat);
+      r.rfeISO = r.strat ? this.subWd(r.ends, d.rfeLate ? 10 : need) : '';
+      r.rfe    = r.rfeISO ? this.toDMY(r.rfeISO) : '';
+      r.bad    = this.flagsOf(r);
+    },
+    // Session 22 rule set; no procedure name or section is cited in a label. Methods by value from the Italian FSEA
+    // user guide (single quote to 10K, two quotes to 50K, structured comparison to 100K,
+    // tender above). Notice periods from their own spreadsheet formula. See Plan.html.
+    stratFor(eur) {
+      if (eur > 100000) return 'Full Tender';
+      if (eur > 50000)  return 'Light Tender';
+      if (eur > 10000)  return 'Quote comparison';
+      return 'Direct Nego';
+    },
+    noticeFor(eur, strat) {
+      const st = String(strat || '').toLowerCase();
+      if (st.startsWith('light')) return 40;
+      if (st.startsWith('full'))  return 60;
+      return eur < 100000 ? 30 : (eur < 1000000 ? 40 : 60);
+    },
+
+    // ══ THE RULE SET ═══════════════════════════════════════════════════════════════════
+    // The same rules the plan validates against, run on the draft before it is scheduled.
+    // This is the whole reason the review is the table: the old list could not say any of it.
+    flagsOf(r) {
+      const f = {}, eur = this.yearlyEur(r), need = this.noticeFor(eur, r.strat);
+      if (!r.owner) f.owner = 'No business owner recorded. Nobody can be asked about this line, so it cannot carry a question in the collection cycle.';
+      if (!r.strat) f.strat = 'No sourcing strategy recorded. The sheet formula produces no deadline and no error for a line in this state, and there are 359 of them in the master file.';
+      else if (r.strat !== r.strat.trim() || (/^direct nego$/.test(r.strat)))
+        f.strat = 'Lower case variant of Direct Nego. The sheet matches the method by exact string, so this line falls through and receives no deadline and no error.'
+                + (eur > 10000 ? ' At ' + this.mfmt(eur / 1000) + ' a year it is also a derogation that needs authorization.' : '');
+      else if (/^direct/i.test(r.strat) && eur > 10000)
+        f.strat = 'Direct negotiation at ' + this.mfmt(eur / 1000) + ' a year is a derogation. It needs authorization before it can proceed.';
+      if (r.rfeISO && r.endISO) {
+        // Compare against the latest compliant date rather than recounting working days
+        // from the deadline. Counting both ways disagrees by one whenever the contract
+        // ends on a weekend, which flagged four compliant lines in the first build.
+        const latest = this.subWd(r.endISO, need);
+        if (r.rfeISO > latest)
+          f.rfe = 'The RFE deadline leaves ' + Math.max(0, this.wdBetween(r.rfeISO, r.endISO))
+                + ' working days before the contract ends, which is already too late to run the standard process.';
+      }
+      if (r.startISO && r.endISO && r.startISO > r.endISO)
+        f.start = 'Contract start date falls after the end date, so duration and yearly value both compute negative.';
+      return f;
+    },
+    isBad(r, k)     { return !!(r && r.bad && r.bad[k]); },
+    badReason(r, k) { return (r && r.bad && r.bad[k]) || ''; },
+    flaggedRows()   { return this.rows.filter(r => !r.removed && !this.groupOf(r).excluded && r.bad && Object.keys(r.bad).length).length; },
+
+
+    init() {
+      this.seed.forEach(s => this.rows.push({ id: 'C' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'contract', kind: 'contract', removed: false, reason: '' }));
+      this.needSeed.forEach(s => this.rows.push({ id: 'N' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'need', kind: 'need', removed: false, reason: '' }));
+      // Every draft line becomes a plan record, validated against the rule set before
+      // anyone is asked to confirm the scope.
+      this.rows.forEach(r => this.enrich(r));
+      // Open on the fields this step needs. The rest of the schema stays behind Hide fields.
+      this.cols.forEach(c => { if (!this.fieldSet.includes(c.id)) this.hidden[c.id] = true; });
+    },
+
+    // ── helpers ──
+    pl(n, w, many) { return n + ' ' + (n === 1 ? w : (many || w + 's')); },
+    d(iso) { return new Date(iso + 'T12:00:00'); },
+    fmt(iso) { return this.d(iso).getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][this.d(iso).getMonth()] + ' ' + this.d(iso).getFullYear(); },
+    longDate(iso) { return iso ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][this.d(iso).getDay()] + ' ' + this.fmt(iso) : ''; },
+    weekend(iso) { if (!iso) return false; const g = this.d(iso).getDay(); return g === 0 || g === 6; },
+    gap(a, b) { return Math.round((this.d(b) - this.d(a)) / 86400000); },
+    addWd(iso, n) {
+      const x = this.d(iso); let k = 0;
+      while (k < n) { x.setDate(x.getDate() + 1); const g = x.getDay(); if (g !== 0 && g !== 6) k++; }
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    },
+    kfmt(k) { return k >= 1000 ? '€ ' + (k / 1000).toFixed(2).replace(/\.?0+$/, '') + 'M' : '€ ' + k + 'k'; },
+    mfmt(k) { return k >= 1000 ? '€ ' + (k / 1000).toFixed(1) + 'M' : '€ ' + Math.round(k) + 'k'; },
+    flash(m) { this.toast = m; clearTimeout(this.toastT); this.toastT = setTimeout(() => { this.toast = ''; }, 2600); },
+
+    // ── numbers ──
+    extras(g) { return this.rows.filter(r => r.cat === g.k && r.src !== 'contract'); },
+    removedIn(g) { return this.rows.filter(r => r.cat === g.k && r.removed); },
+    groupLines(g) { return g.excluded ? 0 : g.count + this.extras(g).length - this.removedIn(g).length; },
+    groupValue(g) {
+      if (g.excluded) return 0;
+      return g.valueM * 1000 + this.extras(g).reduce((a, r) => a + r.value, 0) - this.removedIn(g).reduce((a, r) => a + r.value, 0);
+    },
+    totalLines() { return this.groups.reduce((a, g) => a + this.groupLines(g), 0); },
+    totalValue() { return this.groups.reduce((a, g) => a + this.groupValue(g), 0); },
+    includedGroups() { return this.groups.filter(g => !g.excluded); },
+    removedCount() { return this.rows.filter(r => r.removed && !this.groupOf(r).excluded).length; },
+    importedCount() { return this.rows.filter(r => r.src === 'import' && !r.removed && !this.groupOf(r).excluded).length; },
+    addedCount() { return this.rows.filter(r => r.src === 'added' && !r.removed && !this.groupOf(r).excluded).length; },
+    groupOf(r) { return this.groups.find(g => g.k === r.cat); },
+    missingGroupReasons() { return this.groups.filter(g => g.excluded && !g.reason).length; },
+    // What has been taken out with nothing recorded against it, said as a consequence.
+    // Not a warning and not a blocker: the person can confirm with this on screen.
+    noReasonText() {
+      const a = this.missingReasons(), b = this.missingGroupReasons(), out = [];
+      if (a) out.push(this.pl(a, 'removed line'));
+      if (b) out.push(this.pl(b, 'category left out', 'categories left out'));
+      if (!out.length) return '';
+      return out.join(' and ') + ' with no reason recorded. Plan coverage will not be able to explain '
+             + (a + b === 1 ? 'it' : 'them') + ' later.';
+    },
+
+    // Where the data already says why, Ellie fills the reason in and says so, and the person
+    // can change it or clear it. A contract that also sits in the previous plan is the one case
+    // this screen can be sure about, because it is the overlap it already marks.
+    proposeReason(r) { return this.overlap(r) ? 'Already in the Q1 to Q2 2027 plan' : ''; },
+    missingReasons() { return this.rows.filter(r => r.removed && !r.reason && !this.groupOf(r).excluded).length; },
+    changes(g) {
+      const rem = this.removedIn(g).length, add = this.rows.filter(r => r.cat === g.k && (r.src === 'added' || r.src === 'import') && !r.removed).length;
+      return [rem ? '−' + rem : '', add ? '+' + add : ''].filter(Boolean).join(' ');
+    },
+
+    // ── filtering ──
+    filterCount(k) {
+      const live = this.rows.filter(r => !r.removed && !this.groupOf(r).excluded);
+      if (k === 'all') return this.totalLines();
+      if (k === 'exp') return this.totalLines() - live.filter(r => r.src !== 'contract').length;
+      if (k === 'need') return live.filter(r => r.src === 'need').length;
+      if (k === 'added') return live.filter(r => r.src === 'added').length;
+      if (k === 'import') return live.filter(r => r.src === 'import').length;
+      return this.rows.filter(r => r.removed).length;
+    },
+    rowsOf(g) {
+      const all = this.rows.filter(r => r.cat === g.k);
+      if (this.filter === 'exp') return all.filter(r => r.src === 'contract');
+      if (this.filter === 'need') return all.filter(r => r.src === 'need');
+      if (this.filter === 'added') return all.filter(r => r.src === 'added');
+      if (this.filter === 'import') return all.filter(r => r.src === 'import');
+      if (this.filter === 'removed') return all.filter(r => r.removed);
+      return all;
+    },
+    groupShown(g) { return this.filter === 'all' || this.filter === 'exp' || this.rowsOf(g).length > 0; },
+    showRows(g) { return g.open || (this.filter !== 'all' && this.filter !== 'exp'); },
+    toggleAll() { const o = !this.groups.every(g => g.open); this.groups.forEach(g => { g.open = o; }); },
+    shownContracts(g) { return this.rows.filter(r => r.cat === g.k && r.src === 'contract').length; },
+
+    endsText(r) { return r.src === 'contract' || r.kind === 'contract' ? this.fmt(r.ends).replace(/ 20(\d\d)$/, ' ’$1') : 'by ' + this.fmt(r.by || r.ends).replace(/ 20(\d\d)$/, ' ’$1'); },
+    overlap(r) { return r.kind === 'contract' && (r.src === 'contract' || r.src === 'import') && r.ends >= '2027-04-01' && r.ends <= '2027-06-30'; },
+
+    // ── removing and restoring ──
+    remove(r)  { r.removed = true; r.reason = this.proposeReason(r); r.proposed = !!r.reason; },
+    restore(r) { r.removed = false; r.reason = ''; r.proposed = false; },
+
+    // ── adding ──
+    candidates() {
+      const t = this.q.trim().toLowerCase();
+      return this.pool.filter(c => !t || (c.contract + ' ' + c.supplier + ' ' + c.owner + ' ' + c.cat).toLowerCase().includes(t));
+    },
+    isAdded(id) { return this.rows.some(r => r.poolId === id && !r.removed); },
+    addExisting(c) {
+      if (this.isAdded(c.id)) return;
+      this.rows.push({ id: 'A' + (++this.seq), poolId: c.id, cat: c.cat, contract: c.contract, supplier: c.supplier, owner: c.owner, ends: c.ends, value: c.value, src: 'added', kind: 'contract', removed: false, reason: '' });
+      this.enrich(this.rows[this.rows.length - 1]);
+      this.openGroup(c.cat);
+      this.flash('Added to ' + c.cat + ': ' + c.contract);
+    },
+    // Notice for a new need, from the same rule set as noticeFor. Not shown as a number.
+    noticeDays(v, strat) { return this.noticeFor(Number(v), strat); },
+    earliest(n) { return this.addWd(this.dates.session, this.noticeDays(n.value, n.strat)); },
+    short(n) { return !!(n.value && n.by) && n.by < this.earliest(n); },
+    noticeText(n) {
+      if (!n.value || !n.by) return '';
+      const e = this.earliest(n);
+      return this.short(n)
+        ? 'Counted from the authorization session, the earliest start at this value is ' + this.longDate(e) + ', after the date asked for.'
+        : 'Counted from the authorization session, the date asked for leaves enough time.';
+    },
+    emptyNd() {
+      return { subject: '', owner: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
+               ent: '', sisal: false, pkr: false, snai: false, bu: '', opx: '',
+               sup: '', inc: '', fopp: false, strat: '', ratio: '',
+               value: '', by: '', end: '', ramt: '', notes: '' };
+    },
+    canAdd() {
+      const n = this.nd;
+      const stratOk = !!n.strat && (n.strat !== 'Direct Nego' || !!n.ratio.trim());
+      return !!(n.subject.trim() && n.owner && n.cat && n.ent && n.bu && n.opx && stratOk && n.value && n.by);
+    },
+    addNeed() {
+      if (!this.canAdd()) return;
+      const n = this.nd;
+      const brandFlags = [n.sisal && 'Sisal', n.pkr && 'PokerStars Italy', n.snai && 'Snaitech'].filter(Boolean);
+      const supplierName = n.sup.trim() || 'Supplier not chosen';
+      const kv = Math.round(Number(n.value) / 1000 * 100) / 100;
+      this.rows.push({
+        id: 'A' + (++this.seq), cat: n.cat, contract: n.subject.trim(), supplier: supplierName,
+        owner: n.owner, ends: n.by, by: n.by, value: kv, src: 'added', kind: 'need', removed: false, reason: '',
+        // Fields of ours, plus the rest of Required Information from Procurement's own
+        // plan-update request. Kept under the same ids Plan.html's `cols` schema uses,
+        // so a line added here reads correctly if it is ever shown with more columns.
+        sub: n.sub.trim(), proj: n.proj.trim(), act: n.act.trim(), status: n.status,
+        ent: n.ent, sisal: n.sisal ? 'Y' : '', pkr: n.pkr ? 'Y' : '', snai: n.snai ? 'Y' : '',
+        brand: brandFlags.length > 1 ? 'Multi-brand' : (brandFlags[0] || ''),
+        bu: n.bu, opx: n.opx, sup: supplierName, inc: n.inc.trim(),
+        fopp: n.fopp ? 'Y' : 'N', strat: n.strat, ratio: n.ratio.trim(),
+        start: n.by, end: n.end, tot: kv, ramt: n.ramt.trim(), notes: n.notes.trim(), itype: 'NEW'
+      });
+      this.enrich(this.rows[this.rows.length - 1]);
+      this.openGroup(n.cat);
+      this.flash('Added to ' + n.cat + ': ' + n.subject.trim());
+      this.nd = this.emptyNd();
+    },
+    openGroup(k) { const g = this.groups.find(x => x.k === k); if (g) { g.open = true; g.excluded = false; g.reason = ''; } },
+    toggleGroup(g) { g.excluded = !g.excluded; if (!g.excluded) g.reason = ''; },
+
+    // The add-a-line row at the foot of a category. Opens the same panel the toolbar's
+    // Add lines button does, already on the new-need tab and scoped to this category,
+    // and scrolls back up so the person sees it without hunting for it.
+    quickAdd(g) {
+      this.addOpen = true;
+      this.addMode = 'need';
+      this.nd = this.emptyNd();
+      this.nd.cat = g.k;
+      this.$nextTick(() => { const el = document.getElementById('main'); if (el) el.scrollTop = 0; });
+    },
+
+    // ── import ──
+    // The file is not parsed in this mockup: any file chosen shows the built-in example for the chosen source.
+    // Each row: [reference, title, supplier, owner or purchasing group, ends, value in k€, category value in the file, title of the line it matches]
+    sources: {
+      appian: {
+        label: 'Appian', file: 'appian_contracts_export_2026-09-29.csv', ownerMode: 'name',
+        hint: 'One row per contract, with an end date and a value.',
+        catLabel: 'Category values, matched to a Product Category',
+        cols: [['Contract ID', 'Reference'], ['Contract Title', 'Line'], ['Supplier Name', 'Supplier'], ['Contract Owner', 'Business Owner'], ['Expiry Date', 'Ends'], ['Total Value (EUR)', 'Value'], ['Category', 'Product Category']],
+        catMap: [['Cybersecurity', 'Technology'], ['Cloud', 'Technology'], ['Telecoms', 'Technology'], ['IT Software', 'Technology'], ['Advertising', 'Marketing'], ['Print', 'Marketing'],
+                 ['Facilities', 'Facility Management'], ['Legal', 'Professional Services'], ['HR', 'Human Resources'], ['Media Content', 'Content Feeds'],
+                 ['Customer Service', 'Customer Operations'], ['Affiliate', 'Affiliation'], ['Miscellaneous', '']],
+        rows: [
+          ['CT-20418', 'Endpoint security', 'Bastion Security', 'Paolo Riva', '2027-04-30', 620, 'Cybersecurity', 'Endpoint security'],
+          ['CT-20977', 'Cloud hosting, EU regions', 'AWS EMEA', 'Alessandro Conti', '2027-06-30', 3400, 'Cloud', 'Cloud hosting, EU regions'],
+          ['CT-21133', 'Building maintenance, Rome', 'Solida Servizi', 'Davide Sala', '2027-08-31', 890, 'Facilities', 'Building maintenance, Rome'],
+          ['CT-19870', 'Payroll processing', 'Payflow', 'Sara Bianchi', '2027-06-30', 720, 'HR', 'Payroll processing'],
+          ['CT-22014', 'WAN connectivity', 'Vantix Networks', 'Giulia Ferri', '2027-05-15', 1450, 'Telecoms', ''],
+          ['CT-22051', 'Accounts payable automation', 'Ledgerly', 'Luca Greco', '2027-07-31', 380, 'IT Software', ''],
+          ['CT-22190', 'Out-of-home advertising', 'Adcast', 'Elena Marchetti', '2027-06-15', 900, 'Advertising', ''],
+          ['CT-22233', 'Waste disposal, Milan sites', 'Greenline Waste', 'Paolo Riva', '2027-09-30', 210, 'Facilities', ''],
+          ['CT-22301', 'Legal counsel, employment law', 'Studio Ardenti', 'Sofia Neri', '2027-08-31', 540, 'Legal', ''],
+          ['CT-22344', 'Highlights video licensing', 'Streamhaus', 'Federica Poli', '2027-07-15', 760, 'Media Content', ''],
+          ['CT-22402', 'Voice bot licenses', 'Talkwell', 'Ilaria Costa', '2027-09-15', 320, 'Customer Service', ''],
+          ['CT-22457', 'Affiliate reporting tool', 'Linkbridge', 'Elena Marchetti', '2027-08-15', 95, 'Affiliate', ''],
+          ['CT-23001', 'Backup connectivity', 'Fibrelink', 'Alessandro Conti', '2027-11-30', 260, 'Telecoms', ''],
+          ['CT-17755', 'Partner tracking, legacy module', 'Trackmate', 'Elena Marchetti', '2027-03-31', 205, 'Affiliate', ''],
+          ['CT-22500', 'Printing and mailing', 'Hexa Print', '', '2027-08-31', 180, 'Print', ''],
+          ['CT-22512', 'Small consulting assignments', 'Various suppliers', 'Chiara Monti', '2027-07-31', 150, 'Miscellaneous', '']
+        ]
+      },
+      sap: {
+        label: 'SAP', file: 'sap_outline_agreements_2026-09-29.xlsx', ownerMode: 'lookup',
+        hint: 'One row per outline agreement, with a valid-to date and a target value.',
+        catLabel: 'Material groups, matched to a Product Category',
+        cols: [['Outline agreement', 'Reference'], ['Short text', 'Line'], ['Vendor name', 'Supplier'], ['Purchasing group', 'Business Owner'], ['Valid to', 'Ends'], ['Target value', 'Value'], ['Material group', 'Product Category']],
+        catMap: [['ZIT-SW', 'Technology'], ['ZIT-INF', 'Technology'], ['ZIT-CLD', 'Technology'], ['ZFAC', 'Facility Management'], ['ZMKT', 'Marketing'], ['ZFLT', '']],
+        ownerMap: [['P10', 'Giulia Ferri'], ['P11', 'Elena Marchetti'], ['P12', 'Paolo Riva'], ['P13', '']],
+        rows: [
+          ['4600018811', 'Data warehouse licenses', 'Northwind Data', 'P10', '2027-08-31', 1850, 'ZIT-SW', 'Data warehouse licenses'],
+          ['4600018902', 'Service desk platform', 'Deskly', 'P10', '2027-09-30', 480, 'ZIT-SW', 'Service desk platform'],
+          ['4600019007', 'Mainframe support', 'Kyoto Systems', 'P10', '2027-06-30', 2100, 'ZIT-INF', ''],
+          ['4600019055', 'Backup as a service', 'Nexon Cloud', 'P10', '2027-05-31', 340, 'ZIT-CLD', ''],
+          ['4600019120', 'Cleaning, secondary sites', 'Cleanwave', 'P12', '2027-08-15', 410, 'ZFAC', ''],
+          ['4600019176', 'Alarm monitoring', 'Vigilis', 'P12', '2027-07-31', 230, 'ZFAC', ''],
+          ['4600019233', 'Social media production', 'Brightline Creative', 'P11', '2027-06-30', 780, 'ZMKT', ''],
+          ['4600019290', 'Brand tracking study', 'Panelio', 'P11', '2027-09-15', 260, 'ZMKT', ''],
+          ['4600019344', 'Colocation, Milan', 'Colomax', 'P10', '2027-12-31', 1200, 'ZIT-INF', ''],
+          ['4600019401', 'Fleet leasing', 'Corsa Fleet', 'P13', '2027-08-31', 640, 'ZFLT', '']
+        ]
+      }
+    },
+    srcDef() { return this.sources[this.imp.source]; },
+    pickFile(ev) { const f = ev.target.files && ev.target.files[0]; if (f) this.loadImport(f.name); ev.target.value = ''; },
+    useSample() { this.loadImport(this.srcDef().file); },
+    loadImport(name) {
+      const def = this.srcDef();
+      this.imp.file = name;
+      this.imp.stage = 'preview';
+      this.imp.rows = def.rows.map((x, i) => ({ id: 'I' + i, ref: x[0], title: x[1], sup: x[2], own0: x[3], ends: x[4], value: x[5], cat0: x[6], match: x[7], pick: undefined, ownerFix: '' }));
+      this.imp.catMap = def.catMap.map(x => ({ from: x[0], to: x[1] }));
+      this.imp.ownerMap = (def.ownerMap || []).map(x => ({ from: x[0], to: x[1] }));
+    },
+    resetImport() { this.imp.stage = 'choose'; this.imp.file = ''; this.imp.rows = []; },
+    catOf(r) { const m = this.imp.catMap.find(x => x.from === r.cat0); return m ? m.to : ''; },
+    ownerOf(r) {
+      if (this.srcDef().ownerMode === 'lookup') { const m = this.imp.ownerMap.find(x => x.from === r.own0); return m ? m.to : ''; }
+      return r.own0 || r.ownerFix;
+    },
+    // new, dup (already in the plan), out (outside the window), fix (something cannot be placed yet)
+    statusOf(r) {
+      if (this.rows.some(x => !x.removed && ((r.match && x.contract === r.match) || (x.ref && x.ref === r.ref)))) return 'dup';
+      if (!this.ownerOf(r) || !this.catOf(r)) return 'fix';
+      if (r.ends < this.dates.from || r.ends > this.dates.to) return 'out';
+      return 'new';
+    },
+    impCount(st) { return this.imp.rows.filter(r => this.statusOf(r) === st).length; },
+    canPick(r) { const s = this.statusOf(r); return s !== 'dup' && s !== 'fix'; },
+    pickOf(r) { return this.canPick(r) && (r.pick !== undefined ? r.pick : this.statusOf(r) === 'new'); },
+    pickedImport() { return this.imp.rows.filter(r => this.pickOf(r)); },
+    addImported() {
+      const picked = this.pickedImport();
+      if (!picked.length) return;
+      const label = this.srcDef().label;
+      picked.forEach(r => {
+        this.rows.push({ id: 'M' + (++this.seq), ref: r.ref, imp: label, cat: this.catOf(r), contract: r.title, supplier: r.sup, owner: this.ownerOf(r), ends: r.ends, value: r.value, src: 'import', kind: 'contract', removed: false, reason: '' });
+        this.enrich(this.rows[this.rows.length - 1]);
+        this.openGroup(this.catOf(r));
+      });
+      this.flash('Imported ' + this.pl(picked.length, 'line') + ' from ' + label);
+      this.resetImport();
+    },
+
+    // ── steps and confirming ──
+    toDates() { this.step = 2; document.getElementById('main').scrollTop = 0; },
+    orderOk() { return this.dates.opens && this.dates.freeze && this.dates.session && this.dates.opens < this.dates.freeze && this.dates.freeze < this.dates.session; },
+    // A missing reason does not block. Justifying a removal is something we are proposing and
+    // not something their procedure asks for, so it is information rather than a gate.
+    blockReason() {
+      if (this.totalLines() === 0) return 'The plan has no lines.';
+      if (!this.orderOk()) return 'Fix the order of the dates first.';
+      return '';
+    },
+    confirm() {
+      if (this.blockReason()) return;
+      const p = new URLSearchParams({
+        scheduled: '1', lines: String(this.totalLines()),
+        from: this.fmt(this.dates.from), to: this.fmt(this.dates.to),
+        opens: this.longDate(this.dates.opens), freeze: this.longDate(this.dates.freeze), session: this.longDate(this.dates.session)
+      });
+      window.location.href = 'P0%20Purchasing%20Plans.html?' + p.toString();
+    }
+  };
+}
+</script>
+</body>
+</html>

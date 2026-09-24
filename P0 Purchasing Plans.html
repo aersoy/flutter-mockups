@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<!--
+  P0 · Purchasing Plans  (Procurement, in the platform)  Phase 1
+  ==============================================================
+  Source: `Tiered Solution/Screen Inventory.md` → "P0. Purchasing plans" and "What A Plan Is", and the
+          first mockup shown to Flutter, `attachments/initial mockup screen/01 workspace.png`
+          ("Purchase Planning Workspaces": one card per quarterly plan, Create Purchasing Plan,
+          Open Plan). Also `Tiered Solution/Scope and Flow.md` → "The Collection Cycle":
+          the agent opens the cycle on the calendar, proposes the freeze date, and Procurement
+          confirms the freeze date and scope.
+
+  What it has to prove:
+    Every quarter is a plan of its own, and the next one starts here, with the dates and the
+    scope already proposed by the agent, so Procurement confirms rather than builds.
+
+  THE DECISION THAT SHAPES THIS SCREEN (session 5, made with Alper):
+    A plan is ONE QUARTER. Each quarter the agent opens a new plan and its collection cycle,
+    and the plan then moves through the same four stages as the tabs inside it:
+    Collection, Review, Authorization, Tracking. So this list is a list of plans, and the
+    stage strip on each row is the plan's place in that sequence.
+
+  NAMING. A plan is named by the window it covers, the way the request emails already name it
+  ("Purchasing plan Q1-Q2 2027"), not by the quarter it was opened in. The first mockup named
+  them by the opening quarter (Purchasing Plan Q3 2026). The opening quarter is shown on the
+  row instead, so nothing is lost. The procedure describes a plan prepared quarterly with a
+  six month horizon, which is why consecutive plans overlap by a quarter.
+
+  WHAT IS SOURCED AND WHAT IS NOT:
+    Sourced: quarterly cadence, six month horizon, agent proposes the freeze date, Procurement
+    confirms freeze date and scope, one plan per quarter in the first mockup, the four stages
+    (their flow), authorization following the freeze.
+    Ours, illustrative: every count and date below, the 25 day gap from opening to freeze and the
+    11 days from freeze to the authorization session (both taken from this mockup set's own
+    Q1-Q2 2027 cycle, then repeated backwards), the holiday reason for the later freeze, and
+    the plan statuses PROPOSED, SCHEDULED, ACTIVE and CLOSED.
+    Open question for Flutter: because windows overlap, a contract expiring in May falls into two
+    plans. How does their process avoid asking twice? Not answered here.
+
+  SCHEDULING GOES THROUGH P0b. "Review and confirm", the row's "Review" and "Create Purchasing Plan" all open
+  P0b, where the lines are reviewed (remove, add, leave a category out) and the dates are set. Confirming
+  there returns here with the plan scheduled, carrying the dates and the line count in the address. Here,
+  "Change dates" edits the dates of an already scheduled plan, and links back to the lines.
+
+  THE DEMO OPENS ON THIS SCREEN. It shows where a quarter starts, then Open plan on Q1-Q2 2027
+  lands on the plan grid (P1).
+
+  Only the Q1-Q2 2027 plan is built out. The others show what the list carries but do not open.
+
+  Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans. Wireframe, not the real UI.
+  Alpine rule: no double quotes inside the x-data attribute value.
+-->
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P0 · Purchasing Plans</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  [x-cloak] { display: none !important; }
+  .scroll::-webkit-scrollbar { width: 9px; height: 9px; }
+  .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
+  /* one column template for the header row and every plan row, so they cannot drift apart */
+  .planrow { display: grid; grid-template-columns: minmax(250px, 1.5fr) 96px minmax(270px, 1.7fr) 104px minmax(190px, 1.2fr) 96px; column-gap: 16px; align-items: center; }
+</style>
+</head>
+
+<body class="bg-gray-100 h-screen overflow-hidden text-slate-800" x-data="plans()" x-cloak>
+<div class="flex h-screen">
+
+  <!-- ══════════ Left icon rail (matches the existing product shell) ══════════ -->
+  <nav class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-2 shrink-0">
+    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center mb-3">
+      <span class="text-white text-xs font-bold">E</span>
+    </div>
+    <template x-for="item in rail" :key="item.k">
+      <button class="w-10 h-11 rounded-lg flex flex-col items-center justify-center gap-0.5 text-[8px] leading-tight"
+              :class="item.on ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-gray-400 hover:bg-gray-100'">
+        <span class="text-[15px]" x-text="item.i"></span>
+        <span x-text="item.k"></span>
+      </button>
+    </template>
+  </nav>
+
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- ══════════ Header. No tab bar: this screen sits above the plans, not inside one. ══════════ -->
+    <header class="bg-white border-b border-gray-200 px-5 py-3.5 shrink-0 z-30">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-[17px] font-semibold text-gray-900">Purchasing Plans</h1>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200" x-text="plans.length"></span>
+          </div>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">One plan per quarter. Each opens a collection cycle, then moves through review, authorization and tracking.</p>
+        </div>
+        <a href="P0b%20Review%20Before%20Scheduling.html"
+           class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1.5 shrink-0">
+          <span class="text-[14px] leading-none">&#43;</span> Create Purchasing Plan
+        </a>
+      </div>
+    </header>
+
+    <div class="scroll flex-1 overflow-y-auto px-5 py-5">
+
+      <!-- ══════════ The next cycle. This is where a quarter starts. ══════════
+           The agent has already picked the window, the lines and the dates from the calendar
+           and the contract end dates in the plan. Procurement confirms, or changes and confirms. -->
+      <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 mb-5">
+        <div class="flex gap-3">
+          <div class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-[11px] font-bold"
+               style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+          <div class="min-w-0 flex-1">
+            <template x-if="!confirmed">
+              <div>
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Next cycle, waiting for you</div>
+                <p class="text-sm text-slate-800 leading-relaxed mt-1">
+                  The <span class="font-semibold">Q2&ndash;Q3 2027</span> plan is due to open on
+                  <span class="font-semibold">Mon 14 Dec 2026</span>. It covers contracts expiring
+                  <span class="font-semibold">1 Apr &ndash; 30 Sep 2027</span>:
+                  <span class="font-semibold">1,146 lines</span> across
+                  <span class="font-semibold">71 business owners</span> and 5 legal entities, picked from the contract end dates already in the plan.
+                </p>
+                <p class="text-sm text-slate-700 leading-relaxed mt-1.5">
+                  I propose a freeze date of <span class="font-medium">Fri 15 Jan 2027</span>. That is a week later than usual,
+                  because the holiday break falls inside the collection window.
+                </p>
+                <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
+                  Nothing is scheduled yet. You can look through the lines first, take some out or add others, and then set the dates.
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Review and confirm</a>
+                </div>
+              </div>
+            </template>
+            <template x-if="confirmed">
+              <div>
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Scheduled</div>
+                <p class="text-sm text-slate-800 leading-relaxed mt-1">
+                  <span class="font-semibold">Q2&ndash;Q3 2027</span> opens on <span class="font-semibold" x-text="draft.opens"></span>, with
+                  <span class="font-semibold" x-text="lines.toLocaleString('en-GB') + ' lines'"></span> in scope.
+                  Business owners are emailed that morning, with the freeze on <span class="font-semibold" x-text="draft.freeze"></span>
+                  and the authorization session on <span class="font-semibold" x-text="draft.session"></span>.
+                </p>
+                <div class="flex flex-wrap gap-2 mt-2.5" x-show="!panel">
+                  <button @click="openPanel()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Change dates</button>
+                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Review the lines again</a>
+                </div>
+              </div>
+            </template>
+
+            <!-- Confirm panel. Every value is prefilled, so the shortest path is one click. -->
+            <div x-show="panel && confirmed" x-transition.opacity class="mt-4 rounded-lg border border-indigo-100 bg-white p-4" id="dates-panel">
+              <div class="grid grid-cols-3 gap-x-5 gap-y-4">
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Plan</span>
+                  <input type="text" readonly value="Purchasing Plan Q2&ndash;Q3 2027"
+                         class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Covers contracts expiring from</span>
+                  <input type="text" x-model="draft.from" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Until</span>
+                  <input type="text" x-model="draft.to" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Cycle opens</span>
+                  <input type="text" x-model="draft.opens" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Freeze date</span>
+                  <input type="text" x-model="draft.freeze" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                  <span class="block text-[10.5px] text-gray-400 mt-1">Proposed 32 days after opening. The usual gap is 25.</span>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization session</span>
+                  <input type="text" x-model="draft.session" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                  <span class="block text-[10.5px] text-gray-400 mt-1">Proposed 11 days after the freeze, as in the last four cycles.</span>
+                </label>
+              </div>
+              <div class="mt-4 pt-3.5 border-t border-gray-100 flex items-center justify-between gap-4">
+                <div class="text-[11.5px] text-gray-500">
+                  Scope: <span class="font-medium text-gray-700" x-text="lines.toLocaleString('en-GB') + ' lines'"></span>.
+                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-indigo-600 hover:text-indigo-800 font-medium">Review the lines again</a>.
+                  Lines that a business unit adds later join the cycle, as in every cycle.
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button @click="cancelDates()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Cancel</button>
+                  <button @click="panel = false" class="text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Save dates</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ Filter ══════════ -->
+      <div class="flex items-center gap-1.5 mb-3">
+        <template x-for="f in filters" :key="f">
+          <button @click="filter = f"
+                  class="text-[11.5px] px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5"
+                  :class="filter === f ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-200/60'">
+            <span x-text="f"></span>
+            <span class="text-[10px] px-1.5 rounded-full" :class="filter === f ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-500'" x-text="count(f)"></span>
+          </button>
+        </template>
+      </div>
+
+      <!-- ══════════ The plans, newest first ══════════ -->
+      <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="planrow px-4 py-2 border-b border-gray-200 bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+          <div>Plan</div><div>Status</div><div>Where it is</div><div class="text-right">Lines</div><div>Next</div><div></div>
+        </div>
+
+        <template x-for="p in visible()" :key="p.k">
+          <div class="planrow px-4 py-3.5 border-b border-gray-100 last:border-0 hover:bg-gray-50/60"
+               :class="p.link ? 'bg-indigo-50/30' : ''">
+
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[13.5px] font-semibold text-gray-900">Purchasing Plan <span x-text="p.name"></span></span>
+              </div>
+              <div class="text-[11.5px] text-gray-500 mt-0.5" x-text="openedOf(p) + ' · covers ' + coversOf(p)"></div>
+            </div>
+
+            <div>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border" :class="statusClass(p)" x-text="statusOf(p)"></span>
+            </div>
+
+            <div class="min-w-0">
+              <div class="flex items-start gap-1">
+                <template x-for="(s, i) in stages" :key="s">
+                  <div class="flex-1 min-w-0">
+                    <div class="h-1.5 rounded-full" :class="segClass(p, i)"></div>
+                    <div class="text-[10px] mt-1 truncate" :class="lblClass(p, i)" x-text="s"></div>
+                  </div>
+                </template>
+              </div>
+              <div class="text-[11.5px] text-gray-600 mt-1" x-text="progressOf(p)"></div>
+            </div>
+
+            <div class="text-right">
+              <div class="text-[13px] font-medium text-gray-900" x-text="p.lines ? p.lines.toLocaleString('en-GB') : (isScheduled(p) ? 'Scope set' : 'Not yet built')"></div>
+              <div class="text-[11px] text-gray-500" x-text="dueOf(p).toLocaleString('en-GB') + ' fall due'"></div>
+            </div>
+
+            <div class="min-w-0">
+              <div class="text-[12px] font-medium" :class="p.tone" x-text="nextOf(p)"></div>
+              <div class="text-[11px]" :class="p.subTone || 'text-gray-500'" x-text="subOf(p)"></div>
+            </div>
+
+            <div class="text-right">
+              <a x-show="p.link" :href="p.link" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">Open plan &rarr;</a>
+              <span x-show="!p.link && p.status !== 'PROPOSED'" class="text-[12px] text-gray-300 whitespace-nowrap cursor-default"
+                    title="Not available yet">Open plan &rarr;</span>
+              <a x-show="p.status === 'PROPOSED' && !confirmed" href="P0b%20Review%20Before%20Scheduling.html" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">Review &rarr;</a>
+              <a x-show="p.status === 'PROPOSED' && confirmed" href="P0b%20Review%20Before%20Scheduling.html" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">Lines &rarr;</a>
+            </div>
+          </div>
+        </template>
+
+        <div x-show="visible().length === 0" class="px-4 py-8 text-center text-[12px] text-gray-400">No plans in this view.</div>
+      </div>
+
+          </div>
+  </div>
+</div>
+
+<script>
+function plans() {
+  return {
+    rail: [
+      { k: 'Home', i: '⌂', on: false }, { k: 'Plan', i: '▤', on: true }, { k: 'Tasks', i: '☑', on: false },
+      { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false }, { k: 'Setup', i: '⚙', on: false }
+    ],
+
+    // The same four stages as the tabs inside a plan.
+    stages: ['Collection', 'Review', 'Authorization', 'Tracking'],
+
+    filters: ['All plans', 'Active', 'Proposed', 'Closed'],
+    filter: 'All plans',
+    panel: false,
+    confirmed: false,
+    lines: 1146,          // the scope the agent proposed. P0b passes the reviewed count back.
+    snap: null,
+
+    // What the agent proposes for the next quarter. Editable before confirming.
+    draft: {
+      from: '1 Apr 2027', to: '30 Sep 2027',
+      opens: 'Mon 14 Dec 2026', freeze: 'Fri 15 Jan 2027', session: 'Tue 26 Jan 2027'
+    },
+
+    // stage: -1 not started, 0..3 the stage it is in, 4 everything done.
+    plans: [
+      { k: 'q2q3-27', name: 'Q2–Q3 2027', status: 'PROPOSED', stage: -1,
+        opened: 'Opens Mon 14 Dec 2026', covers: '1 Apr – 30 Sep 2027',
+        lines: 0, due: 1146, progress: 'Waiting for your confirmation',
+        next: 'Freeze proposed Fri 15 Jan 2027', sub: 'Proposed by the agent', tone: 'text-indigo-700', subTone: 'text-gray-500', link: '' },
+
+      { k: 'q1q2-27', name: 'Q1–Q2 2027', status: 'ACTIVE', stage: 0,
+        opened: 'Opened Mon 21 Sep 2026', covers: '1 Jan – 30 Jun 2027',
+        lines: 4793, due: 1284, progress: '742 of 1,284 answered',
+        next: 'Freeze Fri 16 Oct 2026', sub: '12 working days left', tone: 'text-gray-800', subTone: 'text-amber-600 font-medium', link: 'Plan.html' },
+
+      { k: 'q4q1', name: 'Q4 2026–Q1 2027', status: 'ACTIVE', stage: 3,
+        opened: 'Opened Mon 15 Jun 2026', covers: '1 Oct 2026 – 31 Mar 2027',
+        lines: 4711, due: 1197, progress: 'Authorized Tue 21 Jul 2026',
+        next: 'Lead times monitored', sub: '38 lines inside their notice window', tone: 'text-gray-800', subTone: 'text-gray-500', link: '' },
+
+      { k: 'q3q4-26', name: 'Q3–Q4 2026', status: 'ACTIVE', stage: 3,
+        opened: 'Opened Mon 16 Mar 2026', covers: '1 Jul – 31 Dec 2026',
+        lines: 4632, due: 1102, progress: 'Authorized Tue 21 Apr 2026',
+        next: 'Lead times monitored', sub: '61 lines at RFE stage', tone: 'text-gray-800', subTone: 'text-gray-500', link: '' },
+
+      { k: 'q2q3-26', name: 'Q2–Q3 2026', status: 'ACTIVE', stage: 3,
+        opened: 'Opened Mon 15 Dec 2025', covers: '1 Apr – 30 Sep 2026',
+        lines: 4540, due: 1068, progress: 'Authorized Tue 20 Jan 2026',
+        next: 'Window ends Wed 30 Sep 2026', sub: 'Closes once the last line is settled', tone: 'text-gray-800', subTone: 'text-gray-500', link: '' },
+
+      { k: 'q1q2-26', name: 'Q1–Q2 2026', status: 'CLOSED', stage: 4,
+        opened: 'Opened Mon 15 Sep 2025', covers: '1 Jan – 30 Jun 2026',
+        lines: 4417, due: 1031, progress: 'Authorized Tue 21 Oct 2025',
+        next: 'Closed', sub: 'Window ended 30 Jun 2026', tone: 'text-gray-500', subTone: 'text-gray-400', link: '' }
+    ],
+
+    // Coming back from P0b with ?scheduled=1&lines=..&from=..&to=..&opens=..&freeze=..&session=..
+    init() {
+      const q = new URLSearchParams(window.location.search);
+      if (q.get('scheduled') !== '1') return;
+      this.confirmed = true;
+      const n = parseInt(q.get('lines'), 10);
+      if (n > 0) this.lines = n;
+      ['from', 'to', 'opens', 'freeze', 'session'].forEach(k => { if (q.get(k)) this.draft[k] = q.get(k); });
+    },
+    openedOf(p) { return this.isScheduled(p) ? 'Opens ' + this.draft.opens : p.opened; },
+    coversOf(p) { return this.isScheduled(p) ? this.draft.from.replace(/ 20\d\d$/, '') + ' – ' + this.draft.to : p.covers; },
+    subOf(p)    { return this.isScheduled(p) ? 'Confirmed by Procurement' : p.sub; },
+    isScheduled(p) { return p.status === 'PROPOSED' && this.confirmed; },
+    dueOf(p) { return this.isScheduled(p) ? this.lines : p.due; },
+
+    statusOf(p) { return (p.status === 'PROPOSED' && this.confirmed) ? 'SCHEDULED' : p.status; },
+    statusClass(p) {
+      return {
+        ACTIVE:    'bg-emerald-50 text-emerald-700 border-emerald-200',
+        PROPOSED:  'bg-white text-indigo-600 border-indigo-300 border-dashed',
+        SCHEDULED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        CLOSED:    'bg-gray-100 text-gray-500 border-gray-200'
+      }[this.statusOf(p)];
+    },
+    progressOf(p) { return (p.status === 'PROPOSED' && this.confirmed) ? 'Opens ' + this.draft.opens : p.progress; },
+    nextOf(p)     { return (p.status === 'PROPOSED' && this.confirmed) ? 'Freeze ' + this.draft.freeze : p.next; },
+
+    segClass(p, i) {
+      if (p.stage === -1) return 'bg-gray-200';
+      if (p.stage === 4)  return 'bg-gray-400';
+      if (i < p.stage)    return 'bg-indigo-500';
+      if (i === p.stage)  return 'bg-indigo-300';
+      return 'bg-gray-200';
+    },
+    lblClass(p, i) {
+      if (p.stage === -1) return 'text-gray-300';
+      if (p.stage === 4)  return 'text-gray-400';
+      if (i === p.stage)  return 'text-indigo-700 font-semibold';
+      if (i < p.stage)    return 'text-gray-500';
+      return 'text-gray-300';
+    },
+
+    count(f) { return this.plans.filter(p => this.matches(p, f)).length; },
+    matches(p, f) {
+      if (f === 'All plans') return true;
+      if (f === 'Active')    return p.status === 'ACTIVE';
+      if (f === 'Proposed')  return p.status === 'PROPOSED';
+      if (f === 'Closed')    return p.status === 'CLOSED';
+      return true;
+    },
+    visible() { return this.plans.filter(p => this.matches(p, this.filter)); },
+
+    // Only for a plan that is already scheduled: change its dates. Cancel puts them back as they were.
+    openPanel() { this.snap = Object.assign({}, this.draft); this.panel = true; },
+    cancelDates() { if (this.snap) this.draft = Object.assign({}, this.snap); this.panel = false; }
+  };
+}
+</script>
+</body>
+</html>
