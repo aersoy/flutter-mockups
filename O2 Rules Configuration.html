@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
+    D6  A rule set is fixed for a cycle once the cycle starts. Effective dating is replaced
+        by one version per cycle; every version is kept (P33). This screen edits only the
+        next cycle's draft, during its start-of-cycle review (P0b, step Rules). Versions of
+        the open and closed cycles open read-only.
+    D9  Procurement only. Reached from a cycle's Rules tab or the start-of-cycle review,
+        not from Settings.
+  The rest of this comment describes the build before the brief.
+
   O2 · Rules Configuration  (Procurement administrator)  Phase 1
   ==============================================================
   Source: `Tiered Solution/Scope and Flow.md` → "Rules Are Configuration, Owned By Flutter",
@@ -71,20 +80,22 @@
     <header class="bg-white border-b border-gray-200 px-6 pt-4 pb-0 shrink-0">
       <div class="flex items-start justify-between">
         <div>
-          <p class="text-[11px] text-gray-400 mb-0.5">Settings · Procurement rules · FSEA</p>
+          <p class="text-[11px] text-gray-400 mb-0.5"><a href="P0%20Purchasing%20Plans.html" class="hover:underline">Cycles</a> · <span x-text="ver().cycle"></span> · Rules</p>
           <h1 class="text-lg font-semibold text-gray-900">Procurement rules</h1>
-          <p class="text-xs text-gray-500 mt-1">
-            Owned and edited by Procurement, per legal entity, effective dated and audited.
-          </p>
+          <p class="text-xs mt-1" :class="ver().draft ? 'text-indigo-700' : 'text-gray-500'" x-text="ver().note"></p>
         </div>
         <div class="flex items-center gap-2">
-          <select x-model="entity" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-700 bg-white font-medium">
-            <template x-for="e in entities" :key="e.k">
-              <option :value="e.k" x-text="e.k + (e.inherits ? ' (inherits)' : '')"></option>
+          <select x-model="verId" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-700 bg-white font-medium">
+            <template x-for="v in versions" :key="v.id">
+              <option :value="v.id" :selected="v.id === verId" x-text="v.cycle + ' · ' + v.state"></option>
             </template>
           </select>
-          <button class="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50">Change history</button>
-          <button class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Propose a change</button>
+          <select x-model="entity" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-700 bg-white font-medium">
+            <template x-for="e in entities" :key="e.k">
+              <option :value="e.k" :selected="e.k === entity" x-text="e.k + (e.inherits ? ' (inherits)' : '')"></option>
+            </template>
+          </select>
+          <a x-show="ver().draft" href="P0b%20Review%20Before%20Scheduling.html" class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Back to the start-of-cycle review</a>
         </div>
       </div>
       <div class="flex gap-1 mt-3 -mb-px">
@@ -115,8 +126,8 @@
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h2 class="text-[13.5px] font-semibold text-gray-900">Sourcing method by purchase amount</h2>
               <div class="text-right">
-                <div class="text-[10.5px] text-gray-400">Effective from</div>
-                <div class="text-[12px] font-medium text-gray-800">1 Jan 2026</div>
+                <div class="text-[10.5px] text-gray-400">In force for</div>
+                <div class="text-[12px] font-medium text-gray-800" x-text="ver().cycle"></div>
               </div>
             </div>
             <table class="w-full text-xs">
@@ -136,7 +147,7 @@
                     <td class="px-3 py-2.5 text-gray-700" x-text="b.method"></td>
                     <td class="px-3 py-2.5 text-gray-500" x-text="b.src"></td>
                     <td class="px-3 py-2.5"><span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass(b.st)" x-text="b.st"></span></td>
-                    <td class="px-3 py-2.5 text-right"><button class="text-[11px] font-medium text-indigo-600">Edit</button></td>
+                    <td class="px-3 py-2.5 text-right"><button x-show="ver().draft" class="text-[11px] font-medium text-indigo-600">Edit</button></td>
                   </tr>
                 </template>
               </tbody>
@@ -147,8 +158,8 @@
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h2 class="text-[13.5px] font-semibold text-gray-900">Minimum notice before the contract starts</h2>
               <div class="text-right">
-                <div class="text-[10.5px] text-gray-400">Effective from</div>
-                <div class="text-[12px] font-medium text-gray-800">1 Jan 2026</div>
+                <div class="text-[10.5px] text-gray-400">In force for</div>
+                <div class="text-[12px] font-medium text-gray-800" x-text="ver().cycle"></div>
               </div>
             </div>
             <table class="w-full text-xs">
@@ -170,7 +181,7 @@
                     <td class="px-3 py-2.5 text-right font-medium text-gray-800" x-text="n.days"></td>
                     <td class="px-3 py-2.5 text-gray-500" x-text="n.src"></td>
                     <td class="px-3 py-2.5"><span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass(n.st)" x-text="n.st"></span></td>
-                    <td class="px-3 py-2.5 text-right"><button class="text-[11px] font-medium text-indigo-600">Edit</button></td>
+                    <td class="px-3 py-2.5 text-right"><button x-show="ver().draft" class="text-[11px] font-medium text-indigo-600">Edit</button></td>
                   </tr>
                 </template>
               </tbody>
@@ -212,7 +223,7 @@
                       </div>
                       <div class="flex items-center gap-3 shrink-0">
                         <span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="statusClass(r.st)" x-text="r.st"></span>
-                        <button class="text-[11px] font-medium text-indigo-600">Edit</button>
+                        <button x-show="ver().draft" class="text-[11px] font-medium text-indigo-600">Edit</button>
                       </div>
                     </div>
                   </div>
@@ -240,13 +251,13 @@
       </template>
 
       <!-- ══════════ TAB · Change history ══════════
-           Effective dating and audit, drawn as the same object because they are. -->
+           One version per cycle, and the audit of how each version differs from the one before. -->
       <template x-if="tab === 'Change history'">
         <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
           <table class="w-full text-xs">
             <thead class="bg-gray-50 text-gray-500">
               <tr class="text-left">
-                <th class="px-4 py-2.5 font-medium">Effective from</th>
+                <th class="px-4 py-2.5 font-medium">Version</th>
                 <th class="px-3 py-2.5 font-medium">What changed</th>
                 <th class="px-3 py-2.5 font-medium">Entity</th>
                 <th class="px-3 py-2.5 font-medium">Changed by</th>
@@ -265,7 +276,7 @@
                   <td class="px-3 py-2.5 text-gray-600" x-text="h.entity"></td>
                   <td class="px-3 py-2.5 text-gray-600" x-text="h.by"></td>
                   <td class="px-3 py-2.5 text-right font-medium text-gray-800" x-text="h.n"></td>
-                  <td class="px-3 py-2.5 text-right"><button class="text-[11px] font-medium text-indigo-600">View rules as of this date</button></td>
+                  <td class="px-3 py-2.5 text-right"><button @click="verId = h.ver; tab = 'Methods and notice'" class="text-[11px] font-medium text-indigo-600">View this version</button></td>
                 </tr>
               </template>
             </tbody>
@@ -282,10 +293,21 @@ function rules() {
     tab: 'Methods and notice',
     tabs: ['Methods and notice', 'Authorization', 'Change history'],
     entity: 'Sisal Italia',
+    // D6: one rule set version per cycle. Only the next cycle's draft can be edited.
+    verId: 'c3',
+    versions: [
+      { id: 'c3', cycle: 'Cycle 3', state: 'draft, editable', draft: true,
+        note: 'Draft for Cycle 3, copied from Cycle 2. Editable until Cycle 3 starts on Mon 14 Dec 2026, then fixed for the whole cycle.' },
+      { id: 'c2', cycle: 'Cycle 2', state: 'in force, fixed', draft: false,
+        note: 'In force for Cycle 2, the open cycle. Fixed since it started on Mon 21 Sep 2026. Read-only.' },
+      { id: 'c1', cycle: 'Cycle 1', state: 'closed', draft: false, note: 'Cycle 1\'s rule set, kept with the closed cycle. Read-only.' },
+      { id: 'c0', cycle: 'Cycle 0', state: 'closed', draft: false, note: 'Cycle 0\'s rule set, set from Flutter\'s documents at the import. Read-only.' }
+    ],
+    ver() { return this.versions.find(v => v.id === this.verId) || this.versions[0]; },
 
     rail: [
-      { k: 'Home', i: '⌂', on: false }, { k: 'Plan', i: '▤', on: false }, { k: 'Tasks', i: '☑', on: false },
-      { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false }, { k: 'Setup', i: '⚙', on: true }
+      { k: 'Home', i: '⌂', on: false }, { k: 'Plan', i: '▤', on: true }, { k: 'Tasks', i: '☑', on: false },
+      { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false }, { k: 'Setup', i: '⚙', on: false }
     ],
 
     // Session 22: the Italian entities share one configuration. Turkey keeps its own.
@@ -331,10 +353,11 @@ function rules() {
     ],
 
     history: [
-      { i: 1, from: '1 Jan 2026', status: 'current', what: 'Sourcing methods by amount set from the FSEA user guide', entity: 'Italian entities', by: 'Imported at onboarding', n: '4,413' },
-      { i: 2, from: '1 Jan 2026', status: 'current', what: 'Notice periods set from the plan’s RFE deadline formula', entity: 'Italian entities', by: 'Imported at onboarding', n: '4,413' },
-      { i: 3, from: '1 Jan 2026', status: 'current', what: 'Authorization ladder defined, four rungs; derogation above € 10,000', entity: 'Italian entities', by: 'Imported at onboarding', n: '2,308' },
-      { i: 4, from: '1 Apr 2026', status: 'current', what: 'Derogations section updated (procedure version 2.0)', entity: 'Sisal Tech Turkey', by: 'Imported at onboarding', n: '112' }
+      { i: 1, ver: 'c0', from: 'Cycle 0', status: 'closed', what: 'Rule set created from the FSEA user guide and the plan\'s RFE deadline formula', entity: 'Italian entities', by: 'Set at the import, confirmed by Procurement', n: '5,465' },
+      { i: 2, ver: 'c0', from: 'Cycle 0', status: 'closed', what: 'Derogations section from the procedure, version 2.0', entity: 'Sisal Tech Turkey', by: 'Set at the import', n: '112' },
+      { i: 3, ver: 'c1', from: 'Cycle 1', status: 'closed', what: 'No change from Cycle 0', entity: 'All', by: 'Confirmed by Sara Lombardi', n: '' },
+      { i: 4, ver: 'c2', from: 'Cycle 2', status: 'in force', what: 'No change from Cycle 1', entity: 'All', by: 'Confirmed by Sara Lombardi', n: '' },
+      { i: 5, ver: 'c3', from: 'Cycle 3', status: 'draft', what: 'Copied from Cycle 2, not yet confirmed', entity: 'All', by: 'Copied at the start-of-cycle review', n: '' }
     ],
 
     statusClass(st) {

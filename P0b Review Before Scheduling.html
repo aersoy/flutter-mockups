@@ -1,5 +1,20 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
+  This is the start-of-cycle review. The next cycle starts as a copy of the open one (D4),
+  and this is where Procurement reviews what the copy will send out before it starts.
+    D6  A new Rules step between Lines and Dates. The rule set is copied from the open cycle,
+        can be changed here, and is fixed once the cycle starts. Confirming it is required.
+    D21 Each legal entity has its own rule set, configured and confirmed independently in
+        the Rules step: value bands, notice, derogation ladder and validity.
+    P17, P19 The start-of-cycle check runs on the copy; flagged lines can be held back from
+        the first send, so owners are not challenged over Procurement's data errors.
+    D11 Unfinished work moves forward with its lines; starting the cycle closes the open one.
+    D19 "Authorization session" is now "authorization meeting": the product has no session mode.
+  Not mocked here: the Cycle 0 import review (column mapping, renewal pairing, P16). It is the
+  same review with the import in front of it.
+  The rest of this comment describes the build before the brief.
+
   P0b · Review Before Scheduling  (Procurement, in the platform)  Phase 1
   =======================================================================
   Source: Procedure (STH Turkey, FlutterSEA layout) → 3.1 "Purchasing plan": the plan is prepared quarterly
@@ -67,7 +82,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>P0b · Review Before Scheduling</title>
+<title>P0b · Start-of-Cycle Review</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -173,22 +188,22 @@
     <header class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 z-30 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3.5 min-w-0">
         <a href="P0%20Purchasing%20Plans.html" class="text-[12.5px] font-medium px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 shrink-0">
-          <span aria-hidden="true">&larr;</span> Purchasing Plans
+          <span aria-hidden="true">&larr;</span> Cycles
         </a>
         <div class="min-w-0">
           <div class="flex items-center gap-2.5">
-            <h1 class="text-[16px] font-semibold text-gray-900">Purchasing Plan Q2&ndash;Q3 2027</h1>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white text-indigo-600 border border-dashed border-indigo-300">PROPOSED</span>
+            <h1 class="text-[16px] font-semibold text-gray-900">Cycle 3 &middot; Q2 2027</h1>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white text-indigo-600 border border-dashed border-indigo-300">NEXT</span>
           </div>
-          <div class="text-[11.5px] text-gray-500">Review before scheduling &middot; contracts expiring 1 Apr &ndash; 30 Sep 2027</div>
+          <div class="text-[11.5px] text-gray-500">Start-of-cycle review &middot; copied from Cycle 2 &middot; plan Q2&ndash;Q3 2027 &middot; contracts expiring 1 Apr &ndash; 30 Sep 2027</div>
         </div>
       </div>
 
       <!-- steps -->
       <div class="flex items-center gap-2 shrink-0">
-        <template x-for="(s, i) in ['Lines', 'Dates']" :key="s">
+        <template x-for="(s, i) in ['Lines', 'Rules', 'Dates']" :key="s">
           <div class="flex items-center gap-2">
-            <button @click="i === 0 ? step = 1 : (step = 2)"
+            <button @click="step = i + 1"
                     class="flex items-center gap-2 text-[12px] px-2.5 py-1 rounded-lg"
                     :class="step === i + 1 ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">
               <span class="w-5 h-5 rounded-full text-[10.5px] font-semibold flex items-center justify-center"
@@ -196,7 +211,7 @@
                     x-text="i + 1 < step ? '✓' : i + 1"></span>
               <span x-text="s"></span>
             </button>
-            <span x-show="i === 0" class="text-gray-300">&mdash;</span>
+            <span x-show="i < 2" class="text-gray-300">&mdash;</span>
           </div>
         </template>
       </div>
@@ -222,22 +237,43 @@
                   <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Nothing is scheduled yet</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      I picked the contracts that end between <span class="font-semibold">1 Apr and 30 Sep 2027</span>:
+                      Cycle 3 starts as a copy of Cycle 2's live lines. From them I picked the contracts that end between <span class="font-semibold">1 Apr and 30 Sep 2027</span>:
                       <span class="font-semibold">1,146 lines</span> in nine product categories. Three needs raised in earlier alignments are already in.
                       Take out what does not belong, add what is missing, then set the dates.
                       If the contracts are kept in Appian or SAP, you can import an export from there instead of adding them one by one.
                     </p>
                     <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
-                      Contracts that end in April to June also sit in the Q1&ndash;Q2 2027 plan. I marked them and left them in.
-                      Lines deferred at the 27 Oct authorization session will join by themselves.
+                      Contracts that end in April to June were also in Cycle 2's window. I marked them and left them in.
+                      Lines deferred at the 27 Oct authorization meeting, and any unfinished work, move forward with their lines.
                     </p>
+                    <!-- P17, P19: the start-of-cycle check on the copy, and holding flagged lines back. -->
+                    <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 flex items-start gap-3">
+                      <div class="text-[12.5px] text-amber-900 leading-relaxed flex-1">
+                        <strong>Start-of-cycle check:</strong> 212 of these lines fail the rule set.
+                        97 direct negotiations with no justification, 74 with no sourcing strategy, 41 with no owner.
+                        <span x-show="holdBack">They are held back from the first send until Procurement fixes them, so owners are not asked about data errors that are ours to fix.</span>
+                        <span x-show="!holdBack">They will be sent as they are, and owners will be challenged on them.</span>
+                      </div>
+                      <label class="flex items-center gap-1.5 text-[11.5px] text-amber-900 font-medium shrink-0 mt-0.5">
+                        <input type="checkbox" x-model="holdBack" class="accent-amber-600 w-3.5 h-3.5"> Hold back flagged lines
+                      </label>
+                    </div>
                   </div>
                 </template>
                 <template x-if="step === 2">
                   <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">The rule set for Cycle 3</div>
+                    <p class="text-sm text-slate-800 leading-relaxed mt-1">
+                      These are Cycle 2's rule sets, copied, one per legal entity. Once Cycle 3 starts they are fixed until Cycle 4 starts, and each line is judged against its own entity's rules.
+                      Change what Flutter has decided to change, then confirm each entity.
+                    </p>
+                  </div>
+                </template>
+                <template x-if="step === 3">
+                  <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Last step</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      The dates below are what I proposed. Business owners are emailed on the morning the cycle opens, not before.
+                      The dates below are what I proposed. Business owners are emailed on the morning the cycle starts, not before, and Cycle 2 closes that morning.
                     </p>
                   </div>
                 </template>
@@ -826,13 +862,154 @@
             </div>
           </div>
 
-          <!-- ══════════ STEP 2 · DATES ══════════ -->
-          <div x-show="step === 2">
+          <!-- ══════════ STEP 2 · RULES (IA brief D6, D21) ══════════
+               The only point at which a rule set can change. Each legal entity has its own
+               rule set, configured independently (D21): value bands, minimum notice, the
+               derogation ladder and the validity tolerances. Values that differ from Cycle 2
+               are marked with the lines they affect. Every entity must be confirmed before
+               the cycle can be scheduled; editing a confirmed entity unconfirms it.
+               Values: Italian entities from the FSEA user guide and their own RFE deadline
+               formula; Sisal Technology Turkey from the STH procedure. Albania and Morocco
+               are shown with the Turkey hub values, illustrative until Flutter confirms. -->
+          <div x-show="step === 2" class="flex gap-4 items-start">
+
+            <!-- Entities -->
+            <div class="w-60 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden sticky top-0">
+              <div class="px-3.5 py-2.5 border-b border-gray-100">
+                <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal entities</div>
+                <div class="text-[11.5px] mt-0.5" :class="rulesOk ? 'text-emerald-700' : 'text-gray-500'"
+                     x-text="confirmedCount() + ' of ' + ruleEnts.length + ' confirmed'"></div>
+              </div>
+              <template x-for="en in ruleEnts" :key="en.k">
+                <button @click="entSel = en.k" class="w-full text-left px-3.5 py-2.5 border-l-2 border-b border-b-gray-50 flex items-center gap-2"
+                        :class="entSel === en.k ? 'border-l-indigo-600 bg-indigo-50/60' : 'border-l-transparent hover:bg-gray-50'">
+                  <span class="w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[9px] text-white"
+                        :class="en.confirmed ? 'bg-emerald-500' : 'bg-gray-200'" x-text="en.confirmed ? '✓' : ''"></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[12px] font-medium truncate" :class="entSel === en.k ? 'text-indigo-700' : 'text-gray-800'" x-text="en.k"></span>
+                    <span class="block text-[10.5px] text-gray-400" x-text="en.lines + ' lines' + (entChanges(en) ? ' · ' + entChanges(en) + ' changed' : '')"></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+
+            <!-- The selected entity's rule set -->
+            <div class="flex-1 min-w-0 space-y-4">
+              <div class="flex items-center gap-3">
+                <div class="min-w-0 flex-1">
+                  <h2 class="text-[15px] font-semibold text-gray-900" x-text="ent().k"></h2>
+                  <p class="text-[11.5px] text-gray-500" x-text="ent().lines + ' lines in Cycle 3 · ' + ent().src"></p>
+                </div>
+                <label class="text-[11.5px] text-gray-500 flex items-center gap-1.5 shrink-0">Copy values from
+                  <select @change="copyFrom($event.target.value); $event.target.value = ''" class="text-[11.5px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-700">
+                    <option value="">another entity</option>
+                    <template x-for="o in ruleEnts.filter(x => x.k !== entSel)" :key="o.k"><option :value="o.k" x-text="o.k"></option></template>
+                  </select>
+                </label>
+              </div>
+
+              <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Sourcing method by purchase amount</div>
+                <table class="w-full text-[12px]">
+                  <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                    <th class="px-4 py-2 font-medium">Up to (&euro;)</th><th class="px-4 py-2 font-medium">Required method</th>
+                    <th class="px-4 py-2 font-medium text-right">Cycle 2</th><th class="px-4 py-2 font-medium"></th>
+                  </tr></thead>
+                  <tbody>
+                    <template x-for="(bd, i) in ent().bands" :key="i">
+                      <tr class="border-b border-gray-50 last:border-0" :class="bdChanged(bd) ? 'bg-amber-50/60' : ''">
+                        <td class="px-4 py-1.5 w-40">
+                          <template x-if="bd.to !== null"><input type="number" step="1000" x-model.number="bd.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
+                          <template x-if="bd.to === null"><span class="text-gray-500">Above</span></template>
+                        </td>
+                        <td class="px-4 py-1.5"><input type="text" x-model="bd.method" @input="ent().confirmed = false" class="fld"></td>
+                        <td class="px-4 py-2 text-right mono text-gray-500 whitespace-nowrap" x-text="bd.prevTo === null ? 'Above' : eur(bd.prevTo)"></td>
+                        <td class="px-4 py-2 text-[11px] text-amber-700 whitespace-nowrap" x-text="bdChanged(bd) ? 'Changed' : ''"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                  <span class="text-[12px] font-semibold text-gray-800">Minimum notice</span>
+                  <span class="text-[11px] text-gray-400">working days</span>
+                </div>
+                <table class="w-full text-[12px]">
+                  <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                    <th class="px-4 py-2 font-medium">Sourcing strategy</th><th class="px-4 py-2 font-medium">Amount</th>
+                    <th class="px-4 py-2 font-medium text-right">Cycle 2</th><th class="px-4 py-2 font-medium text-right w-28">Cycle 3</th><th class="px-4 py-2 font-medium"></th>
+                  </tr></thead>
+                  <tbody>
+                    <template x-for="n in ent().notice" :key="n.strat + n.amt">
+                      <tr class="border-b border-gray-50 last:border-0" :class="n.days != n.prev ? 'bg-amber-50/60' : ''">
+                        <td class="px-4 py-2 text-gray-800" x-text="n.strat"></td>
+                        <td class="px-4 py-2 text-gray-600" x-text="n.amt"></td>
+                        <td class="px-4 py-2 text-right mono text-gray-500" x-text="n.prev === null ? 'none' : n.prev"></td>
+                        <td class="px-4 py-1.5 text-right"><input type="number" x-model.number="n.days" @input="ent().confirmed = false" class="fld !w-20 text-right mono"></td>
+                        <td class="px-4 py-2 text-[11px] text-amber-700" x-text="n.prev === null ? 'New for this entity' : (n.days != n.prev ? 'Changed · ' + n.lines + ' lines get a new decision date' : '')"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Who authorizes a derogation</div>
+                  <table class="w-full text-[12px]">
+                    <tbody>
+                      <template x-for="(l, i) in ent().ladder" :key="l.rung">
+                        <tr class="border-b border-gray-50 last:border-0" :class="l.to !== l.prevTo ? 'bg-amber-50/60' : ''">
+                          <td class="px-4 py-2 text-gray-800" x-text="l.rung"></td>
+                          <td class="px-4 py-1.5 text-right whitespace-nowrap">
+                            <template x-if="l.to !== null"><span class="text-gray-500 text-[11px]">up to &euro; <input type="number" step="1000" x-model.number="l.to" @input="ent().confirmed = false" class="fld !w-24 text-right mono inline-block"></span></template>
+                            <template x-if="l.to === null"><span class="text-gray-500 text-[11px]">above</span></template>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Derogation floor and validity</div>
+                  <div class="px-4 py-3 space-y-2.5 text-[12px] text-gray-700">
+                    <label class="flex items-center gap-2" :class="ent().floor !== ent().prevFloor ? 'text-amber-800' : ''">
+                      <span class="flex-1">A direct negotiation is a derogation above &euro;</span>
+                      <input type="number" step="1000" x-model.number="ent().floor" @input="ent().confirmed = false" class="fld !w-24 text-right mono">
+                    </label>
+                    <label class="flex items-center gap-2" :class="ent().pct !== ent().prevPct ? 'text-amber-800' : ''">
+                      <span class="flex-1">An authorization lapses if the amount exceeds it by more than %</span>
+                      <input type="number" x-model.number="ent().pct" @input="ent().confirmed = false" class="fld !w-16 text-right mono">
+                    </label>
+                    <label class="flex items-center gap-2" :class="ent().abs !== ent().prevAbs ? 'text-amber-800' : ''">
+                      <span class="flex-1">or by more than &euro;</span>
+                      <input type="number" step="1000" x-model.number="ent().abs" @input="ent().confirmed = false" class="fld !w-24 text-right mono">
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <label class="rounded-xl border px-4 py-3 flex items-start gap-3 cursor-pointer"
+                     :class="ent().confirmed ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-200 bg-white'">
+                <input type="checkbox" x-model="ent().confirmed" class="accent-indigo-600 w-4 h-4 mt-0.5">
+                <span class="text-[12.5px] text-gray-800 leading-relaxed">
+                  <strong x-text="'I confirm ' + ent().k + '\'s rule set for Cycle 3.'"></strong>
+                  <span class="text-gray-600" x-text="entChanges(ent()) ? entChanges(ent()) + (entChanges(ent()) === 1 ? ' value differs' : ' values differ') + ' from Cycle 2, and the change is audited.' : 'No value differs from Cycle 2.'"></span>
+                  It cannot change again until Cycle 4 starts.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ══════════ STEP 3 · DATES ══════════ -->
+          <div x-show="step === 3">
             <div class="rounded-xl border border-gray-200 bg-white p-4">
               <div class="grid grid-cols-3 gap-x-5 gap-y-4">
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Plan</span>
-                  <input type="text" readonly value="Purchasing Plan Q2–Q3 2027" class="fld mt-1 !bg-gray-50 !text-gray-600">
+                  <input type="text" readonly value="Cycle 3 · plan Q2–Q3 2027" class="fld mt-1 !bg-gray-50 !text-gray-600">
                 </label>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Covers contracts expiring from</span>
@@ -845,7 +1022,7 @@
                   <span class="block text-[10.5px] text-gray-400 mt-1" x-text="longDate(dates.to)"></span>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Cycle opens</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Cycle starts</span>
                   <input type="date" x-model="dates.opens" class="fld mt-1" id="d-opens">
                   <span class="block text-[10.5px] mt-1" :class="weekend(dates.opens) ? 'text-amber-600' : 'text-gray-400'" x-text="longDate(dates.opens) + (weekend(dates.opens) ? ' is a weekend' : '')"></span>
                 </label>
@@ -856,14 +1033,14 @@
                         x-text="longDate(dates.freeze) + (weekend(dates.freeze) ? ' is a weekend' : '') + '. ' + gap(dates.opens, dates.freeze) + ' days after opening. The usual gap is 25, and the holiday break falls inside this one.'"></span>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization session</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization meeting</span>
                   <input type="date" x-model="dates.session" class="fld mt-1" id="d-session">
                   <span class="block text-[10.5px] mt-1" :class="weekend(dates.session) ? 'text-amber-600' : 'text-gray-400'"
                         x-text="longDate(dates.session) + (weekend(dates.session) ? ' is a weekend' : '') + '. ' + gap(dates.freeze, dates.session) + ' days after the freeze, as in the last four cycles.'"></span>
                 </label>
               </div>
               <div x-show="!orderOk()" class="mt-4 text-[12px] rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2" id="date-err">
-                The dates need to run in order: the cycle opens, then the freeze, then the authorization session.
+                The dates need to run in order: the cycle starts, then the freeze, then the authorization meeting.
               </div>
             </div>
 
@@ -876,7 +1053,7 @@
                 <div><div class="text-xl font-semibold text-gray-900" x-text="removedCount() + ' out, ' + (addedCount() + importedCount()) + ' in'"></div><div class="text-[11.5px] text-gray-500">changed by you</div></div>
               </div>
               <p class="text-[12px] text-gray-500 mt-3 leading-relaxed">
-                Lines that a business unit adds later join the cycle, as in every cycle. Lines deferred at the 27 Oct authorization session join by themselves.
+                Lines that a business unit adds later join the cycle, as in every cycle. Lines deferred at the 27 Oct authorization meeting move forward with their lines.
               </p>
               <p x-show="noReasonText()" class="text-[12px] text-gray-500 mt-1.5 leading-relaxed" x-text="noReasonText()"></p>
               <button @click="step = 1" class="mt-2 text-[12px] font-medium text-indigo-600 hover:text-indigo-800">&larr; Back to the lines</button>
@@ -892,18 +1069,24 @@
               <span x-text="noReasonText() || 'Nothing is scheduled and nobody is emailed until you confirm on the next step.'"></span>
             </template>
             <template x-if="step === 2">
-              <span x-text="blockReason() || 'Business owners are emailed on the morning the cycle opens. That is the step that cannot be undone.'"
+              <span x-text="rulesOk ? 'Every legal entity\'s rule set is confirmed for Cycle 3.' : 'Confirm each legal entity\'s rule set to continue (' + confirmedCount() + ' of ' + ruleEnts.length + ' done).'"></span>
+            </template>
+            <template x-if="step === 3">
+              <span x-text="blockReason() || 'Business owners are emailed on the morning the cycle starts, and Cycle 2 closes. That is the step that cannot be undone.'"
                     :class="blockReason() ? 'text-amber-700 font-medium' : ''"></span>
             </template>
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <a x-show="step === 1" href="P0%20Purchasing%20Plans.html" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Cancel</a>
-            <button x-show="step === 2" @click="step = 1" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Back</button>
-            <button x-show="step === 1" @click="toDates()"
-                    class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to dates</button>
-            <button x-show="step === 2" @click="confirm()" :disabled="!!blockReason()"
+            <button x-show="step > 1" @click="step = step - 1" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Back</button>
+            <button x-show="step === 1" @click="step = 2; document.getElementById('main').scrollTop = 0"
+                    class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to rules</button>
+            <button x-show="step === 2" @click="toDates()" :disabled="!rulesOk"
                     class="text-[12px] font-semibold px-4 py-2 rounded-lg"
-                    :class="blockReason() ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Confirm and schedule</button>
+                    :class="rulesOk ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Continue to dates</button>
+            <button x-show="step === 3" @click="confirm()" :disabled="!!blockReason()"
+                    class="text-[12px] font-semibold px-4 py-2 rounded-lg"
+                    :class="blockReason() ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Confirm and schedule Cycle 3</button>
           </div>
         </div>
       </div>
@@ -930,6 +1113,8 @@
             <div class="flex justify-between"><span>Lines added</span><span class="mono" x-text="addedCount()"></span></div>
             <div class="flex justify-between"><span>Lines imported</span><span class="mono" x-text="importedCount()"></span></div>
             <div class="flex justify-between"><span>Categories left out</span><span class="mono" x-text="groups.filter(g => g.excluded).length"></span></div>
+            <div class="flex justify-between"><span>Held back, flagged</span><span class="mono" x-text="holdBack ? 212 : 0"></span></div>
+            <div class="flex justify-between"><span>Rule values changed</span><span class="mono" x-text="ruleChanges()"></span></div>
           </div>
           <!-- Information, not a warning. Amber would read as an error on a field nobody is
                required to fill, and the rail is where the scope is tallied rather than policed. -->
@@ -953,6 +1138,73 @@ function review() {
 
     step: 1,
     filter: 'all',
+    holdBack: true,     // P17
+    // D6, D21: one rule set per legal entity, copied from Cycle 2, configured independently.
+    entSel: 'Sisal Italia',
+    ruleEnts: [],
+    get rulesOk() { return this.ruleEnts.length > 0 && this.ruleEnts.every(e => e.confirmed); },
+    confirmedCount() { return this.ruleEnts.filter(e => e.confirmed).length; },
+    ent() { return this.ruleEnts.find(e => e.k === this.entSel) || this.ruleEnts[0]; },
+    bdChanged(b) { return b.to !== b.prevTo || b.method !== b.prevMethod; },
+    entChanges(e) {
+      if (!e) return 0;
+      return e.bands.filter(b => this.bdChanged(b)).length + e.notice.filter(n => n.days != n.prev).length
+        + e.ladder.filter(l => l.to !== l.prevTo).length
+        + (e.floor !== e.prevFloor ? 1 : 0) + (e.pct !== e.prevPct ? 1 : 0) + (e.abs !== e.prevAbs ? 1 : 0);
+    },
+    ruleChanges() { return this.ruleEnts.reduce((a, e) => a + this.entChanges(e), 0); },
+    copyFrom(k) {
+      const src = this.ruleEnts.find(e => e.k === k); if (!src) return;
+      const t = this.ent();
+      t.bands = src.bands.map((b, i) => Object.assign({}, b, { prevTo: (t.bands[i] || {}).prevTo ?? null, prevMethod: (t.bands[i] || {}).prevMethod || '' }));
+      // Notice rows are matched by strategy and amount, not position: entities can have
+      // different methods. A row the target did not have before is marked new.
+      t.notice = src.notice.map(n => {
+        const old = t.notice.find(o => o.strat === n.strat && o.amt === n.amt);
+        return Object.assign({}, n, { prev: old ? old.prev : null, lines: old ? old.lines : null });
+      });
+      t.ladder = src.ladder.map((l, i) => Object.assign({}, l, { prevTo: (t.ladder[i] || {}).prevTo ?? l.to }));
+      t.floor = src.floor; t.pct = src.pct; t.abs = src.abs; t.confirmed = false;
+      this.flash('Copied ' + k + '\'s values into ' + t.k + '. Review and confirm.');
+    },
+    eur(n) { return n === null ? '' : '€ ' + Number(n).toLocaleString('en-GB'); },
+    buildEntities() {
+      const it = () => ({
+        bands: [ { to: 10000, method: 'A quote from a single supplier' }, { to: 50000, method: 'At least two quotes' },
+                 { to: 100000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender, three suppliers' } ],
+        notice: [ { strat: 'Direct Nego', amt: 'Below € 100,000', days: 30, lines: 214 }, { strat: 'Direct Nego', amt: '€ 100,000 – € 1,000,000', days: 40, lines: 131 },
+                  { strat: 'Direct Nego', amt: 'Above € 1,000,000', days: 60, lines: 22 }, { strat: 'Light Tender', amt: 'Any', days: 40, lines: 188 },
+                  { strat: 'Full Tender', amt: 'Any', days: 60, lines: 96 } ],
+        ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Procurement', to: 50000 },
+                  { rung: 'Sr Procurement Director', to: 500000 }, { rung: 'FSEA CFO', to: null } ],
+        floor: 10000, pct: 10, abs: 50000 });
+      const tr = () => ({
+        bands: [ { to: 1000, method: 'A quote from a single supplier' }, { to: 10000, method: 'At least three quotes' },
+                 { to: 50000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender' } ],
+        notice: [ { strat: 'Direct Nego', amt: 'Up to € 50,000', days: 25, lines: 18 }, { strat: 'Direct Nego', amt: '€ 50,000 – € 1,000,000', days: 40, lines: 9 },
+                  { strat: 'Direct Nego', amt: 'Above € 1,000,000', days: 60, lines: 1 }, { strat: 'Quote comparison', amt: '€ 1,000 – € 10,000', days: 30, lines: 7 },
+                  { strat: 'Structured comparison', amt: '€ 10,000 – € 50,000', days: 40, lines: 6 }, { strat: 'Tender', amt: 'Above € 50,000', days: 60, lines: 4 } ],
+        ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Procurement', to: 50000 },
+                  { rung: 'Sr Procurement Director', to: 500000 }, { rung: 'FSEA CFO', to: null } ],
+        floor: 1000, pct: 10, abs: 50000 });
+      const list = [
+        { k: 'Sisal Italia',            lines: 612, src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'Snaitech',                lines: 148, src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'Sisal Gaming',            lines: 96,  src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'TSG Italy',               lines: 41,  src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'Sisal Technology Turkey', lines: 38,  src: 'STH procurement procedure', f: tr },
+        { k: 'Sisal Albania',           lines: 52,  src: 'Local units guide, to confirm', f: tr },
+        { k: 'Sisal Jeux Maroc',        lines: 46,  src: 'Local units guide, to confirm', f: tr }
+      ];
+      this.ruleEnts = list.map(x => {
+        const v = x.f();
+        return { k: x.k, lines: x.lines, src: x.src, confirmed: false,
+          bands: v.bands.map(b => Object.assign({}, b, { prevTo: b.to, prevMethod: b.method })),
+          notice: v.notice.map(n => Object.assign({}, n, { prev: n.days })),
+          ladder: v.ladder.map(l => Object.assign({}, l, { prevTo: l.to })),
+          floor: v.floor, prevFloor: v.floor, pct: v.pct, prevPct: v.pct, abs: v.abs, prevAbs: v.abs };
+      });
+    },
     addOpen: false,
     addMode: 'existing',
     q: '',
@@ -1333,6 +1585,7 @@ function review() {
 
 
     init() {
+      this.buildEntities();
       this.seed.forEach(s => this.rows.push({ id: 'C' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'contract', kind: 'contract', removed: false, reason: '' }));
       this.needSeed.forEach(s => this.rows.push({ id: 'N' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'need', kind: 'need', removed: false, reason: '' }));
       // Every draft line becomes a plan record, validated against the rule set before
@@ -1593,12 +1846,13 @@ function review() {
     },
 
     // ── steps and confirming ──
-    toDates() { this.step = 2; document.getElementById('main').scrollTop = 0; },
+    toDates() { if (!this.rulesOk) return; this.step = 3; document.getElementById('main').scrollTop = 0; },
     orderOk() { return this.dates.opens && this.dates.freeze && this.dates.session && this.dates.opens < this.dates.freeze && this.dates.freeze < this.dates.session; },
     // A missing reason does not block. Justifying a removal is something we are proposing and
     // not something their procedure asks for, so it is information rather than a gate.
     blockReason() {
       if (this.totalLines() === 0) return 'The plan has no lines.';
+      if (!this.rulesOk) return 'Confirm every legal entity\'s rule set on the Rules step first.';
       if (!this.orderOk()) return 'Fix the order of the dates first.';
       return '';
     },

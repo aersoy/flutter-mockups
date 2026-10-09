@@ -1,5 +1,16 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
+  This screen is now the list of cycles, the root of purchase planning (D1).
+    D4  Each cycle starts as a copy of the one before, and the one before closes, read-only.
+    D5  One cycle open at a time. The old list had several ACTIVE plans at once, because a
+        plan stayed active through its tracking. Now tracking continues on the lines in the
+        open cycle, so every earlier cycle is CLOSED.
+    D14 Cycle 0 is the import of Flutter's file, and otherwise a normal cycle.
+    D6, D11 Starting the next cycle goes through P0b, where Procurement reviews the lines
+        going out and the rule set. Unfinished work is copied forward with the lines.
+  The rest of this comment describes the build before the brief.
+
   P0 · Purchasing Plans  (Procurement, in the platform)  Phase 1
   ==============================================================
   Source: `Tiered Solution/Screen Inventory.md` → "P0. Purchasing plans" and "What A Plan Is", and the
@@ -54,7 +65,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>P0 · Purchasing Plans</title>
+<title>P0 · Cycles</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -95,14 +106,14 @@
       <div class="flex items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-2.5">
-            <h1 class="text-[17px] font-semibold text-gray-900">Purchasing Plans</h1>
+            <h1 class="text-[17px] font-semibold text-gray-900">Cycles</h1>
             <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200" x-text="plans.length"></span>
           </div>
-          <p class="text-[11.5px] text-gray-500 mt-0.5">One plan per quarter. Each opens a collection cycle, then moves through review, authorization and tracking.</p>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">One cycle open at a time. Each starts as a copy of the one before, and the one before becomes read-only.</p>
         </div>
         <a href="P0b%20Review%20Before%20Scheduling.html"
            class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1.5 shrink-0">
-          <span class="text-[14px] leading-none">&#43;</span> Create Purchasing Plan
+          <span class="text-[14px] leading-none">&#43;</span> Start next cycle
         </a>
       </div>
     </header>
@@ -121,21 +132,25 @@
               <div>
                 <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Next cycle, waiting for you</div>
                 <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                  The <span class="font-semibold">Q2&ndash;Q3 2027</span> plan is due to open on
-                  <span class="font-semibold">Mon 14 Dec 2026</span>. It covers contracts expiring
-                  <span class="font-semibold">1 Apr &ndash; 30 Sep 2027</span>:
+                  <span class="font-semibold">Cycle 3</span>, for the <span class="font-semibold">Q2&ndash;Q3 2027</span> plan, is due to start on
+                  <span class="font-semibold">Mon 14 Dec 2026</span>. Starting it copies Cycle 2's live lines, rules and people, and closes Cycle 2.
+                  It asks about contracts expiring <span class="font-semibold">1 Apr &ndash; 30 Sep 2027</span>:
                   <span class="font-semibold">1,146 lines</span> across
-                  <span class="font-semibold">71 business owners</span> and 5 legal entities, picked from the contract end dates already in the plan.
+                  <span class="font-semibold">71 business owners</span> and 5 legal entities.
+                </p>
+                <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
+                  Unfinished work moves with its lines: 14 authorizations still to record, 37 open challenges and 9 delegations waiting for the owner.
+                  Cancelled lines and expired contracts stay in Cycle 2.
                 </p>
                 <p class="text-sm text-slate-700 leading-relaxed mt-1.5">
                   I propose a freeze date of <span class="font-medium">Fri 15 Jan 2027</span>. That is a week later than usual,
                   because the holiday break falls inside the collection window.
                 </p>
                 <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
-                  Nothing is scheduled yet. You can look through the lines first, take some out or add others, and then set the dates.
+                  Nothing is scheduled yet. Review the lines going out and the rule set, which is fixed once the cycle starts, then set the dates.
                 </p>
                 <div class="flex flex-wrap gap-2 mt-3">
-                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Review and confirm</a>
+                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Review lines and rules</a>
                 </div>
               </div>
             </template>
@@ -143,10 +158,10 @@
               <div>
                 <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Scheduled</div>
                 <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                  <span class="font-semibold">Q2&ndash;Q3 2027</span> opens on <span class="font-semibold" x-text="draft.opens"></span>, with
+                  <span class="font-semibold">Cycle 3</span> starts on <span class="font-semibold" x-text="draft.opens"></span>, with
                   <span class="font-semibold" x-text="lines.toLocaleString('en-GB') + ' lines'"></span> in scope.
                   Business owners are emailed that morning, with the freeze on <span class="font-semibold" x-text="draft.freeze"></span>
-                  and the authorization session on <span class="font-semibold" x-text="draft.session"></span>.
+                  and the authorization meeting on <span class="font-semibold" x-text="draft.session"></span>. Cycle 2 closes that morning.
                 </p>
                 <div class="flex flex-wrap gap-2 mt-2.5" x-show="!panel">
                   <button @click="openPanel()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Change dates</button>
@@ -160,7 +175,7 @@
               <div class="grid grid-cols-3 gap-x-5 gap-y-4">
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Plan</span>
-                  <input type="text" readonly value="Purchasing Plan Q2&ndash;Q3 2027"
+                  <input type="text" readonly value="Cycle 3 &middot; plan Q2&ndash;Q3 2027"
                          class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
                 </label>
                 <label class="block">
@@ -181,7 +196,7 @@
                   <span class="block text-[10.5px] text-gray-400 mt-1">Proposed 32 days after opening. The usual gap is 25.</span>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization session</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization meeting</span>
                   <input type="text" x-model="draft.session" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
                   <span class="block text-[10.5px] text-gray-400 mt-1">Proposed 11 days after the freeze, as in the last four cycles.</span>
                 </label>
@@ -217,7 +232,7 @@
       <!-- ══════════ The plans, newest first ══════════ -->
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div class="planrow px-4 py-2 border-b border-gray-200 bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-          <div>Plan</div><div>Status</div><div>Where it is</div><div class="text-right">Lines</div><div>Next</div><div></div>
+          <div>Cycle</div><div>Status</div><div>Where it is</div><div class="text-right">Lines</div><div>Next</div><div></div>
         </div>
 
         <template x-for="p in visible()" :key="p.k">
@@ -226,7 +241,8 @@
 
             <div class="min-w-0">
               <div class="flex items-center gap-2">
-                <span class="text-[13.5px] font-semibold text-gray-900">Purchasing Plan <span x-text="p.name"></span></span>
+                <span class="text-[13.5px] font-semibold text-gray-900" x-text="p.name"></span>
+                <span class="text-[11.5px] text-gray-400" x-text="'plan ' + p.plan"></span>
               </div>
               <div class="text-[11.5px] text-gray-500 mt-0.5" x-text="openedOf(p) + ' · covers ' + coversOf(p)"></div>
             </div>
@@ -258,16 +274,14 @@
             </div>
 
             <div class="text-right">
-              <a x-show="p.link" :href="p.link" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">Open plan &rarr;</a>
-              <span x-show="!p.link && p.status !== 'PROPOSED'" class="text-[12px] text-gray-300 whitespace-nowrap cursor-default"
-                    title="Not available yet">Open plan &rarr;</span>
+              <a x-show="p.link" :href="p.link" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap" x-text="p.status === 'CLOSED' ? 'View, read-only →' : 'Open cycle →'"></a>
               <a x-show="p.status === 'PROPOSED' && !confirmed" href="P0b%20Review%20Before%20Scheduling.html" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">Review &rarr;</a>
               <a x-show="p.status === 'PROPOSED' && confirmed" href="P0b%20Review%20Before%20Scheduling.html" class="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">Lines &rarr;</a>
             </div>
           </div>
         </template>
 
-        <div x-show="visible().length === 0" class="px-4 py-8 text-center text-[12px] text-gray-400">No plans in this view.</div>
+        <div x-show="visible().length === 0" class="px-4 py-8 text-center text-[12px] text-gray-400">No cycles in this view.</div>
       </div>
 
           </div>
@@ -283,10 +297,11 @@ function plans() {
     ],
 
     // The same four stages as the tabs inside a plan.
+    // The phases of one cycle. Tracking runs until the next cycle starts (D5).
     stages: ['Collection', 'Review', 'Authorization', 'Tracking'],
 
-    filters: ['All plans', 'Active', 'Proposed', 'Closed'],
-    filter: 'All plans',
+    filters: ['All cycles', 'Open', 'Next', 'Closed'],
+    filter: 'All cycles',
     panel: false,
     confirmed: false,
     lines: 1146,          // the scope the agent proposed. P0b passes the reviewed count back.
@@ -300,35 +315,25 @@ function plans() {
 
     // stage: -1 not started, 0..3 the stage it is in, 4 everything done.
     plans: [
-      { k: 'q2q3-27', name: 'Q2–Q3 2027', status: 'PROPOSED', stage: -1,
-        opened: 'Opens Mon 14 Dec 2026', covers: '1 Apr – 30 Sep 2027',
-        lines: 0, due: 1146, progress: 'Waiting for your confirmation',
+      { k: 'c3', name: 'Cycle 3 · Q2 2027', plan: 'Q2–Q3 2027', status: 'PROPOSED', stage: -1,
+        opened: 'Starts Mon 14 Dec 2026, as a copy of Cycle 2', covers: 'contracts ending 1 Apr – 30 Sep 2027',
+        lines: 0, due: 1146, progress: 'Waiting for your review of lines and rules',
         next: 'Freeze proposed Fri 15 Jan 2027', sub: 'Proposed by the agent', tone: 'text-indigo-700', subTone: 'text-gray-500', link: '' },
 
-      { k: 'q1q2-27', name: 'Q1–Q2 2027', status: 'ACTIVE', stage: 0,
-        opened: 'Opened Mon 21 Sep 2026', covers: '1 Jan – 30 Jun 2027',
-        lines: 4793, due: 1284, progress: '742 of 1,284 answered',
+      { k: 'c2', name: 'Cycle 2 · Q1 2027', plan: 'Q1–Q2 2027', status: 'OPEN', stage: 0,
+        opened: 'Started Mon 21 Sep 2026, copied from Cycle 1', covers: 'contracts ending 1 Jan – 30 Jun 2027',
+        lines: 5182, due: 1284, progress: '742 of 1,284 answered',
         next: 'Freeze Fri 16 Oct 2026', sub: '12 working days left', tone: 'text-gray-800', subTone: 'text-amber-600 font-medium', link: 'Plan.html' },
 
-      { k: 'q4q1', name: 'Q4 2026–Q1 2027', status: 'ACTIVE', stage: 3,
-        opened: 'Opened Mon 15 Jun 2026', covers: '1 Oct 2026 – 31 Mar 2027',
-        lines: 4711, due: 1197, progress: 'Authorized Tue 21 Jul 2026',
-        next: 'Lead times monitored', sub: '38 lines inside their notice window', tone: 'text-gray-800', subTone: 'text-gray-500', link: '' },
+      { k: 'c1', name: 'Cycle 1 · Q4 2026', plan: 'Q4 2026–Q1 2027', status: 'CLOSED', stage: 4,
+        opened: 'Started Mon 15 Jun 2026, copied from Cycle 0', covers: 'contracts ending 1 Oct 2026 – 31 Mar 2027',
+        lines: 5031, due: 1206, progress: 'Authorized Tue 21 Jul 2026',
+        next: 'Closed Mon 21 Sep 2026', sub: 'Its live lines continue in Cycle 2', tone: 'text-gray-500', subTone: 'text-gray-400', link: 'Plan.html?cycle=c1' },
 
-      { k: 'q3q4-26', name: 'Q3–Q4 2026', status: 'ACTIVE', stage: 3,
-        opened: 'Opened Mon 16 Mar 2026', covers: '1 Jul – 31 Dec 2026',
-        lines: 4632, due: 1102, progress: 'Authorized Tue 21 Apr 2026',
-        next: 'Lead times monitored', sub: '61 lines at RFE stage', tone: 'text-gray-800', subTone: 'text-gray-500', link: '' },
-
-      { k: 'q2q3-26', name: 'Q2–Q3 2026', status: 'ACTIVE', stage: 3,
-        opened: 'Opened Mon 15 Dec 2025', covers: '1 Apr – 30 Sep 2026',
-        lines: 4540, due: 1068, progress: 'Authorized Tue 20 Jan 2026',
-        next: 'Window ends Wed 30 Sep 2026', sub: 'Closes once the last line is settled', tone: 'text-gray-800', subTone: 'text-gray-500', link: '' },
-
-      { k: 'q1q2-26', name: 'Q1–Q2 2026', status: 'CLOSED', stage: 4,
-        opened: 'Opened Mon 15 Sep 2025', covers: '1 Jan – 30 Jun 2026',
-        lines: 4417, due: 1031, progress: 'Authorized Tue 21 Oct 2025',
-        next: 'Closed', sub: 'Window ended 30 Jun 2026', tone: 'text-gray-500', subTone: 'text-gray-400', link: '' }
+      { k: 'c0', name: 'Cycle 0 · Q3 2026', plan: 'Q3–Q4 2026', status: 'CLOSED', stage: 4,
+        opened: 'Imported Mon 16 Mar 2026 from Flutter\'s Purchasing Plan export', covers: 'contracts ending 1 Jul – 31 Dec 2026',
+        lines: 5465, due: 1118, progress: 'Authorized Tue 21 Apr 2026',
+        next: 'Closed Mon 15 Jun 2026', sub: 'Day-one check: 1,042 lines flagged', tone: 'text-gray-500', subTone: 'text-gray-400', link: 'Plan.html?cycle=c0' }
     ],
 
     // Coming back from P0b with ?scheduled=1&lines=..&from=..&to=..&opens=..&freeze=..&session=..
@@ -346,11 +351,11 @@ function plans() {
     isScheduled(p) { return p.status === 'PROPOSED' && this.confirmed; },
     dueOf(p) { return this.isScheduled(p) ? this.lines : p.due; },
 
-    statusOf(p) { return (p.status === 'PROPOSED' && this.confirmed) ? 'SCHEDULED' : p.status; },
+    statusOf(p) { return p.status === 'PROPOSED' ? (this.confirmed ? 'SCHEDULED' : 'NEXT') : p.status; },
     statusClass(p) {
       return {
-        ACTIVE:    'bg-emerald-50 text-emerald-700 border-emerald-200',
-        PROPOSED:  'bg-white text-indigo-600 border-indigo-300 border-dashed',
+        OPEN:      'bg-emerald-50 text-emerald-700 border-emerald-200',
+        NEXT:      'bg-white text-indigo-600 border-indigo-300 border-dashed',
         SCHEDULED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
         CLOSED:    'bg-gray-100 text-gray-500 border-gray-200'
       }[this.statusOf(p)];
@@ -375,9 +380,9 @@ function plans() {
 
     count(f) { return this.plans.filter(p => this.matches(p, f)).length; },
     matches(p, f) {
-      if (f === 'All plans') return true;
-      if (f === 'Active')    return p.status === 'ACTIVE';
-      if (f === 'Proposed')  return p.status === 'PROPOSED';
+      if (f === 'All cycles') return true;
+      if (f === 'Open')      return p.status === 'OPEN';
+      if (f === 'Next')      return p.status === 'PROPOSED';
       if (f === 'Closed')    return p.status === 'CLOSED';
       return true;
     },

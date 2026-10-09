@@ -1,5 +1,30 @@
 <!--
   ═══════════════════════════════════════════════════════════════════════════════════════
+  Plan.html · One cycle's workspace
+
+  IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
+  This file is now the workspace of one cycle, and the cycle is the root of purchase
+  planning (D1, P31). What changed here, by decision:
+    D1  The header is the cycle, with a switcher over every cycle (P0 is the full list).
+        Lines, Rules and People are tabs inside the cycle, not top-level areas.
+    D4  Closed cycles open read-only. The sample rows are the open cycle's; a closed
+        cycle would show its own copy.
+    D6  The Rules tab shows the rule set fixed for this cycle, Procurement only (D9).
+    P20 Two scopes on the Lines tab: Requested this cycle, and All lines.
+    D3, D18 Renderers are labelled Grid, Kanban, List and Report. List is the Queue.
+    D3, D9, P9 to P14 Reports are saved prompts. The prompt is shown read-only; only
+        Eluvium sys-admins edit it. Reports export to PDF, data views to Excel.
+        Gantt (notice-date timeline) and the Changes report are new.
+    D8  Cancellations are not reviewed. They show in the Changes report.
+    D16, D17, P29, P30 The row panel's Response, Comments and Audit tabs are one Stream,
+        Procurement only. Comments are internal unless sent to the owner's email thread.
+    D15, P15, P23 A Contract tab: one line, its terms over time and their amendments.
+    D19, D20, P38 No session mode. Authorization is a view where Procurement records the
+        outcomes decided in Flutter's own meeting, naming the approver. Alignment is a
+        view plus a PDF pack. The agenda bar, staged writes and commit step are gone.
+  Everything below this block describes the build before the brief and is kept for the
+  record, except where it says otherwise.
+
   Plan.html · The purchasing plan, as one record set seen through saved views
 
   WHAT THIS FILE REPLACES
@@ -184,22 +209,71 @@
     <!-- ══════════ Plan header ══════════
          The h1 is the plan, not the screen. It does not change underneath the views,
          because every view below is the same object. -->
-    <header class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 z-30">
+    <!-- IA brief D1: the header is the cycle. The switcher lists every cycle; P0 is the
+         same list with more detail. Only one cycle is open at a time (D5). -->
+    <header class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 z-40">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5 min-w-0">
-          <a href="P0%20Purchasing%20Plans.html" class="text-gray-400 hover:text-gray-700 text-sm" title="All purchasing plans" aria-label="All purchasing plans">&lsaquo;</a>
-          <h1 class="text-[17px] font-semibold text-gray-900 shrink-0">Purchasing Plan Q1&ndash;Q2 2027</h1>
+          <a href="P0%20Purchasing%20Plans.html" class="text-gray-400 hover:text-gray-700 text-sm" title="All cycles" aria-label="All cycles">&lsaquo;</a>
+          <div class="relative" @click.outside="cycMenu = false">
+            <button @click="cycMenu = !cycMenu" class="flex items-center gap-1.5 rounded-md px-1 -mx-1 hover:bg-gray-50">
+              <h1 class="text-[17px] font-semibold text-gray-900 shrink-0" x-text="cyc().name"></h1>
+              <span class="text-gray-400 text-[11px]">&#9662;</span>
+            </button>
+            <div x-show="cycMenu" x-cloak class="absolute left-0 top-full mt-1 w-[360px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1.5">
+              <div class="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Cycles &middot; one open at a time</div>
+              <template x-for="c in cycles" :key="c.id">
+                <button @click="cycleId = c.id; cycMenu = false; selected = null"
+                        class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-start gap-2.5"
+                        :class="cycleId === c.id ? 'bg-indigo-50/60' : ''">
+                  <span class="mt-1 w-2 h-2 rounded-full shrink-0" :class="c.open ? 'bg-emerald-500' : 'bg-gray-300'"></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[12.5px] font-medium text-gray-900" x-text="c.name + ' · plan ' + c.horizon"></span>
+                    <span class="block text-[11px] text-gray-500" x-text="c.note"></span>
+                  </span>
+                  <span class="text-[10px] font-semibold shrink-0 mt-0.5" :class="c.open ? 'text-emerald-700' : 'text-gray-400'" x-text="c.open ? 'OPEN' : 'CLOSED'"></span>
+                </button>
+              </template>
+              <a href="P0%20Purchasing%20Plans.html" class="block px-3 pt-2 mt-1 border-t border-gray-100 text-[11.5px] text-indigo-600 hover:underline">All cycles</a>
+            </div>
+          </div>
           <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">FSEA</span>
-          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">ACTIVE</span>
-          <span class="text-[11px] text-gray-400 truncate">4,793 lines &middot; one record set</span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                :class="readOnly ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'"
+                x-text="readOnly ? 'CLOSED · READ-ONLY' : 'OPEN · ' + cyc().phase.toUpperCase()"></span>
+          <span class="text-[11px] text-gray-400 truncate" x-text="'Plan ' + cyc().horizon + ' · ' + cyc().lines + ' lines · ' + cyc().requested + ' requested this cycle'"></span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <button class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Import</button>
-          <button class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Export to Excel</button>
-          <button class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" x-text="v().action || 'Open a collection cycle'"></button>
+          <button x-show="area === 'lines'" class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" x-text="exportLabel()"></button>
+          <button x-show="!readOnly && area === 'lines'" class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" x-text="v().action || 'Send reminders'"></button>
         </div>
       </div>
     </header>
+
+    <!-- ══════════ Cycle tabs ══════════
+         IA brief D1: the four top-level areas of the first build (Plan, Cycles, Rules,
+         Owners & Setup) are now three tabs inside a cycle. The cycle itself is the header. -->
+    <div class="bg-white border-b border-gray-200 px-5 flex items-center gap-1 shrink-0 z-30">
+      <template x-for="t in areas" :key="t.k">
+        <button @click="area = t.k; selected = null"
+                class="px-3 py-2.5 text-[12.5px] font-semibold border-b-2 transition-colors"
+                :class="area === t.k ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-700'">
+          <span x-text="t.label"></span>
+          <span x-show="t.note" class="ml-1 text-[10px] font-normal text-gray-400" x-text="t.note"></span>
+        </button>
+      </template>
+    </div>
+
+    <!-- D4: a closed cycle is a record of the plan as it stood. Nothing in it can change. -->
+    <div x-show="readOnly" x-cloak class="bg-slate-100 border-b border-slate-200 px-5 py-2 text-[12px] text-slate-700 shrink-0 z-20 flex items-center gap-3">
+      <span class="font-semibold">Read-only.</span>
+      <span x-text="cyc().note + '. Changes go on the line in the open cycle, where its stream continues.'"></span>
+      <div class="flex-1"></div>
+      <button @click="cycleId = openCycle().id" class="text-[11.5px] font-medium text-indigo-600 hover:underline shrink-0" x-text="'Go to ' + openCycle().name"></button>
+    </div>
+
+    <!-- ══════════ LINES TAB ══════════ -->
+    <div x-show="area === 'lines'" class="flex-1 min-h-0 flex flex-col">
 
     <!-- ══════════ View bar ══════════
          This was a tab bar of six task-named screens. It is now a list of saved views
@@ -217,6 +291,17 @@
       </template>
       <button @click="newView = true"
               class="px-2.5 py-2 text-xs text-gray-400 hover:text-gray-700 shrink-0" title="New view">&plus;</button>
+      <div class="flex-1"></div>
+      <!-- P20: a cycle holds every live line but asks owners about some of them. The scope
+           is a property of the tab, not of a view, so every view respects it. -->
+      <div class="flex items-center rounded-lg border border-gray-200 p-0.5 my-1.5 shrink-0" title="Which lines of this cycle the views show">
+        <button @click="scope = 'requested'" class="text-[11px] px-2.5 py-1 rounded-md"
+                :class="scope === 'requested' ? 'bg-gray-900 text-white font-medium' : 'text-gray-500 hover:text-gray-800'"
+                x-text="'Requested this cycle · ' + cyc().requested"></button>
+        <button @click="scope = 'all'" class="text-[11px] px-2.5 py-1 rounded-md"
+                :class="scope === 'all' ? 'bg-gray-900 text-white font-medium' : 'text-gray-500 hover:text-gray-800'"
+                x-text="'All lines · ' + cyc().lines"></button>
+      </div>
     </div>
 
     <!-- ══════════ Toolbar ══════════
@@ -289,11 +374,11 @@
       <div class="flex-1"></div>
 
       <div class="relative">
-        <input type="text" placeholder="Search 4,793 lines..."
+        <input type="text" :placeholder="'Search ' + (scope === 'all' ? cyc().lines : cyc().requested) + ' lines...'"
                class="text-[11.5px] pl-7 pr-3 py-1.5 border border-gray-200 rounded-md w-56 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
         <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]">&#9906;</span>
       </div>
-      <button class="text-[11.5px] px-2.5 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+      <button x-show="!readOnly" @click="openAlignAddLine()" class="text-[11.5px] px-2.5 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
         <span class="text-[12px]">&plus;</span> Add line
       </button>
     </div>
@@ -335,10 +420,12 @@
          class="bg-amber-50 border-b border-amber-200 px-5 py-2 flex items-center gap-3 shrink-0 z-20">
       <div class="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold"
            style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</div>
+      <!-- P19: the start-of-cycle check, run on every cycle's copy against its rule set.
+           The day-one report is this check in Cycle 0. -->
       <span class="text-[12px] text-amber-900 min-w-0 truncate">
-        <strong>1,042 lines</strong> need attention before the cycle opens.
+        Start-of-cycle check, 21 Sep: <strong>1,042 lines</strong> need attention.
         619 direct negotiations with no justification &middot;
-        359 with no sourcing strategy &middot; 38 with an end date before the start.
+        251 with no sourcing strategy &middot; 38 with an end date before the start.
       </span>
       <div class="flex-1"></div>
       <button @click="onlyBad = !onlyBad"
@@ -353,7 +440,7 @@
          class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-6 shrink-0 z-20">
       <div>
         <div class="text-[10px] text-gray-400 uppercase tracking-wider">Cycle</div>
-        <div class="text-[12px] font-medium text-gray-800">2027 H1 &middot; freezes Fri 16 Oct 2026</div>
+        <div class="text-[12px] font-medium text-gray-800"><span x-text="cyc().name"></span> &middot; freezes Fri 16 Oct 2026</div>
       </div>
       <template x-for="s in cycleStats" :key="s.label">
         <div>
@@ -386,11 +473,11 @@
         </template>
         <div class="flex-1"></div>
         <button @click="rulesOpen = !rulesOpen" class="text-[11px] text-indigo-600 hover:underline shrink-0"
-                x-text="rulesOpen ? 'Hide the rules this plan was judged against' : 'Rules this plan was judged against'"></button>
+                x-text="rulesOpen ? 'Hide the rules this cycle is judged against' : 'Rules this cycle is judged against'"></button>
       </div>
       <div x-show="rulesOpen" x-cloak class="mt-2.5 rounded-lg border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-3 py-1.5 text-[10.5px] text-gray-500 border-b border-gray-200">
-          Saved with this plan at the freeze, Fri 16 Oct 2026. Rule set effective from 1 Jan 2026, Italian entities.
+          Fixed for this cycle when it opened, Mon 21 Sep 2026 (D6). Italian entities. The full rule set is on the Rules tab.
         </div>
         <div class="grid grid-cols-2 divide-x divide-gray-200">
           <table class="w-full text-[11.5px]">
@@ -456,60 +543,62 @@
       </div>
     </div>
 
-    <!-- ══════════ Session bar ══════════
-         A session is a mode over a view, so this is the view's context strip with an
-         agenda in it. The table underneath is the same table, grouped the same way, and
-         the decisions are values in a field on the line.
-
-         This replaces the dark one-record-at-a-time screen that P5 and P7 used to be.
-         What that screen had that a table lacks is legibility across a room, and that is
-         the Projection control on the right rather than a separate design. -->
-    <div x-show="sessionOn()" class="bg-indigo-50/70 border-b border-indigo-100 px-5 py-2 shrink-0 z-20">
-
-      <!-- Authorization: a single agenda item, so the title, the agenda tabs and the
-           definition line underneath said nothing the room did not already know. What
-           is left is the only thing that changes as the room works: the count, and the
-           one action that ends it. -->
-      <template x-if="viewId === 'auth'">
-        <div class="flex items-center gap-3">
-          <span class="text-[11px] text-indigo-700/80" x-text="decidedCount() + ' of ' + stepRows().length + ' decided'"></span>
-          <div class="flex-1"></div>
-          <button @click="nextStepOrClose()"
-                  class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
-                  x-text="sStep < sess().agenda.length - 1 ? 'Next agenda item' : 'Review and close'"></button>
-        </div>
-      </template>
-
-      <!-- Alignment: one bar rather than two. The focused business unit used to sit in its
-           own white strip above this one; it lives here now, first in the row, since it is
-           part of what this session is rather than a setting above it. The line count and
-           filter text that used to run underneath (stepDef) and the decided tally that used
-           to sit by the button are both gone: neither earned the room's attention every time
-           the step changed, and the agenda tab itself already names what is being decided. -->
-      <template x-if="viewId !== 'auth'">
-        <div class="flex items-center gap-3">
-          <div class="shrink-0">
-            <div class="text-[10px] text-indigo-400 uppercase tracking-wider">Focused business unit</div>
-            <select x-model="alignBU" @change="sReset()"
-                    class="text-[12.5px] font-medium text-gray-800 border border-indigo-200 rounded-md px-2 py-1 mt-0.5 bg-white">
-              <template x-for="bu in businessUnits" :key="bu">
-                <option :value="bu" x-text="bu"></option>
-              </template>
-            </select>
-          </div>
-          <div class="flex items-center gap-1 flex-wrap">
-            <template x-for="(ag, i) in sess().agenda" :key="ag.k">
-              <button @click="sStep = i; focus = null"
-                      class="text-[11px] px-2.5 py-1 rounded-md transition-colors max-w-[200px] truncate"
-                      :class="sStep === i ? 'bg-indigo-600 text-white font-medium' : 'text-indigo-700 hover:bg-indigo-100'"
-                      x-text="(i + 1) + '. ' + ag.k"></button>
+    <!-- ══════════ Authorization strip ══════════
+         IA brief D19, D20, P38. There is no session mode. Flutter runs its own meeting with
+         the pack this view exports; afterwards Procurement records each outcome here, on
+         the line, naming the approver who decided and the meeting date. The rule set still
+         checks the approver sits at the rung the line's value needs, so an outcome cannot be
+         recorded under someone who could not have given it. -->
+    <div x-show="viewId === 'auth'" class="bg-white border-b border-gray-200 px-5 py-2 shrink-0 z-20">
+      <div class="flex items-center gap-5">
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider">Decided by</div>
+          <select x-model="authApprover" :disabled="readOnly"
+                  class="text-[12px] font-medium text-gray-800 border border-gray-200 rounded-md px-2 py-0.5 mt-0.5 bg-white">
+            <template x-for="a in approvers" :key="a.name">
+              <option :value="a.name" :selected="a.name === authApprover" x-text="a.name + ' · ' + a.rung"></option>
             </template>
-          </div>
-          <div class="flex-1"></div>
-          <button @click="sView = 'summary'"
-                  class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shrink-0">Review and close</button>
+          </select>
         </div>
-      </template>
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider">Meeting</div>
+          <div class="text-[12px] font-medium text-gray-800 mt-0.5">Tue 27 Oct 2026</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider">Recorded by</div>
+          <div class="text-[12px] text-gray-800 mt-0.5">Sara Lombardi, Procurement</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider">Recorded</div>
+          <div class="text-[12px] font-medium mt-0.5" :class="authRecorded() === authRows().length ? 'text-emerald-600' : 'text-gray-800'"
+               x-text="authRecorded() + ' of ' + authRows().length"></div>
+        </div>
+        <div class="flex-1"></div>
+        <button x-show="!readOnly" class="text-[11.5px] px-2.5 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 shrink-0">Attach minutes or email</button>
+        <button @click="area = 'lines'; renderer = 'Report'; reportSel = 'authpack'"
+                class="text-[11.5px] px-2.5 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 shrink-0">Open the authorization pack</button>
+      </div>
+      <p x-show="authMismatch()" class="text-[11px] text-amber-700 mt-1.5" x-text="authMismatch()"></p>
+    </div>
+
+    <!-- Alignment: a view and a pack, not a meeting mode (D19). The focused business unit is
+         the view's filter. Needs raised in the meeting are added as lines afterwards. -->
+    <div x-show="viewId === 'align'" class="bg-white border-b border-gray-200 px-5 py-2 shrink-0 z-20">
+      <div class="flex items-center gap-5">
+        <div class="shrink-0">
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider">Business unit</div>
+          <select x-model="alignBU"
+                  class="text-[12px] font-medium text-gray-800 border border-gray-200 rounded-md px-2 py-0.5 mt-0.5 bg-white">
+            <template x-for="bu in businessUnits" :key="bu">
+              <option :value="bu" :selected="bu === alignBU" x-text="bu"></option>
+            </template>
+          </select>
+        </div>
+        <span class="text-[11.5px] text-gray-500">The pack covers this unit's negotiations in progress, expiring contracts without an answer, and lines added since the last alignment.</span>
+        <div class="flex-1"></div>
+        <button @click="renderer = 'Report'; reportSel = 'alignpack'"
+                class="text-[11.5px] px-2.5 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 shrink-0">Open the alignment pack</button>
+      </div>
     </div>
 
     <!-- ══════════════════════════ RENDERERS ══════════════════════════ -->
@@ -518,9 +607,9 @@
       <!-- ── GRID ───────────────────────────────────────────────────────────────────
            Their spreadsheet, with every column knowing what it is. When the view has a
            grouping, a band row is inserted before each group: the same rows, gathered. -->
-      <template x-if="renderer === 'Grid' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+      <template x-if="renderer === 'Grid'">
         <div class="gwrap flex-1 min-h-0 overflow-auto bg-white">
-          <table class="sheet text-[12px]" :class="density === 'proj' ? 'proj' : ''" :style="'width:' + tableW + 'px'">
+          <table class="sheet text-[12px]" :style="'width:' + tableW + 'px'">
             <colgroup>
               <col style="width:44px">
               <col style="width:64px">
@@ -581,7 +670,7 @@
                   </template>
 
                   <template x-for="r in band.rows" :key="r.n">
-                    <tr class="group" :class="[selected === r.n ? 'sel' : 'hover:bg-gray-50/70', focus === r.n ? 'focus' : '']">
+                    <tr class="group" :class="selected === r.n ? 'sel' : 'hover:bg-gray-50/70'">
                       <td class="fz f0 px-1 text-center">
                         <div class="flex items-center justify-center">
                           <span class="text-[10.5px] text-gray-400 group-hover:hidden" x-text="r.n"></span>
@@ -606,24 +695,25 @@
                       </td>
                       <template x-for="c in visCols" :key="c.id">
                         <td class="px-2.5 cellrel"
-                            :class="[isBad(r, c.id) ? 'badcell' : '', isStaged(r, c) ? 'staged' : '', starts[c.id] ? 'gs' : '', c.plat ? 'platcell' : '',
+                            :class="[isBad(r, c.id) ? 'badcell' : '', starts[c.id] ? 'gs' : '', c.plat ? 'platcell' : '',
                                      al(c) === 'r' ? 'text-right' : (al(c) === 'c' ? 'text-center' : ''), isMono(c) ? 'mono' : '']"
                             :title="isBad(r, c.id) ? badReason(r, c.id) : ''">
-                          <!-- The field the room is deciding. In a session its cell is the
-                               choice itself, so the decision is made in the table rather
-                               than on a screen built to make it. -->
-                          <template x-if="sessionOn() && step().kind === 'records' && c.id === step().field">
+                          <!-- IA brief D20: on the Authorization view, Procurement records the
+                               outcome decided in Flutter's meeting straight onto the line. No
+                               staging and no commit step; the stream records who decided and
+                               who entered it (P38). -->
+                          <template x-if="isOutcomeCell(c)">
                             <span class="flex items-center gap-1 flex-wrap">
-                              <template x-for="o in step().options" :key="o">
-                                <button @click="setDecision(r, o)"
+                              <template x-for="o in outcomeOptions" :key="o">
+                                <button @click="setOutcome(r, o)" :disabled="!canRecord(r)"
                                         class="chip text-[10.5px] px-2 py-0.5 rounded-full border transition-colors"
-                                        :class="decOf(r) === o ? chipClass(c.id, o) + ' font-medium ring-1 ring-indigo-400' : 'border-gray-200 text-gray-400 hover:bg-gray-100'"
+                                        :class="r.outcome === o ? chipClass(c.id, o) + ' font-medium ring-1 ring-indigo-400' : (canRecord(r) ? 'border-gray-200 text-gray-400 hover:bg-gray-100' : 'border-gray-100 text-gray-300 cursor-not-allowed')"
                                         x-text="o"></button>
                               </template>
                             </span>
                           </template>
 
-                          <template x-if="c.t === 'sel' && !(sessionOn() && step().kind === 'records' && c.id === step().field)">
+                          <template x-if="c.t === 'sel' && !isOutcomeCell(c)">
                             <span x-show="r[c.id]" class="chip inline-block max-w-full truncate align-middle text-[10.5px] px-2 py-0.5 rounded-full border"
                                   :class="chipClass(c.id, r[c.id])" x-text="r[c.id]"></span>
                           </template>
@@ -659,82 +749,12 @@
         </div>
       </template>
 
-      <!-- ── A needs agenda item ────────────────────────────────────────
-           Needs not in the plan is not a view of rowsAll, because these lines do not
-           exist yet, but the room still works it row by row the same way it works
-           steps 1 and 2, so it gets the same sheet look rather than the card list a
-           plain note gets. Its own kind, because there is no field on file to decide. -->
-      <template x-if="sessionOn() && step().kind === 'needs'">
-        <div class="gwrap flex-1 min-h-0 overflow-auto bg-white">
-          <table class="sheet text-[12px]" :class="density === 'proj' ? 'proj' : ''">
-            <colgroup>
-              <col style="width:44px">
-              <col style="width:300px">
-              <col style="width:170px">
-              <col style="width:110px">
-              <col style="width:120px">
-              <col style="width:180px">
-            </colgroup>
-            <thead>
-              <tr class="hc" style="top:0">
-                <th class="fz f0 px-1 text-[10px] font-semibold text-gray-400 text-center" style="top:0">#</th>
-                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Need</th>
-                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Owner</th>
-                <th class="px-2.5 text-right text-[11.5px] font-semibold text-gray-600" style="top:0">Value</th>
-                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Wanted by</th>
-                <th class="px-2.5 text-left text-[11.5px] font-semibold text-gray-600" style="top:0">Raised</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template x-for="(n, ni) in step().items" :key="ni">
-                <tr class="hover:bg-gray-50/70">
-                  <td class="fz f0 px-1 text-center text-[10.5px] text-gray-400" x-text="ni + 1"></td>
-                  <td class="px-2.5 text-gray-900 font-medium truncate" x-text="n.need"></td>
-                  <td class="px-2.5 text-gray-700 truncate" x-text="n.owner"></td>
-                  <td class="px-2.5 text-right text-gray-700" x-text="n.value"></td>
-                  <td class="px-2.5 text-gray-700" x-text="n.by"></td>
-                  <td class="px-2.5 text-gray-500 truncate" x-text="n.raised"></td>
-                </tr>
-              </template>
-              <tr>
-                <td class="fz f0 px-1 text-center text-gray-300 text-[13px]">+</td>
-                <td class="px-2.5 text-[11.5px] text-gray-400" colspan="5">
-                  <button class="hover:text-indigo-600" @click="openAlignAddLine()" x-text="step().add"></button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-
-      <!-- ── A note agenda item ────────────────────────────────────────
-           The alignment's last item is not a view of the plan either, because it is not
-           about lines at all: it is feedback and follow-ups kept with the alignment
-           record. That one stays a card list, because there is no column shape to give
-           it, unlike the needs above. -->
-      <template x-if="sessionOn() && step().kind === 'note'">
-        <div class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-6">
-          <div class="max-w-3xl">
-            <h2 class="text-[20px] font-semibold text-gray-900" x-text="step().k"></h2>
-            <p class="text-[13px] text-gray-500 mt-1.5 leading-relaxed" x-text="step().blurb"></p>
-            <div class="mt-4 space-y-2">
-              <template x-for="n in step().items" :key="n.t">
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-3">
-                  <div class="text-[13px] text-gray-900" x-text="n.t"></div>
-                  <div class="text-[11.5px] text-gray-500 mt-0.5" x-text="n.sub"></div>
-                </div>
-              </template>
-              <button class="w-full rounded-xl border border-dashed border-gray-300 px-4 py-3 text-[12.5px] text-gray-500 hover:bg-white text-left"
-                      x-text="step().add"></button>
-            </div>
-          </div>
-        </div>
-      </template>
+      <!-- The needs and note agenda items of the alignment session were removed with the session mode (IA brief D19). -->
 
       <!-- ── BOARD ──────────────────────────────────────────────────────────────────
            The same rows, gathered by one select field. Moving a card writes that field,
            which is the whole of what the Tracking screen used to be. -->
-      <template x-if="renderer === 'Board' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+      <template x-if="renderer === 'Kanban'">
         <div class="board flex-1 min-h-0 overflow-x-auto overflow-y-hidden bg-gray-100 px-4 py-3">
           <div class="flex gap-3 h-full items-start">
             <template x-for="col in boardColumns()" :key="col.label">
@@ -776,7 +796,7 @@
            One person's outstanding work, ordered by urgency rather than by plan order.
            A sixty-four line queue read in plan order is a spreadsheet with worse
            ergonomics, which is the thing the app is supposed to beat. -->
-      <template x-if="renderer === 'Queue' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
+      <template x-if="renderer === 'List'">
         <div class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-4">
           <div class="max-w-4xl mx-auto space-y-5">
             <template x-for="grp in queueGroups()" :key="grp.label">
@@ -833,9 +853,48 @@
            report (views[].report): Responses draws the old P2 Cycle Workspace here and
            Review draws the old P4 Consolidated Review. Every other view gets the generic
            aggregation with the report picker. -->
-      <template x-if="renderer === 'Report' && !(sessionOn() && (step().kind === 'note' || step().kind === 'needs'))">
-        <div class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-4">
+      <!-- IA brief D3, D9, P9 to P14. Reports are saved prompts, picked from the report's
+           title (the sidebar was removed); the prompt behind each is shown read-only, because only Eluvium
+           sys-admins create or edit prompts, and users open saved reports only (no one-off
+           prompts). The prompt produced a report spec, and the platform computed every number
+           from the spec (P9): no figure here was written by the model. Reports run over the
+           current cycle, scope and the viewer's access (P10), and export to PDF. -->
+      <template x-if="renderer === 'Report'">
+        <div class="flex-1 min-h-0 flex bg-gray-50">
+          <div class="scroll flex-1 min-w-0 overflow-y-auto px-5 py-4">
           <div class="max-w-5xl mx-auto">
+
+            <!-- Report header: the report, its prompt and spec, and the PDF export. -->
+            <div class="flex items-start gap-3 mb-4">
+              <div class="min-w-0 flex-1">
+                <!-- The saved-reports sidebar was removed on Alper's call (2026-10-09). The report
+                     is picked from its title instead; each view opens on its own report. -->
+                <select x-model="reportSel" @change="promptOpen = false; if (curReport().by) reportBy = curReport().by"
+                        class="text-[16px] font-semibold text-gray-900 bg-transparent border-0 -ml-1 pl-1 pr-7 py-0 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer">
+                  <template x-for="rp in reportList()" :key="rp.id">
+                    <option :value="rp.id" :selected="rp.id === reportSel" x-text="rp.k"></option>
+                  </template>
+                </select>
+                <p class="text-[11.5px] text-gray-500 mt-0.5" x-text="curReport().sub + ' · ' + (cyc().name + ' · ' + (scope === 'all' ? 'all lines' : 'lines requested this cycle'))"></p>
+              </div>
+              <button @click="promptOpen = !promptOpen" class="text-[11.5px] px-2.5 py-1.5 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 shrink-0"
+                      x-text="promptOpen ? 'Hide prompt' : 'Prompt and spec'"></button>
+              <button class="text-[11.5px] font-medium px-2.5 py-1.5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shrink-0">Export PDF</button>
+            </div>
+            <div x-show="promptOpen" x-cloak class="mb-4 rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2 text-[10.5px] text-gray-500">
+                <span>&#128274;</span>
+                <span x-text="'Prompt v' + (curReport().ver || 1) + ' · edited by Eluvium · only Eluvium sys-admins can change it or add reports'"></span>
+              </div>
+              <div class="px-4 py-3 text-[12px] text-gray-800 leading-relaxed whitespace-pre-line" x-text="curReport().prompt"></div>
+              <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/60">
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Spec the prompt produced, run by the platform</div>
+                <template x-for="ln in (curReport().spec || [])" :key="ln">
+                  <div class="text-[11px] text-gray-600 mono" x-text="ln"></div>
+                </template>
+              </div>
+            </div>
+
             <!-- ── RESPONSES, SHOWN AS REPORT (was P2 Cycle Workspace) ──────────────────
                  Ported from Mockups - Old/P2. The old header, tab bar and cycle strip are
                  dropped: the Responses context strip above already carries the cycle, the
@@ -846,7 +905,7 @@
                  the chase state each has reached. Completion stays a fraction with an
                  added-lines chip, never a percentage, because the denominator moves.
                  Numbers are the illustrative ones P2 carried, not computed from the rows. -->
-            <template x-if="v().report === 'cycle'">
+            <template x-if="curReport().kind === 'view' && v().report === 'cycle'">
               <div>
                 <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 mb-4 flex gap-3">
                   <div class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-[11px] font-bold"
@@ -995,7 +1054,7 @@
 
                  Canceled stays a section, expanded, never a filter. There is no review gate
                  on individual responses, so this grouping is the compensating control. -->
-            <template x-if="v().report === 'review'">
+            <template x-if="curReport().kind === 'view' && v().report === 'review'">
               <div>
                 <section class="mb-5">
                   <h2 class="text-[13px] font-semibold text-gray-900 mb-2">What the cycle produced</h2>
@@ -1164,18 +1223,9 @@
               </div>
             </template>
 
-            <!-- ── Every other view: the generic aggregation, picked from the report list. -->
-            <template x-if="!v().report">
+            <!-- ── A table report: tiles and one grouped table, from the spec. ── -->
+            <template x-if="curReport().kind === 'table'">
             <div>
-            <div class="flex items-center gap-1.5 mb-4 flex-wrap">
-              <template x-for="r in reports" :key="r">
-                <button @click="report = r"
-                        class="text-[11.5px] px-2.5 py-1.5 rounded-lg border transition-colors"
-                        :class="report === r ? 'bg-white border-indigo-300 text-indigo-700 font-medium' : 'bg-white/60 border-gray-200 text-gray-500 hover:bg-white'"
-                        x-text="r"></button>
-              </template>
-            </div>
-
             <div class="grid grid-cols-4 gap-3 mb-4">
               <template x-for="t in reportTiles()" :key="t.k">
                 <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
@@ -1188,15 +1238,8 @@
 
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <span class="text-[12px] font-semibold text-gray-800" x-text="report"></span>
-                <span class="text-[11px] text-gray-400" x-text="'· ' + rows.length + ' lines in the current view, grouped by ' + reportByLabel"></span>
-                <div class="flex-1"></div>
-                <select x-model="reportBy" class="text-[11px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-600">
-                  <option value="cat">Product Category</option>
-                  <option value="bu">Business Unit</option>
-                  <option value="ent">Legal Entity</option>
-                  <option value="strat">Sourcing Strategy</option>
-                </select>
+                <span class="text-[12px] font-semibold text-gray-800" x-text="'By ' + reportByLabel"></span>
+                <span class="text-[11px] text-gray-400" x-text="'· ' + rows.length + ' lines in scope'"></span>
               </div>
               <table class="w-full text-[12px]">
                 <thead><tr class="text-left text-gray-500 border-b border-gray-100">
@@ -1225,17 +1268,311 @@
             </div>
             </div>
             </template>
+
+            <!-- ── Gantt: the notice-date timeline (P13). Bars are dates the line already
+                 carries: contract start to end, with the RFE deadline marked. Grouped, and
+                 groups collapse, because a few thousand ungrouped bars cannot be read. ── -->
+            <template x-if="curReport().kind === 'gantt'">
+              <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-4 text-[11px] text-gray-500">
+                  <span class="flex items-center gap-1.5"><span class="inline-block w-5 h-2 rounded-sm bg-indigo-300"></span>Contract term</span>
+                  <span class="flex items-center gap-1.5"><span class="inline-block w-0.5 h-3 bg-amber-500"></span>RFE deadline</span>
+                  <span class="flex items-center gap-1.5"><span class="inline-block w-0.5 h-3 bg-rose-500"></span>Today</span>
+                  <span class="flex items-center gap-1.5"><span class="inline-block w-0.5 h-3 bg-slate-400"></span>Freeze date</span>
+                  <div class="flex-1"></div>
+                  <span>Grouped by Business Unit</span>
+                </div>
+                <div class="flex border-b border-gray-100 text-[10px] text-gray-400">
+                  <div class="w-64 shrink-0 px-4 py-1.5">Line</div>
+                  <div class="flex-1 relative h-6">
+                    <template x-for="m in ganttTicks()" :key="m.k">
+                      <span class="absolute top-1.5 -translate-x-1/2" :style="'left:' + m.x + '%'" x-text="m.k"></span>
+                    </template>
+                  </div>
+                </div>
+                <template x-for="g in ganttGroups()" :key="g.k">
+                  <div>
+                    <button @click="ganttOpen[g.k] = (ganttOpen[g.k] === false)" class="w-full flex items-center gap-2 px-4 py-1.5 bg-gray-50 border-b border-gray-100 text-left">
+                      <span class="text-[10px] text-gray-400" x-text="ganttOpen[g.k] === false ? '▸' : '▾'"></span>
+                      <span class="text-[11.5px] font-semibold text-gray-700" x-text="g.k"></span>
+                      <span class="text-[10.5px] text-gray-400" x-text="g.rows.length + (g.rows.length === 1 ? ' line' : ' lines')"></span>
+                    </button>
+                    <template x-if="ganttOpen[g.k] !== false">
+                      <div>
+                        <template x-for="b in g.rows" :key="b.n">
+                          <div class="flex items-center border-b border-gray-50 hover:bg-gray-50/60">
+                            <button @click="openRow(b.r)" class="w-64 shrink-0 px-4 py-1.5 text-left text-[11.5px] text-gray-800 truncate hover:text-indigo-700" x-text="b.subj"></button>
+                            <div class="flex-1 relative h-7">
+                              <div class="absolute inset-y-0 w-px bg-slate-300" :style="'left:' + ganttX('16/10/2026') + '%'"></div>
+                              <div class="absolute inset-y-0 w-px bg-rose-400" :style="'left:' + ganttX(asOf) + '%'"></div>
+                              <template x-if="b.ok">
+                                <div class="absolute top-2 h-3 rounded-sm bg-indigo-300" :style="'left:' + b.x + '%; width:' + b.w + '%'"></div>
+                              </template>
+                              <template x-if="!b.ok">
+                                <span class="absolute top-1.5 left-2 text-[10px] text-amber-700">End date before start, cannot be drawn</span>
+                              </template>
+                              <template x-if="b.rfe !== null">
+                                <div class="absolute top-1 h-5 w-0.5 bg-amber-500" :style="'left:' + b.rfe + '%'" :title="'RFE deadline ' + b.rfeLabel"></div>
+                              </template>
+                            </div>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- ── The Changes report (D8, P14): this cycle against the previous one. It is
+                 Procurement's only view of cancellations, since they are not reviewed. ── -->
+            <template x-if="curReport().kind === 'changes'">
+              <div class="space-y-4">
+                <div class="grid grid-cols-4 gap-3">
+                  <template x-for="t in changeTiles" :key="t.k">
+                    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+                      <div class="text-[10px] text-gray-400 uppercase tracking-wider" x-text="t.k"></div>
+                      <div class="text-[20px] font-semibold mt-1 text-gray-900" x-text="t.n"></div>
+                      <div class="text-[10.5px] text-gray-400 mt-1" x-text="t.sub"></div>
+                    </div>
+                  </template>
+                </div>
+                <template x-for="sec in changeSections" :key="sec.k">
+                  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                      <span class="text-[12px] font-semibold text-gray-800" x-text="sec.k"></span>
+                      <span class="text-[11px] text-gray-400" x-text="sec.sub"></span>
+                    </div>
+                    <table class="w-full text-[12px]">
+                      <tbody>
+                        <template x-for="it in sec.items" :key="it.ref + it.what">
+                          <tr class="border-b border-gray-50 last:border-0 align-top">
+                            <td class="px-4 py-2 w-28 text-[11px] text-gray-400 mono" x-text="it.ref"></td>
+                            <td class="px-4 py-2 text-gray-900" x-text="it.line"></td>
+                            <td class="px-4 py-2 text-gray-600" x-text="it.what"></td>
+                            <td class="px-4 py-2 text-[11px] text-gray-500 whitespace-nowrap" x-text="it.by"></td>
+                            <td class="px-4 py-2 text-right">
+                              <button x-show="sec.reinstate && !readOnly" class="text-[11px] text-indigo-600 hover:underline">Reinstate</button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- ── The authorization pack: what the meeting needs, per rung (D19). ── -->
+            <template x-if="curReport().kind === 'authpack'">
+              <div class="space-y-4">
+                <template x-for="g in authPack()" :key="g.k">
+                  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                      <span class="text-[12px] font-semibold text-gray-800" x-text="g.k"></span>
+                      <span class="text-[11px] text-gray-400" x-text="g.rows.length + ' derogations · € ' + fmtK(g.v) + 'K a year'"></span>
+                    </div>
+                    <table class="w-full text-[12px]">
+                      <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                        <th class="px-4 py-2 font-medium">Line</th><th class="px-4 py-2 font-medium">Supplier</th>
+                        <th class="px-4 py-2 font-medium">Method</th><th class="px-4 py-2 font-medium">Reason given</th>
+                        <th class="px-4 py-2 font-medium text-right">Total (K&euro;)</th><th class="px-4 py-2 font-medium">Outcome</th>
+                      </tr></thead>
+                      <tbody>
+                        <template x-for="r in g.rows" :key="r.n">
+                          <tr class="border-b border-gray-50 last:border-0">
+                            <td class="px-4 py-2 text-gray-900" x-text="r.subj"></td>
+                            <td class="px-4 py-2 text-gray-600" x-text="r.sup"></td>
+                            <td class="px-4 py-2 text-gray-600" x-text="r.strat"></td>
+                            <td class="px-4 py-2 text-gray-600" x-text="r.ratio || r.rdn || 'No reason recorded'"></td>
+                            <td class="px-4 py-2 text-right mono text-gray-800" x-text="fmtK(r.tot)"></td>
+                            <td class="px-4 py-2"><span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="chipClass('outcome', r.outcome)" x-text="r.outcome || 'To decide'"></span></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+                <p class="text-[10.5px] text-gray-400">Year-to-date volumes by category and the main planned negotiations follow on the next pages of the PDF.</p>
+              </div>
+            </template>
+
+            <!-- ── The alignment pack for the focused business unit (D19). ── -->
+            <template x-if="curReport().kind === 'alignpack'">
+              <div class="space-y-4">
+                <template x-for="sec in alignPack()" :key="sec.k">
+                  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                      <span class="text-[12px] font-semibold text-gray-800" x-text="sec.k"></span>
+                      <span class="text-[11px] text-gray-400" x-text="sec.rows.length + (sec.rows.length === 1 ? ' line' : ' lines')"></span>
+                    </div>
+                    <template x-for="r in sec.rows" :key="r.n">
+                      <div class="px-4 py-2 border-b border-gray-50 last:border-0 flex items-center gap-3 text-[12px]">
+                        <span class="text-gray-900 flex-1 truncate" x-text="r.subj"></span>
+                        <span class="text-gray-500" x-text="r.owner || 'No owner'"></span>
+                        <span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="chipClass(sec.chip, r[sec.chip])" x-text="r[sec.chip]"></span>
+                      </div>
+                    </template>
+                    <div x-show="!sec.rows.length" class="px-4 py-3 text-[11.5px] text-gray-400">Nothing for this unit.</div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+          </div>
           </div>
         </div>
       </template>
 
       <!-- ── Summary bar. Under the renderer, never over it. ── -->
       <div class="shrink-0 bg-white border-t border-gray-200 px-5 py-1.5 flex items-center gap-5 text-[11.5px] text-gray-500">
-        <span><strong class="text-gray-800" x-text="rows.length.toLocaleString()"></strong> of 4,793 lines in this view</span>
+        <span><strong class="text-gray-800" x-text="rows.length.toLocaleString()"></strong>
+          <span x-text="'of ' + (scope === 'all' ? cyc().lines + ' lines in this cycle' : cyc().requested + ' lines requested this cycle') + ' in this view'"></span></span>
         <span>Yearly value <strong class="text-gray-800" x-text="'€ ' + fmtK(totalYearly()) + 'K'"></strong></span>
         <span>Budget <strong class="text-gray-800" x-text="'€ ' + fmtK(totalBudget()) + 'K'"></strong></span>
         <div class="flex-1"></div>
         <span class="text-amber-600" x-text="flaggedCount() + ' lines with a flagged cell'"></span>
+      </div>
+    </div>
+    </div><!-- end LINES TAB -->
+
+    <!-- ══════════ RULES TAB ══════════
+         IA brief D6, D9, D21: the rule sets fixed for this cycle when it opened, one per legal
+         entity, configured independently in the start-of-cycle review. Procurement only.
+         Read-only for the whole cycle; it changes at the start of the next cycle, in the
+         start-of-cycle review (P0b, then O2). Same values as the Review strip and O2. -->
+    <div x-show="area === 'rules'" x-cloak class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-5">
+      <div class="max-w-5xl mx-auto space-y-4">
+        <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 flex items-start gap-3">
+          <span class="text-[14px] mt-0.5">&#128274;</span>
+          <div class="text-[12px] text-indigo-900 leading-relaxed min-w-0 flex-1">
+            <strong>Fixed for this cycle</strong> since it opened on <span x-text="cyc().opened"></span>. Every line in
+            <span x-text="cyc().name"></span> is judged against these values. Changes are made at the start of the next cycle,
+            when Procurement reviews the rules together with the lines going out to owners.
+          </div>
+          <a href="O2%20Rules%20Configuration.html" class="text-[11.5px] font-medium text-indigo-700 hover:underline shrink-0">Rules for the next cycle</a>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] text-gray-500">Legal entity</span>
+          <select x-model="ruleEnt"
+                  class="text-[12px] font-medium text-gray-800 border border-gray-200 rounded-md pl-2.5 pr-8 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+            <template x-for="e in ruleEntities" :key="e.k">
+              <option :value="e.k" :selected="e.k === ruleEnt" x-text="e.k"></option>
+            </template>
+          </select>
+          <div class="flex-1"></div>
+          <span class="text-[11px] text-gray-400" x-text="(ruleEntities.find(e => e.k === ruleEnt) || {}).note"></span>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Sourcing method and authorizer, by purchase amount</div>
+          <table class="w-full text-[12px]">
+            <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Required method</th>
+              <th class="px-4 py-2 font-medium">Authorizer for a derogation</th><th class="px-4 py-2 font-medium text-right">Lines this cycle</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="r in rulesFor().bands" :key="r.band">
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-4 py-2 text-gray-800" x-text="r.band"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="r.method"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="r.auth"></td>
+                  <td class="px-4 py-2 text-gray-600 text-right mono" x-text="r.n || ''"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Minimum notice</div>
+            <table class="w-full text-[12px]">
+              <tbody>
+                <template x-for="n in rulesFor().notice" :key="n.strat + n.amt">
+                  <tr class="border-b border-gray-50 last:border-0">
+                    <td class="px-4 py-2 text-gray-800" x-text="n.strat"></td>
+                    <td class="px-4 py-2 text-gray-600" x-text="n.amt"></td>
+                    <td class="px-4 py-2 text-gray-600 text-right" x-text="n.days + ' working days'"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Derogations and validity</div>
+            <div class="px-4 py-3 text-[12px] text-gray-700 leading-relaxed space-y-2">
+              <p x-text="'A direct negotiation above € ' + rulesFor().floor.toLocaleString('en-GB') + ' is a derogation and needs authorization at the rung its value reaches.'"></p>
+              <p>An authorization lapses if the final amount, addenda included, exceeds it by more than 10% or &euro; 50,000, or crosses the authorizer's threshold.</p>
+              <p class="text-gray-500" x-text="'Public holidays: ' + ruleCountry() + ' 2026 and 2027, confirmed by Procurement on 14 Sep 2026.'"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ PEOPLE TAB ══════════
+         IA brief D1: Owners & Setup, inside the cycle. The directory itself is organisation-
+         level (and may come from Flutter's identity provider); this tab shows the people who
+         owe answers or approvals in this cycle, with their progress. -->
+    <div x-show="area === 'people'" x-cloak class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-5">
+      <div class="max-w-6xl mx-auto space-y-4">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+            <span class="text-[12px] font-semibold text-gray-800">Business owners in this cycle</span>
+            <span class="text-[11px] text-gray-400">· signed in with SSO or an email code, or answering by email</span>
+            <div class="flex-1"></div>
+            <span class="text-[11px] text-gray-400">Directory synced from Flutter's identity provider</span>
+          </div>
+          <table class="w-full text-[12px]">
+            <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="px-4 py-2 font-medium">Owner</th><th class="px-4 py-2 font-medium">Business unit</th>
+              <th class="px-4 py-2 font-medium">Legal entity</th><th class="px-4 py-2 font-medium">Backup</th>
+              <th class="px-4 py-2 font-medium">BU manager</th><th class="px-4 py-2 font-medium text-right">Answered</th>
+              <th class="px-4 py-2 font-medium">Chasing</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="u in cwUnits" :key="u.unit">
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-4 py-2 text-gray-900" x-text="u.owner"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="u.unit"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="u.entity"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="(peopleExtra[u.unit] || {}).backup || 'Not set'"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="(peopleExtra[u.unit] || {}).mgr || 'Not set'"></td>
+                  <td class="px-4 py-2 text-right mono text-gray-700" x-text="u.done + ' / ' + u.total"></td>
+                  <td class="px-4 py-2"><span class="text-[10.5px] px-2 py-0.5 rounded-full border" :class="cwChase(u.chase)" x-text="u.chase"></span></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Who approves which value band</div>
+            <table class="w-full text-[12px]">
+              <tbody>
+                <template x-for="a in approvers" :key="a.name">
+                  <tr class="border-b border-gray-50 last:border-0">
+                    <td class="px-4 py-2 text-gray-800" x-text="a.rung"></td>
+                    <td class="px-4 py-2 text-gray-600" x-text="a.band"></td>
+                    <td class="px-4 py-2 text-gray-900" x-text="a.name"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Procurement</div>
+            <table class="w-full text-[12px]">
+              <tbody>
+                <template x-for="p in procTeam" :key="p.name">
+                  <tr class="border-b border-gray-50 last:border-0">
+                    <td class="px-4 py-2 text-gray-900" x-text="p.name"></td>
+                    <td class="px-4 py-2 text-gray-600" x-text="p.role"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1307,93 +1644,120 @@
           </div>
         </template>
 
-        <template x-if="pane === 'Response'">
-          <div class="scroll flex-1 overflow-y-auto px-5 py-4">
-            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3">
-              <div class="text-[11px] font-semibold text-emerald-900 uppercase tracking-wide">Cycle 2027 H1</div>
-              <div class="text-[13px] font-semibold text-emerald-900 mt-1" x-text="row().resp + ' · renewal'"></div>
-              <div class="text-[11.5px] text-emerald-800/85 mt-1 leading-relaxed">
-                Answered by <span x-text="row().owner"></span>, 29 Sep 2026, as an email reply from the owner's mailbox.
-                Ellie read the reply and filled in the fields.
-              </div>
-            </div>
-            <div class="mt-4">
-              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Previous cycles</div>
-              <div class="rounded-lg border border-gray-200 divide-y divide-gray-100">
-                <template x-for="h in history" :key="h.cycle">
-                  <div class="px-3 py-2.5">
-                    <div class="flex items-center justify-between">
-                      <span class="text-[12px] font-medium text-gray-800" x-text="h.cycle"></span>
-                      <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" x-text="h.answer"></span>
+        <!-- IA brief D15, P15, P23: one record per contract. Renewals are new terms on the
+             same line; addenda are amendments within a term. The import merged Flutter's
+             separate rows into this line (P16). -->
+        <template x-if="pane === 'Contract'">
+          <div class="scroll flex-1 overflow-y-auto px-5 py-4 space-y-3">
+            <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic">Mockup: the contract of line 412 is shown for every line.</p>
+            <template x-for="t in contractTerms" :key="t.k">
+              <div class="rounded-lg border" :class="t.current ? 'border-indigo-200 bg-indigo-50/40' : 'border-gray-200'">
+                <div class="px-3.5 py-2.5 flex items-start gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[12.5px] font-semibold text-gray-900" x-text="t.k"></span>
+                      <span x-show="t.current" class="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">CURRENT</span>
                     </div>
-                    <div class="text-[11px] text-gray-500 mt-0.5"><span x-text="h.value"></span> &middot; <span x-text="h.by"></span></div>
+                    <div class="text-[11.5px] text-gray-600 mt-0.5" x-text="t.sup + ' · ' + t.dates"></div>
+                    <div class="text-[11px] text-gray-400 mt-0.5" x-text="t.src"></div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="text-[12.5px] font-semibold text-gray-900 mono" x-text="t.value"></div>
+                    <div class="text-[10.5px] text-gray-400" x-text="t.rfe"></div>
+                  </div>
+                </div>
+                <template x-for="am in t.amendments" :key="am.k">
+                  <div class="px-3.5 py-2 border-t border-gray-100 text-[11.5px] text-gray-700 flex gap-2">
+                    <span class="text-gray-400">&#8627;</span>
+                    <span class="flex-1"><span class="font-medium" x-text="am.k"></span> &middot; <span x-text="am.what"></span></span>
+                    <span class="text-gray-400 shrink-0" x-text="am.when"></span>
                   </div>
                 </template>
               </div>
-              <div class="mt-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-[11.5px] text-amber-900 leading-relaxed">
-                Same value three cycles running, supplier untouched since March 2024. Ellie has asked
-                the owner to confirm this is still current.
-              </div>
-            </div>
+            </template>
+            <p class="text-[10.5px] text-gray-400 leading-relaxed">An addendum that raises the value re-runs the authorization validity check on the term's total (P24).</p>
           </div>
         </template>
 
-        <template x-if="pane === 'Comments'">
+        <!-- IA brief D16, D17, P25 to P30: one stream for history, audit and discussion,
+             across every cycle the line has been in. Procurement only; owners never see it.
+             Their emails and answers land here, split per line when one email covers several
+             (P28). Comments are internal unless sent to the owner's email thread (P30). -->
+        <template x-if="pane === 'Stream'">
           <div class="flex-1 flex flex-col min-h-0">
-            <div class="scroll flex-1 overflow-y-auto px-5 py-4 space-y-3">
-              <div class="text-[10.5px] text-gray-400 text-center pb-1">Same conversation as the email thread for this cycle</div>
-              <template x-for="m in thread" :key="m.i">
-                <div class="flex gap-2.5">
-                  <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white"
-                       :style="m.who === 'ellie' ? 'background: linear-gradient(135deg,#818cf8,#4f46e5)' : ''"
-                       :class="m.who === 'ellie' ? '' : (m.who === 'proc' ? 'bg-slate-600' : 'bg-emerald-600')"
-                       x-text="m.init"></div>
-                  <div class="min-w-0 flex-1">
-                    <div class="rounded-xl px-3 py-2 text-[12px] leading-relaxed border"
-                         :class="m.who === 'ellie' ? 'bg-indigo-50 border-indigo-100' : (m.who === 'proc' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100')"
-                         x-html="m.body"></div>
-                    <div class="text-[10px] text-gray-400 mt-1" x-text="m.meta"></div>
+            <div class="px-5 py-2 border-b border-gray-100 flex items-center gap-1.5 shrink-0">
+              <template x-for="f in ['All', 'Discussion', 'Changes']" :key="f">
+                <button @click="streamFilter = f" class="text-[11px] px-2 py-0.5 rounded-md"
+                        :class="streamFilter === f ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-100'" x-text="f"></button>
+              </template>
+              <div class="flex-1"></div>
+              <select x-model="streamCycle" class="text-[11px] border border-gray-200 rounded-md px-1.5 py-0.5 text-gray-600">
+                <option value="all">Every cycle</option>
+                <template x-for="c in cycles" :key="c.id"><option :value="c.name" x-text="c.name"></option></template>
+              </select>
+            </div>
+            <div class="scroll flex-1 overflow-y-auto px-5 py-3">
+              <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic pb-1">Mockup: the stream of line 412 is shown for every line.</p>
+              <template x-for="(grp, gi) in streamGroups()" :key="grp.cycle">
+                <div class="mb-3">
+                  <div class="flex items-center gap-2 py-1.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-400" x-text="grp.cycle"></span>
+                    <span x-show="grp.closed" class="text-[9.5px] text-gray-400">read-only</span>
+                    <div class="flex-1 h-px bg-gray-100"></div>
+                  </div>
+                  <div class="space-y-2.5">
+                    <template x-for="m in grp.items" :key="m.i">
+                      <div class="flex gap-2.5">
+                        <template x-if="m.kind === 'msg'">
+                          <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white"
+                               :style="m.who === 'ellie' ? 'background: linear-gradient(135deg,#818cf8,#4f46e5)' : ''"
+                               :class="m.who === 'ellie' ? '' : (m.who === 'proc' ? 'bg-slate-600' : 'bg-emerald-600')"
+                               x-text="m.init"></div>
+                        </template>
+                        <template x-if="m.kind !== 'msg'">
+                          <div class="w-6 shrink-0 flex justify-center"><div class="w-1.5 h-1.5 rounded-full mt-1.5" :class="m.tone"></div></div>
+                        </template>
+                        <div class="min-w-0 flex-1">
+                          <template x-if="m.kind === 'msg'">
+                            <div class="rounded-xl px-3 py-2 text-[12px] leading-relaxed border"
+                                 :class="m.who === 'ellie' ? 'bg-indigo-50 border-indigo-100' : (m.who === 'proc' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100')"
+                                 x-html="m.body"></div>
+                          </template>
+                          <template x-if="m.kind !== 'msg'">
+                            <div class="text-[12px] text-slate-800 leading-snug" x-html="m.body"></div>
+                          </template>
+                          <div class="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                            <span x-text="m.meta"></span>
+                            <span x-show="m.vis === 'internal'" class="px-1 rounded bg-slate-100 text-slate-500">internal</span>
+                            <span x-show="m.vis === 'sent'" class="px-1 rounded bg-emerald-50 text-emerald-700">sent to owner</span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
                   </div>
                 </div>
               </template>
             </div>
-            <div class="px-5 py-3 border-t border-gray-200 shrink-0">
-              <textarea rows="2" placeholder="Write a comment or clarifying question..."
+            <div x-show="!readOnly" class="px-5 py-3 border-t border-gray-200 shrink-0">
+              <textarea rows="2" placeholder="Write a comment..."
                         class="w-full text-[12px] px-3 py-2 border border-gray-300 rounded-lg resize-none"></textarea>
-              <div class="text-[10px] text-gray-400 mt-1">The business unit sees this in their email thread and can reply there.</div>
-            </div>
-          </div>
-        </template>
-
-        <template x-if="pane === 'Audit'">
-          <div class="scroll flex-1 overflow-y-auto px-5 py-4">
-            <p class="text-[11px] text-gray-500 leading-relaxed pb-3 mb-3 border-b border-gray-100">
-              Every entry records who made the change and how it arrived: signed in, an email
-              reply from the owner's mailbox, or a returned workbook.
-            </p>
-            <div class="space-y-3">
-              <template x-for="a in audit" :key="a.i">
-                <div class="flex gap-2.5">
-                  <div class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" :class="a.tone"></div>
-                  <div class="min-w-0">
-                    <div class="text-[12px] text-slate-800 leading-snug" x-html="a.what"></div>
-                    <div class="text-[10.5px] text-gray-400 mt-0.5">
-                      <span x-text="a.when"></span> &middot;
-                      <span class="font-medium" x-text="a.channel"></span> &middot;
-                      <span x-text="a.basis"></span>
-                    </div>
-                  </div>
-                </div>
-              </template>
+              <div class="flex items-center gap-2 mt-1.5">
+                <label class="flex items-center gap-1.5 text-[11px] text-gray-600">
+                  <input type="checkbox" x-model="sendToOwner" class="accent-indigo-600 w-3 h-3">
+                  <span x-text="'Send to ' + (row().owner || 'the owner') + ' in their email thread'"></span>
+                </label>
+                <div class="flex-1"></div>
+                <span class="text-[10px] text-gray-400" x-text="sendToOwner ? 'The owner sees this as an email' : 'Internal. Owners never see the stream'"></span>
+              </div>
             </div>
           </div>
         </template>
 
         <div class="px-5 py-3 border-t border-gray-200 flex items-center gap-2 shrink-0">
-          <button class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Ask the owner</button>
-          <button class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Reassign</button>
+          <button x-show="!readOnly" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Reassign</button>
           <div class="flex-1"></div>
-          <button class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
+          <button x-show="!readOnly" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
+          <span x-show="readOnly" class="text-[11px] text-gray-400">Read-only in a closed cycle</span>
         </div>
       </aside>
     </div>
@@ -1411,7 +1775,7 @@
       <div class="relative bg-white rounded-xl shadow-2xl w-[440px] p-5">
         <h3 class="text-[15px] font-semibold text-gray-900">New view</h3>
         <p class="text-[11.5px] text-gray-500 mt-1 leading-relaxed">
-          Over the same 4,793 lines.
+          Over the lines of this cycle. Saved views are copied into the next cycle with everything else.
         </p>
         <div class="mt-4 space-y-3">
           <div>
@@ -1437,13 +1801,13 @@
             <div class="flex-1">
               <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Shown as</label>
               <select class="w-full mt-1 text-[12px] px-2 py-1.5 border border-gray-300 rounded-lg">
-                <option>Grid</option><option>Board</option><option>Queue</option><option>Session</option><option>Report</option>
+                <option>Grid</option><option>Kanban</option><option>List</option><option>Report</option>
               </select>
             </div>
           </div>
         </div>
         <div class="mt-5 flex items-center gap-2">
-          <span class="text-[11px] text-gray-400">Visible to everyone on this plan</span>
+          <span class="text-[11px] text-gray-400">Visible to Procurement</span>
           <div class="flex-1"></div>
           <button @click="newView = false" class="text-[12px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600">Cancel</button>
           <button @click="newView = false" class="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white">Create view</button>
@@ -1467,8 +1831,8 @@
       <div class="absolute inset-0 bg-gray-900/40" @click="addLineOpen = false"></div>
       <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-full flex flex-col">
         <div class="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
-          <h2 class="text-[17px] font-semibold text-gray-900">Add a need raised in this alignment</h2>
-          <p class="text-[12px] text-gray-500 mt-1">For <strong x-text="alignBU"></strong>. Joins this business unit's alignment record and becomes a line in the next plan.</p>
+          <h2 class="text-[17px] font-semibold text-gray-900">Add a line</h2>
+          <p class="text-[12px] text-gray-500 mt-1">Joins this cycle straight away, marked as added. If it falls inside the window it joins the owner's set; if not, the backlog.</p>
         </div>
 
         <div class="px-6 py-4 overflow-y-auto space-y-4">
@@ -1526,7 +1890,9 @@
               </label>
               <label class="block">
                 <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Unit</span>
-                <input type="text" readonly :value="alignBU" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500">
+                <select x-model="alignBU" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-gray-300 rounded-lg">
+                  <template x-for="bu in businessUnits" :key="bu"><option :value="bu" :selected="bu === alignBU" x-text="bu"></option></template>
+                </select>
               </label>
               <div class="col-span-2 flex items-center gap-4">
                 <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 shrink-0">Applies to</span>
@@ -1602,12 +1968,12 @@
         </div>
 
         <div class="px-6 py-4 border-t border-gray-200 flex items-center gap-2 shrink-0">
-          <span class="text-[11px] text-gray-400">Written to this business unit's alignment record when Review and close runs</span>
+          <span class="text-[11px] text-gray-400">Recorded in the line's stream as added by you</span>
           <div class="flex-1"></div>
           <button @click="addLineOpen = false" class="text-[12px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600">Cancel</button>
           <button @click="addAlignNeed()" :disabled="!canAddAlignNeed()"
                   class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg"
-                  :class="canAddAlignNeed() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Add to alignment</button>
+                  :class="canAddAlignNeed() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Add line</button>
         </div>
       </div>
     </div>
@@ -1615,102 +1981,10 @@
 
 
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       THE COMMIT STEP
-       Not a renderer and not a screen. A session stages its decisions on the
-       record's own fields and writes none of them until this step, which lists
-       every write first and refuses to close while a line is undecided.
-
-       The authorization session and the category alignment both end here, and so
-       does the scheduling review on P0b. It is the same primitive in all three:
-       a set of staged changes, a preview, and a commit.
-       ══════════════════════════════════════════════════════════════════════ -->
-  <template x-if="sView === 'summary' || sView === 'closed'">
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-6">
-      <div class="absolute inset-0 bg-gray-900/40" @click="sView === 'closed' ? sReset() : sView = 'line'"></div>
-
-      <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col">
-
-        <div class="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
-          <template x-if="sView === 'summary'">
-            <div>
-              <h2 class="text-[19px] font-semibold text-gray-900">Before closing</h2>
-              <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-2xl">
-                Everything this session will write to the plan. Nothing below has been written yet.
-              </p>
-            </div>
-          </template>
-          <template x-if="sView === 'closed'">
-            <div>
-              <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">CLOSED</span>
-              <h2 class="text-[19px] font-semibold text-gray-900 mt-2" x-text="sess().title + ' is closed'"></h2>
-              <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-2xl" x-text="sess().closedNote"></p>
-            </div>
-          </template>
-        </div>
-
-        <div class="scroll flex-1 overflow-y-auto px-6 py-4 min-h-0">
-          <div x-show="sView === 'summary'" class="grid grid-cols-4 gap-3 mb-4">
-            <template x-for="t in tally()" :key="t.k">
-              <div class="rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider text-gray-400" x-text="t.k"></div>
-                <div class="text-[22px] font-semibold text-gray-900 mt-0.5" x-text="t.n"></div>
-                <div class="text-[10.5px] text-gray-400 mono" x-text="t.v"></div>
-              </div>
-            </template>
-          </div>
-
-          <div class="rounded-xl border border-gray-200 overflow-hidden">
-            <template x-for="band in stepBands()" :key="band.label">
-              <div>
-                <div x-show="band.label !== '__none__'" class="px-4 py-1.5 bg-gray-50 border-b border-gray-200 flex items-center gap-2.5">
-                  <span class="text-[11.5px] font-medium text-gray-700" x-text="band.label"></span>
-                  <span class="text-[10.5px] text-gray-400" x-text="band.rows.length + ' lines ' + band.note"></span>
-                </div>
-                <template x-for="r in band.rows" :key="r.n">
-                  <button @click="sView = 'line'; focusRow(r)"
-                          class="w-full text-left px-4 py-2 flex items-center gap-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                    <span class="text-[10.5px] text-gray-400 mono w-28 shrink-0" x-text="r.ref"></span>
-                    <span class="text-[12.5px] text-gray-800 flex-1 truncate" x-text="r.subj"></span>
-                    <span class="text-[11.5px] text-gray-500 mono shrink-0" x-text="'€ ' + fmtK(yearly(r)) + 'K'"></span>
-                    <span class="text-[10px] text-gray-400 shrink-0 w-24 text-right" x-text="decField().k"></span>
-                    <span class="text-[11px] px-2 py-0.5 rounded-full border shrink-0 w-36 text-center"
-                          :class="decOf(r) ? chipClass(decField().id, decOf(r)) : 'border-gray-200 text-gray-400'"
-                          x-text="decOf(r) || 'not decided'"></span>
-                  </button>
-                </template>
-              </div>
-            </template>
-          </div>
-
-          <div x-show="sView === 'summary'" class="mt-4 rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-3">
-            <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">On closing</div>
-            <p class="text-[12px] text-gray-600 mt-1 leading-relaxed" x-text="sess().onClose"></p>
-          </div>
-        </div>
-
-        <div class="px-6 py-3.5 border-t border-gray-200 flex items-center gap-3 shrink-0">
-          <template x-if="sView === 'summary'">
-            <button @click="sView = 'line'" class="text-[12.5px] px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Back to the lines</button>
-          </template>
-          <div class="flex-1"></div>
-          <span x-show="sView === 'summary' && undecided()" class="text-[11.5px] text-amber-700"
-                x-text="undecided() + ' still undecided. A line with no outcome would drop out of the plan with no record.'"></span>
-          <template x-if="sView === 'summary'">
-            <button @click="commitSession()" :disabled="undecided() > 0"
-                    class="text-[12.5px] font-semibold px-4 py-2 rounded-lg transition-colors"
-                    :class="undecided() ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'">
-              Close the session and write to the plan
-            </button>
-          </template>
-          <template x-if="sView === 'closed'">
-            <button @click="sReset()" class="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Back to the plan</button>
-          </template>
-        </div>
-      </div>
-    </div>
-  </template>
+  <!-- The commit step was removed with the session mode (IA brief D19). -->
 </div>
+
+
 
 <script>
 function planApp() {
@@ -1718,6 +1992,19 @@ function planApp() {
     // ══ UI state ═══════════════════════════════════════════════════════════════════════
     viewId: 'table',
     renderer: 'Grid',
+    // ── IA brief state ──────────────────────────────────────────────────────────────────
+    area: 'lines',          // D1: Lines, Rules or People, inside the cycle
+    scope: 'requested',     // P20: Requested this cycle, or All lines
+    cycleId: 'c2',          // D5: one open cycle; the others are closed and read-only
+    cycMenu: false,
+    reportSel: 'validation',// D3: the saved report open in the Reports renderer
+    promptOpen: false,
+    streamFilter: 'All',    // P29
+    streamCycle: 'all',
+    sendToOwner: false,     // P30: internal unless sent to the owner's email thread
+    authApprover: 'Matteo Bassi',
+    ruleEnt: 'Sisal Italia',
+    ganttOpen: {},
     def: false,          // the view definition panel, opened by Filter or Group
     menu: false,         // Fields popover
     hidden: {},
@@ -1766,17 +2053,19 @@ function planApp() {
     // facilitated meeting is a mode, not a shape. The two are independent, so a session
     // can now be run over the table, and any view can be run as a session.
     renderers: [
+      // IA brief D3, D18: labelled Grid, Kanban, List and Reports. List is the Queue
+      // renderer of the Building Blocks Model; Kanban is the Board.
       { k: 'Grid',    hint: 'The spreadsheet surface. Density, direct edit, every field.' },
-      { k: 'Board',   hint: 'Gathered by one select field. Moving a card writes that field.' },
-      { k: 'Queue',   hint: 'One person\'s outstanding work, ordered by urgency.' },
-      { k: 'Report',  hint: 'Aggregation of whatever this view holds.' }
+      { k: 'Kanban',  hint: 'Gathered by one select field. Moving a card writes that field.' },
+      { k: 'List',    hint: 'Cards, ordered by urgency rather than plan order.' },
+      { k: 'Report',  hint: 'Saved reports defined by a prompt. Export to PDF.' }
     ],
 
     // ══ THE VIEWS ══════════════════════════════════════════════════════════════════════
     // This array is the configuration. It is what would be written once, during onboarding,
     // from a customer's procedure and their spreadsheet. Six screens used to live here.
     views: [
-      { id: 'table', k: 'All Items', n: '4,793', renderer: 'Grid',
+      { id: 'table', k: 'All Items', n: '', renderer: 'Grid',
         def: 'no filter · not grouped · shown as Grid',
         filter: 'all', groupLabel: '', group: null, fields: null,
         action: 'Open a collection cycle' },
@@ -1801,26 +2090,28 @@ function planApp() {
         report: 'review',    // the Report renderer draws the old P4 Consolidated Review
         action: 'Freeze and hand to authorization' },
 
-      { id: 'auth', k: 'Authorization', n: '47', renderer: 'Grid', session: true,
-        def: 'filter: reaches an authorization rung · grouped by Authorization Rung · run as a session',
+      // IA brief D19, D20: no longer run as a session. Procurement records outcomes here.
+      { id: 'auth', k: 'Authorization', n: '47', renderer: 'Grid',
+        def: 'filter: reaches an authorization rung · grouped by Authorization Rung · shown as Grid',
         filter: 'needsAuth',
         groupLabel: 'Authorization Rung', group: 'rung',
         fields: ['rung', 'outcome', 'tot', 'strat', 'sup', 'owner', 'bu', 'ent', 'end'],
-        action: 'Export the pack for the meeting' },
+        action: 'Notify owners of their outcomes' },
 
-      { id: 'tracking', k: 'Tracking', n: '1,127', renderer: 'Board',
-        def: 'filter: authorized · grouped by Stage · shown as Board',
+      { id: 'tracking', k: 'Tracking', n: '1,127', renderer: 'Kanban',
+        def: 'filter: authorized · grouped by Stage · shown as Kanban',
         filter: 'authorized',
         groupLabel: 'Stage', group: 'stage',
         fields: ['stage', 'nextstep', 'nextdue', 'rfe', 'owner', 'buyer', 'sup', 'tot', 'cat', 'status'],
         action: 'Add a next step' },
 
-      { id: 'align', k: 'Alignment', n: '', renderer: 'Grid', session: true,
-        def: 'filter: Business Unit is the focused unit · grouped by Business Unit · four agenda items, each its own filter · run as a session',
+      // IA brief D19: a view and a PDF pack. The meeting is Flutter's.
+      { id: 'align', k: 'Alignment', n: '', renderer: 'Grid',
+        def: 'filter: Business Unit is the focused unit · grouped by Business Unit · shown as Grid',
         filter: 'align',
         groupLabel: 'Business Unit', group: 'bu',
         fields: ['stage', 'nextstep', 'resp', 'owner', 'sup', 'tot', 'end', 'strat'],
-        action: 'Email the attendees' }
+        action: 'Email the pack to the attendees' }
     ],
 
     v()  { return this.views.find(x => x.id === this.viewId) || this.views[0]; },
@@ -1828,12 +2119,17 @@ function planApp() {
       this.viewId = id;
       this.hidden = {}; this.shown = {};   // each view brings its own field set
       this.renderer = this.v().renderer;
+      this.reportSel = this.v().report ? 'view' : (id === 'auth' ? 'authpack' : (id === 'align' ? 'alignpack' : 'validation'));
       this.sReset();
       this.selected = null;
     },
     // The Alignment tab's count depends on which business unit is focused; every other
     // tab's count is fixed, so this reads straight through to the view's own n.
-    tabCount(vw) { return vw.id === 'align' ? this.rowsAll.filter(r => r.bu === this.alignBU).length : vw.n; },
+    tabCount(vw) {
+      if (vw.id === 'align') return this.rowsAll.filter(r => r.bu === this.alignBU).length;
+      if (vw.id === 'table') return this.scope === 'all' ? this.cyc().lines : this.cyc().requested;
+      return vw.n;
+    },
     // The business units on offer in the switcher, read from the plan itself rather than
     // a list kept separately, so a new unit in the data shows up here without an edit.
     get businessUnits() {
@@ -1920,7 +2216,7 @@ function planApp() {
     // why a session can be pointed at a different set of lines without touching the renderer.
     // fn takes the component as its second argument, because a rule may need the rule set.
     filters: {
-      all:       { label: 'No filter. All 4,793 lines.',
+      all:       { label: 'No filter. Every line in the scope chosen on the right of the view bar.',
                    fn: (r, s) => true },
       cycle:     { label: 'Contract End Date is between 1 Jan and 30 Jun 2027, and Status is not Canceled',
                    fn: (r, s) => r.cycle && r.status !== 'Canceled' },
@@ -2088,7 +2384,7 @@ function planApp() {
         hint: 'Added by Eluvium. Proposed from the contract start date, then confirmable.' },
       { id: 'rung',    k: 'Authorization Rung',     t: 'cmp', w: 185, g: 'Eluvium fields', plat: true,
         hint: 'Formula field. Computed from the contract value and the sourcing method. Nobody types this.' },
-      { id: 'outcome', k: 'Authorization Outcome',  t: 'sel', w: 175, g: 'Eluvium fields', plat: true,
+      { id: 'outcome', k: 'Authorization Outcome',  t: 'sel', w: 300, g: 'Eluvium fields', plat: true,
         hint: 'Added by Eluvium. Written by the authorization session, one line at a time.' }
     ],
 
@@ -2154,11 +2450,12 @@ function planApp() {
     ],
     get detailGroups() { return [{ g: 'Line', cols: this.frozenCols }].concat(this.groupList); },
 
+    // IA brief D16: Response, Comments and Audit became one Stream. Contract shows the
+    // line's terms and amendments (D15).
     panelTabs: [
       { k: 'Details',  n: '' },
-      { k: 'Response', n: '' },
-      { k: 'Comments', n: '4' },
-      { k: 'Audit',    n: '9' }
+      { k: 'Contract', n: '2' },
+      { k: 'Stream',   n: '14' }
     ],
 
     rowsAll: [
@@ -2369,16 +2666,19 @@ function planApp() {
       'PP-2027-0504': { cycle: true, tracked: false, stage: 'Canceled', nextstep: '', nextdue: '', decide: '' },
       'PP-2027-0537': { cycle: true, tracked: true, stage: 'Sourcing and awarding', nextstep: 'Offers due from three agencies', nextdue: '04/12/2026', decide: '18/02/2027' },
       'PP-2027-0562': { cycle: true, tracked: true, stage: 'Not started', nextstep: 'Find an owner before anything else', nextdue: '25/11/2026', decide: '' },
-      'PP-2027-0588': { cycle: true, tracked: true, stage: 'Contract drafting', nextstep: 'Send the draft contract to the supplier', nextdue: '24/11/2026', decide: '12/01/2027' },
+      'PP-2027-0588': { cycle: false, tracked: true, stage: 'Contract drafting', nextstep: 'Send the draft contract to the supplier', nextdue: '24/11/2026', decide: '12/01/2027' },
       'PP-2027-0601': { cycle: true, tracked: true, stage: 'RFE raised', nextstep: 'Supplier confirms the 12 month price', nextdue: '27/11/2026', decide: '03/02/2027' },
       'PP-2027-0644': { cycle: true, tracked: false, stage: 'Canceled', nextstep: '', nextdue: '', decide: '' },
       'PP-2027-0672': { cycle: true, tracked: true, stage: 'Not started', nextstep: 'Restart when the specification arrives', nextdue: '', decide: '' },
-      'PP-2027-0689': { cycle: true, tracked: true, stage: 'Contract approval', nextstep: 'Signature pending', nextdue: '30/11/2026', decide: '19/01/2027' },
+      'PP-2027-0689': { cycle: false, tracked: true, stage: 'Contract approval', nextstep: 'Signature pending', nextdue: '30/11/2026', decide: '19/01/2027' },
       'PP-2027-0703': { cycle: true, tracked: true, stage: 'Not started', nextstep: '', nextdue: '', decide: '16/02/2027' },
       'PP-2027-0741': { cycle: true, tracked: true, stage: 'Signed', nextstep: 'PO issued', nextdue: '', decide: '05/01/2027' }
     },
 
     init() {
+      // P0 opens a closed cycle with ?cycle=c0 or ?cycle=c1.
+      const qc = new URLSearchParams(window.location.search).get('cycle');
+      if (qc && this.cycles.some(c => c.id === qc)) this.cycleId = qc;
       this.rowsAll.forEach(r => {
         const e = this.extras[r.ref] || {};
         r.cycle    = e.cycle !== false;
@@ -2402,6 +2702,9 @@ function planApp() {
       // item is open, which is why an agenda item is a view and not a screen.
       if (this.sessionOn() && this.step().kind === 'records') return this.stepRows();
       let rs = this.applyFilter(this.v().filter, this.rowsAll);
+      // P20: the scope applies to every view. Requested means inside this cycle's window,
+      // or added during the cycle; the rest of the cycle's lines are the backlog.
+      if (this.scope === 'requested') rs = rs.filter(r => r.cycle);
       if (this.onlyBad && this.viewId === 'table') rs = rs.filter(r => Object.keys(r.bad).length);
       return rs;
     },
@@ -2530,7 +2833,7 @@ function planApp() {
       const flagged = rs.filter(r => Object.keys(r.bad).length).length;
       const auth    = rs.filter(r => this.rungOf(r)).length;
       return [
-        { k: 'Lines in view',   v: rs.length.toLocaleString(), sub: 'of 4,793 in the plan', tone: 'text-gray-900' },
+        { k: 'Lines in scope',  v: rs.length.toLocaleString(), sub: 'of ' + (this.scope === 'all' ? this.cyc().lines + ' in this cycle' : this.cyc().requested + ' requested'), tone: 'text-gray-900' },
         { k: 'Yearly value',    v: '€ ' + this.fmtK(rs.reduce((a, r) => a + this.yearly(r), 0)) + 'K', sub: 'computed, not typed', tone: 'text-gray-900' },
         { k: 'Flagged',  v: flagged, sub: 'lines with a flagged cell', tone: 'text-amber-600' },
         { k: 'Need authorizing', v: auth, sub: 'rung computed, never typed', tone: 'text-rose-600' }
@@ -2551,7 +2854,9 @@ function planApp() {
     // expiring contract. Neither was a field. The room now writes Stage and Response,
     // which are the fields an email answer and a buyer's update write, so the alignment
     // and the cycle put the same values in the same places.
-    sessionOn() { return !!this.v().session; },
+    // IA brief D19: there is no session mode. Kept returning false so the remaining
+    // helpers below stay inert; they can be deleted with the next clean-up.
+    sessionOn() { return false; },
 
     sess() {
       if (this.viewId === 'align') {
@@ -2900,34 +3205,264 @@ function planApp() {
       return 'bg-gray-50 text-gray-600 border-gray-200';
     },
 
-    history: [
-      { cycle: 'Cycle 2026 H2', answer: 'Confirmed', value: '€ 186,000', by: 'answered by email link' },
-      { cycle: 'Cycle 2026 H1', answer: 'Confirmed', value: '€ 186,000', by: 'answered by email link' },
-      { cycle: 'Cycle 2025 H2', answer: 'Confirmed', value: '€ 186,000', by: 'workbook returned' }
+    // ══ IA BRIEF: CYCLES (D1, D4, D5, D14) ══════════════════════════════════════════════
+    // One open cycle at a time. Each cycle started as a copy of the one before it, and the
+    // copied-from cycle closed. Cycle 0 is the import of Flutter's file and is otherwise a
+    // normal cycle. The demo is set in steady state, two cycles after the import.
+    cycles: [
+      { id: 'c0', name: 'Cycle 0 · Q3 2026', horizon: 'Q3–Q4 2026', open: false, lines: '5,465', requested: '1,118',
+        opened: 'Mon 16 Mar 2026', note: 'Imported from Flutter\'s Purchasing Plan export on 16 Mar 2026. Closed on 15 Jun 2026, when Cycle 1 started' },
+      { id: 'c1', name: 'Cycle 1 · Q4 2026', horizon: 'Q4 2026–Q1 2027', open: false, lines: '5,031', requested: '1,206',
+        opened: 'Mon 15 Jun 2026', note: 'Copied from Cycle 0 on 15 Jun 2026. Closed on 21 Sep 2026, when Cycle 2 started' },
+      { id: 'c2', name: 'Cycle 2 · Q1 2027', horizon: 'Q1–Q2 2027', open: true, lines: '5,182', requested: '1,284',
+        opened: 'Mon 21 Sep 2026', note: 'Copied from Cycle 1 on 21 Sep 2026' }
     ],
+    // The phase follows the demo's calendar, which differs by view (see asOfByView).
+    phaseNow() { return ({ responses: 'Collecting', review: 'Review', auth: 'Authorization' })[this.viewId] || 'Tracking'; },
+    cyc() {
+      const c = this.cycles.find(x => x.id === this.cycleId) || this.cycles[2];
+      return Object.assign({}, c, { phase: c.open ? this.phaseNow() : 'Closed' });
+    },
+    openCycle() { return this.cycles.find(x => x.open); },
+    get readOnly() { return !this.cyc().open; },
+    areas: [
+      { k: 'lines',  label: 'Lines',  note: '' },
+      { k: 'rules',  label: 'Rules',  note: '' }
+      // People tab hidden for now on Alper's call (2026-10-09). Its markup is kept.
+      // { k: 'people', label: 'People', note: '' }
+    ],
+    // D9: data views export to Excel, report views to PDF.
+    exportLabel() { return this.renderer === 'Report' ? 'Export PDF' : 'Export to Excel'; },
 
-    thread: [
-      { i: 1, who: 'ellie', init: 'E', meta: 'Ellie · 22 Sep, 08:15 · sent by email',
+    // ══ IA BRIEF: AUTHORIZATION WITHOUT A SESSION (D19, D20, P38) ═══════════════════════
+    outcomeOptions: ['Authorize', 'Derogation', 'Defer', 'Reject'],
+    approvers: [
+      { rung: 'Local Procurement Manager', band: 'Up to € 10,000',        name: 'Andrea Leone' },
+      { rung: 'Head of Procurement',       band: '€ 10,000 – € 50,000',   name: 'Laura Monti' },
+      { rung: 'Sr Procurement Director',   band: '€ 50,000 – € 500,000',  name: 'Roberto Galli' },
+      { rung: 'FSEA CFO',                  band: 'Above € 500,000',       name: 'Matteo Bassi' }
+    ],
+    curApprover() { return this.approvers.find(a => a.name === this.authApprover) || this.approvers[3]; },
+    isOutcomeCell(c) { return this.viewId === 'auth' && c.id === 'outcome'; },
+    // The rule set checks the named approver sits at the rung the line's value needs.
+    canRecord(r) { return !this.readOnly && this.rungOf(r) === this.curApprover().rung; },
+    setOutcome(r, o) { if (!this.canRecord(r)) return; r.outcome = (r.outcome === o ? '' : o); },
+    authRows() { return this.applyFilter('needsAuth', this.rowsAll); },
+    authRecorded() { return this.authRows().filter(r => r.outcome).length; },
+    authMismatch() {
+      const other = this.authRows().filter(r => this.rungOf(r) !== this.curApprover().rung).length;
+      return other ? other + ' lines on this view sit at another rung. Their outcomes can be recorded only under that rung\'s approver.' : '';
+    },
+    authPack() {
+      const order = this.ladder.map(l => l.rung).reverse();
+      return order.map(k => {
+        const rs = this.authRows().filter(r => this.rungOf(r) === k);
+        return { k: k, rows: rs, v: rs.reduce((a, r) => a + this.yearly(r), 0) };
+      }).filter(g => g.rows.length);
+    },
+    alignPack() {
+      const rs = this.rowsAll.filter(r => r.bu === this.alignBU);
+      return [
+        { k: 'Negotiations in progress', chip: 'stage', rows: rs.filter(r => r.stage !== 'Not started' && r.stage !== 'Canceled') },
+        { k: 'Expiring contracts without an answer', chip: 'resp', rows: rs.filter(r => r.resp === 'Awaiting answer' || r.resp === 'Needs changes') },
+        { k: 'Lines added since the last alignment', chip: 'resp', rows: [] }
+      ];
+    },
+
+    // ══ IA BRIEF: PEOPLE AND RULES TABS (D1, D6, D9) ════════════════════════════════════
+    peopleExtra: {
+      'Digital Operations':   { backup: 'Elena Carbone',   mgr: 'Francesca Gatti' },
+      'Retail Network IT':    { backup: 'Stefano Riva',    mgr: 'Paolo Marchetti' },
+      'Brand & Media':        { backup: 'Chiara Bellini',  mgr: 'Simona Ferri' },
+      'Platform Engineering': { backup: 'Marco Ferretti',  mgr: 'Francesca Gatti' },
+      'Facilities Italia':    { backup: 'Marta Colombo',   mgr: 'Luigi Sartori' },
+      'Legal & Compliance':   { backup: 'Elisa Marchi',    mgr: 'Anna Ricci' },
+      'Sisal Gaming Malta':   { backup: 'Alessandro Conti', mgr: 'Paolo Marchetti' },
+      'Payments & Risk':      { backup: 'Paolo Rizzo',     mgr: 'Anna Ricci' },
+      'Retail Estate':        { backup: 'Marta Colombo',   mgr: 'Luigi Sartori' },
+      'Data & Analytics':     { backup: 'Marco Ferretti',  mgr: 'Francesca Gatti' }
+    },
+    procTeam: [
+      { name: 'Sara Lombardi',  role: 'Procurement administrator · records authorization outcomes' },
+      { name: 'Silvia Fontana', role: 'Procurement buyer' },
+      { name: 'Andrea Leone',   role: 'Procurement buyer · Local Procurement Manager' },
+      { name: 'Paola Serra',    role: 'Procurement buyer' }
+    ],
+    // D21: every legal entity has its own rule set. The Italian entities happen to share
+    // values today; Turkey, Albania and Morocco follow the hub values (illustrative for
+    // Albania and Morocco until Flutter confirms).
+    ruleEntities: [
+      { k: 'Sisal Italia',            note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
+      { k: 'Snaitech',                note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
+      { k: 'Sisal Gaming',            note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
+      { k: 'TSG Italy',               note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
+      { k: 'Sisal Technology Turkey', note: 'STH procurement procedure', set: 'tr' },
+      { k: 'Sisal Albania',           note: 'Local units guide, to confirm', set: 'tr' },
+      { k: 'Sisal Jeux Maroc',        note: 'Local units guide, to confirm', set: 'tr' }
+    ],
+    trBands: [
+      { band: 'Up to € 1,000',        method: 'A quote from a single supplier',     auth: 'Local Procurement Manager', n: '' },
+      { band: '€ 1,000 – € 10,000',   method: 'At least three quotes',              auth: 'Local Procurement Manager', n: '' },
+      { band: '€ 10,000 – € 50,000',  method: 'Structured competitive comparison',  auth: 'Head of Procurement',       n: '' },
+      { band: '€ 50,000 – € 500,000', method: 'Tender',                             auth: 'Sr Procurement Director',   n: '' },
+      { band: 'Above € 500,000',      method: 'Tender',                             auth: 'FSEA CFO',                  n: '' }
+    ],
+    trNotice: [
+      { strat: 'Direct Nego',           amt: 'Up to € 50,000',          days: 25 },
+      { strat: 'Direct Nego',           amt: '€ 50,000 – € 1,000,000',  days: 40 },
+      { strat: 'Direct Nego',           amt: 'Above € 1,000,000',       days: 60 },
+      { strat: 'Quote comparison',      amt: '€ 1,000 – € 10,000',      days: 30 },
+      { strat: 'Structured comparison', amt: '€ 10,000 – € 50,000',     days: 40 },
+      { strat: 'Tender',                amt: 'Above € 50,000',          days: 60 }
+    ],
+    ruleCountry() { return ({ 'Sisal Technology Turkey': 'Turkey', 'Sisal Albania': 'Albania', 'Sisal Jeux Maroc': 'Morocco' })[this.ruleEnt] || 'Italy'; },
+    rulesFor() {
+      const e = this.ruleEntities.find(x => x.k === this.ruleEnt) || this.ruleEntities[0];
+      return e.set === 'tr' ? { bands: this.trBands, notice: this.trNotice, floor: 1000 }
+                            : { bands: this.frozenBands, notice: this.frozenNotice, floor: 10000 };
+    },
+
+    // ══ IA BRIEF: SAVED REPORTS (D3, D9, P9 to P14) ═════════════════════════════════════
+    // Each report is a prompt an Eluvium sys-admin wrote, and the spec it produced. The
+    // platform runs the spec; the numbers are never written by the model.
+    savedReports: [
+      { id: 'validation', k: 'Start-of-cycle check', sub: 'Run on every copy · P19', kind: 'table', by: 'bu', ver: 2,
+        prompt: 'Check every line of this cycle against the cycle\'s rule set. Count the lines with no sourcing strategy, direct negotiations with no justification, lead times that are already impossible, a method the value band does not allow, and no owner. Show the counts, then the flagged lines by business unit.',
+        spec: ['scope    cycle = current, scope = viewer', 'measure  count(lines) per failed rule', 'group    Business Unit', 'show     tiles, table'] },
+      { id: 'ceo', k: 'CEO compliance pack', sub: 'Quarterly · four indicators', kind: 'table', by: 'ent', ver: 3,
+        prompt: 'The four indicators Procurement reports to the CEO each quarter: the non-compliant RFE rate, contracts per supplier over twelve months (count contract terms, not lines), the share of contracts entered by people outside Procurement, and the back-dated contract rate. Break each down by legal entity and compare with the previous cycle.',
+        spec: ['scope    cycles in the last 12 months, joined on line key', 'measure  4 ratios over contract terms', 'group    Legal Entity', 'show     tiles, table'] },
+      { id: 'cfo', k: 'CFO pack', sub: 'Plan presentation', kind: 'table', by: 'cat', ver: 2,
+        prompt: 'For the plan presentation to the CFO: year-to-date expenditure by category, function and project, the main planned negotiations, and the derogations that need authorization with their value bands.',
+        spec: ['scope    cycle = current', 'measure  sum(yearly value), count(derogations)', 'group    Product Category', 'show     tiles, table'] },
+      { id: 'progress', k: 'Progress by business unit', sub: 'Who has answered', kind: 'table', by: 'bu', ver: 1,
+        prompt: 'Progress of this cycle by business unit: lines requested, answered, waiting and escalated, with the channel each answer arrived through.',
+        spec: ['scope    cycle = current, requested', 'measure  count by response state', 'group    Business Unit', 'show     tiles, table'] },
+      { id: 'coverage', k: 'Plan coverage', sub: 'What the plan did not know', kind: 'table', by: 'bu', ver: 1,
+        prompt: 'Lines added outside the cycle, by business unit, and purchases that reached an RFE with no plan line behind them.',
+        spec: ['scope    cycle = current', 'measure  count(lines added), count(RFEs without a line)', 'group    Business Unit', 'show     tiles, table'] },
+      { id: 'changes', k: 'Changes against Cycle 1', sub: 'Cancellations, additions, edits', kind: 'changes', ver: 1,
+        prompt: 'Everything that changed in this cycle against the previous one: every cancelled line with its reason, who cancelled it and how; lines added and who added them; lines delegated; and lines whose value, dates or route changed.',
+        spec: ['scope    cycle = current vs cycle = previous, joined on line key', 'source   line streams (P25)', 'group    change type', 'show     tiles, lists'] },
+      { id: 'gantt', k: 'Notice-date timeline', sub: 'Gantt · by business unit', kind: 'gantt', ver: 1,
+        prompt: 'A timeline of every line in scope: a bar from contract start to contract end, a marker at the RFE deadline, and lines for today and the freeze date. Group by business unit so each group can be collapsed.',
+        spec: ['scope    cycle = current, scope = viewer', 'bars     Contract Start Date to Contract End Date', 'marker   RFE Deadline', 'group    Business Unit', 'show     timeline'] },
+      { id: 'authpack', k: 'Authorization pack', sub: 'For each rung\'s meeting', kind: 'authpack', ver: 2,
+        prompt: 'The pack for the authorization meeting: every derogation that needs authorization, grouped by the rung that decides it, with supplier, method, the reason given and the value. Add year-to-date volumes by category and the main planned negotiations.',
+        spec: ['scope    cycle = current, Authorization Rung not empty', 'group    Authorization Rung, CFO first', 'show     tables per rung'] },
+      { id: 'alignpack', k: 'Alignment pack', sub: 'For one business unit', kind: 'alignpack', ver: 1,
+        prompt: 'The pack for an alignment with one business unit: its negotiations in progress, its expiring contracts without an answer, and the lines it added since the last alignment.',
+        spec: ['scope    cycle = current, Business Unit = chosen unit', 'sections 3 filters', 'show     lists'] }
+    ],
+    reportList() {
+      const own = this.v().report ? [{ id: 'view', kind: 'view', ver: 4,
+        k: this.v().report === 'cycle' ? 'Cycle progress' : 'Review at the freeze', sub: 'This view\'s own report',
+        prompt: this.v().report === 'cycle'
+          ? 'The state of this cycle\'s collection: Ellie\'s summary, answers by channel, how long lines have been waiting, and each business unit\'s progress with how far its chasing has gone.'
+          : 'The state of the plan at the freeze: the outcome mix, the routes chosen, lines needing authorization by rung, every cancelled line, and the lines frozen without an answer.',
+        spec: ['scope    cycle = current', 'source   this view', 'show     report layout'] }] : [];
+      return own.concat(this.savedReports);
+    },
+    curReport() { const l = this.reportList(); return l.find(x => x.id === this.reportSel) || l[0]; },
+
+    // Gantt geometry. Range: Jan 2025 to Dec 2027.
+    ganttStart: new Date(2025, 0, 1), ganttEnd: new Date(2028, 0, 1),
+    ganttX(d) {
+      const t = this.jsDate(d); if (!t) return null;
+      const x = (t - this.ganttStart) / (this.ganttEnd - this.ganttStart) * 100;
+      return Math.max(0, Math.min(100, x));
+    },
+    ganttTicks() {
+      const out = [];
+      for (let y = 2025; y <= 2027; y++) for (const m of [0, 6]) {
+        const d = new Date(y, m, 1);
+        out.push({ k: ['Jan', 'Jul'][m / 6] + ' ' + String(y).slice(2), x: (d - this.ganttStart) / (this.ganttEnd - this.ganttStart) * 100 });
+      }
+      return out;
+    },
+    ganttGroups() {
+      const out = [];
+      this.rows.forEach(r => {
+        const k = r.bu || 'Not set';
+        let g = out.find(x => x.k === k); if (!g) { g = { k: k, rows: [] }; out.push(g); }
+        const s = this.jsDate(r.start), e = this.jsDate(r.end);
+        const ok = !!(s && e && e >= s);
+        const x = ok ? this.ganttX(r.start) : 0, x2 = ok ? this.ganttX(r.end) : 0;
+        g.rows.push({ n: r.n, r: r, subj: r.subj, ok: ok, x: x, w: Math.max(0.6, x2 - x),
+                      rfe: r.rfe ? this.ganttX(r.rfe) : null, rfeLabel: this.longDate(r.rfe) });
+      });
+      return out;
+    },
+
+    changeTiles: [
+      { k: 'Cancelled',                    n: 63,  sub: 'not reviewed, listed here (D8)' },
+      { k: 'Added by business units',      n: 24,  sub: 'joined during the cycle' },
+      { k: 'Delegated',                    n: 112, sub: 'answered Not mine' },
+      { k: 'Value, dates or route changed', n: 289, sub: 'answered Needs changes' }
+    ],
+    get changeSections() {
+      return [
+        { k: 'Cancelled', sub: '· takes effect without review; Procurement can reinstate while the cycle is open', reinstate: true,
+          items: this.rvCanceled.map(c => ({ ref: c.ref, line: c.desc, what: c.reason + ' · ' + c.value, by: c.by + ', ' + c.channel })) },
+        { k: 'Added', sub: '· by business units, during the cycle', reinstate: false,
+          items: [
+            { ref: 'PP-2027-5512', line: 'Managed Kubernetes platform', what: 'New need, no contract · € 120,000', by: 'A. Conti, response page' },
+            { ref: 'PP-2027-5530', line: 'Courier services, Rome offices', what: 'Existing contract the plan was missing · € 38,000', by: 'L. Bertani, email reply' }
+          ] },
+        { k: 'Changed', sub: '· value, dates or route', reinstate: false,
+          items: [
+            { ref: 'PP-2027-0468', line: 'Data warehouse capacity', what: 'Route changed from Renewal to New tender', by: 'P. Rizzo, email link' },
+            { ref: 'PP-2027-0412', line: 'Cloud hosting, production estate', what: 'Addendum recorded in Cycle 1, € 2,160K to € 2,480K', by: 'S. Lombardi, platform' }
+          ] }
+      ];
+    },
+
+    // ══ IA BRIEF: CONTRACT AND STREAM (D15, D16, D17, P15, P23, P25 to P30, P38) ═══════
+    // Illustrative, shown for whichever line is open.
+    contractTerms: [
+      { k: 'Term 2', current: true, sup: 'Amazon Web Services EMEA', dates: '1 Apr 2025 to 31 Mar 2027', value: '€ 2,480K', rfe: 'RFE-3982',
+        src: 'Imported from Flutter row 412, merged at the Cycle 0 import as the renewal of row 118',
+        amendments: [ { k: 'Addendum', what: 'Snai workloads added, € 2,160K to € 2,480K', when: 'Cycle 1 · 12 Aug 2026' } ] },
+      { k: 'Term 1', current: false, sup: 'Amazon Web Services EMEA', dates: '1 Apr 2023 to 31 Mar 2025', value: '€ 1,860K', rfe: 'RFE-2210',
+        src: 'Imported from Flutter row 118', amendments: [] }
+    ],
+    stream: [
+      { i: 1,  cycle: 'Cycle 0 · Q3 2026', kind: 'change', tone: 'bg-slate-300', meta: 'Import · 16 Mar 2026 · pair confirmed by Sara Lombardi',
+        body: 'Imported from Flutter\'s file. Rows 118 and 412 merged as one contract with two terms' },
+      { i: 2,  cycle: 'Cycle 0 · Q3 2026', kind: 'change', tone: 'bg-amber-400', meta: 'Ellie · 16 Mar 2026 · start-of-cycle check',
+        body: 'Flagged: <strong>Sourcing Strategy</strong>, direct negotiation at this value is a derogation' },
+      { i: 3,  cycle: 'Cycle 0 · Q3 2026', kind: 'change', tone: 'bg-slate-300', meta: 'Ellie · 16 Mar 2026',
+        body: 'Outside the window, held in the backlog' },
+      { i: 4,  cycle: 'Cycle 1 · Q4 2026', kind: 'change', tone: 'bg-slate-300', meta: 'Copy · 15 Jun 2026', body: 'Copied into Cycle 1' },
+      { i: 5,  cycle: 'Cycle 1 · Q4 2026', kind: 'change', tone: 'bg-indigo-400', meta: 'Sara Lombardi, Procurement · 12 Aug 2026 · platform, SSO',
+        body: 'Addendum recorded on Term 2: <strong>€ 2,160K to € 2,480K</strong>. Authorization validity re-checked: still within 10% and € 50,000' },
+      { i: 6,  cycle: 'Cycle 2 · Q1 2027', kind: 'change', tone: 'bg-slate-300', meta: 'Copy · 21 Sep 2026', body: 'Copied into Cycle 2. Contract end 31 Mar 2027 falls inside the window' },
+      { i: 7,  cycle: 'Cycle 2 · Q1 2027', kind: 'change', tone: 'bg-indigo-400', meta: 'Ellie · 22 Sep 2026', body: 'Requested from <strong>Marco Ferretti</strong>, decision needed by 5 Jan 2027' },
+      { i: 8,  cycle: 'Cycle 2 · Q1 2027', kind: 'msg', who: 'ellie', init: 'E', vis: 'sent', meta: 'Ellie · 22 Sep, 08:15 · in the owner\'s email thread',
         body: 'This contract ends 31 March 2027. A decision is needed by <strong>5 January</strong> to keep the standard process.' },
-      { i: 2, who: 'bu', init: 'MF', meta: 'Marco Ferretti · 29 Sep, 16:40 · written reply, parsed',
+      { i: 9,  cycle: 'Cycle 2 · Q1 2027', kind: 'msg', who: 'bu', init: 'MF', meta: 'Marco Ferretti · 29 Sep, 16:40 · email reply, from the owner\'s mailbox · one of 4 lines in that email',
         body: 'The AWS one is going to tender, we already started talking to the team about it.' },
-      { i: 3, who: 'ellie', init: 'E', meta: 'Ellie · 29 Sep, 16:41 · confidence: high',
-        body: 'Recorded as <strong>confirmed, new tender</strong>. One thing: the strategy on file still says Direct Nego at € 1,240,000, which needs a CFO derogation. Shall I change it to Full Tender, or is the derogation the intent?' },
-      { i: 4, who: 'proc', init: 'GR', meta: 'Giulia Rinaldi, Procurement · 30 Sep, 09:12 · in the platform',
-        body: 'Leave it. It goes to the October session either way and the CFO will want to see why we did not tender last time.' }
+      { i: 10, cycle: 'Cycle 2 · Q1 2027', kind: 'msg', who: 'ellie', init: 'E', vis: 'sent', meta: 'Ellie · 29 Sep, 16:41 · confidence: high',
+        body: 'Recorded as <strong>confirmed, new tender</strong>. The strategy on file still says Direct Nego at € 2,480,000, which needs a CFO derogation. Shall I change it to Full Tender, or is the derogation the intent?' },
+      { i: 11, cycle: 'Cycle 2 · Q1 2027', kind: 'msg', who: 'proc', init: 'SL', vis: 'internal', meta: 'Sara Lombardi, Procurement · 30 Sep, 09:12',
+        body: 'Leave it. It goes to the October meeting either way and the CFO will want to see why we did not tender last time.' },
+      { i: 12, cycle: 'Cycle 2 · Q1 2027', kind: 'change', tone: 'bg-rose-400', meta: 'Ellie · 16 Oct 2026 · rung computed from value and method', body: 'Routed to authorization at <strong>FSEA CFO</strong>' },
+      { i: 13, cycle: 'Cycle 2 · Q1 2027', kind: 'change', tone: 'bg-emerald-400', meta: 'Entered by Sara Lombardi, Procurement · 28 Oct 2026 · minutes attached',
+        body: 'Outcome <strong>Derogation</strong>, decided by <strong>Matteo Bassi</strong> (FSEA CFO) at the meeting of 27 Oct 2026' },
+      { i: 14, cycle: 'Cycle 2 · Q1 2027', kind: 'change', tone: 'bg-indigo-400', meta: 'Ellie · 28 Oct 2026', body: 'Owner notified of the outcome in his email thread' }
     ],
-
-    audit: [
-      { i: 1, what: 'Line imported from Purchasing Plan master, row 412', when: '4 Aug 2026', channel: 'Import', basis: 'file, mapped by Procurement', tone: 'bg-slate-300' },
-      { i: 2, what: 'Validation: <strong>Sourcing Strategy</strong> flagged: direct negotiation at this value is a derogation', when: '4 Aug 2026', channel: 'Agent', basis: 'validation on import', tone: 'bg-amber-400' },
-      { i: 3, what: 'Owner set to <strong>Marco Ferretti</strong>', when: '4 Aug 2026', channel: 'Import', basis: 'owner field in the plan', tone: 'bg-slate-300' },
-      { i: 4, what: 'Assigned to cycle <strong>2027 H1</strong>, deadline 16 Oct 2026', when: '22 Sep 2026', channel: 'Agent', basis: 'contract end date falls inside the window', tone: 'bg-indigo-400' },
-      { i: 5, what: 'Request sent, one email with a link per line', when: '22 Sep 2026', channel: 'Email', basis: 'sent to marco.ferretti@sisal.it', tone: 'bg-indigo-400' },
-      { i: 6, what: 'Email reply read as <strong>confirmed, new tender</strong>', when: '29 Sep 2026', channel: 'Email reply', basis: 'from the owner\'s mailbox', tone: 'bg-emerald-400' },
-      { i: 7, what: 'Challenge raised on Sourcing Strategy', when: '29 Sep 2026', channel: 'Agent', basis: 'sourcing strategy and value', tone: 'bg-amber-400' },
-      { i: 8, what: 'Comment added by <strong>Giulia Rinaldi</strong>, Procurement', when: '30 Sep 2026', channel: 'Platform', basis: 'signed in with Microsoft', tone: 'bg-emerald-400' },
-      { i: 9, what: 'Routed to authorization at <strong>FSEA CFO</strong>', when: '16 Oct 2026', channel: 'Agent', basis: 'rung computed from value and method', tone: 'bg-rose-400' }
-    ]
+    streamGroups() {
+      const out = [];
+      this.stream.forEach(m => {
+        if (this.streamFilter === 'Discussion' && m.kind !== 'msg') return;
+        if (this.streamFilter === 'Changes' && m.kind === 'msg') return;
+        if (this.streamCycle !== 'all' && m.cycle !== this.streamCycle) return;
+        let g = out.find(x => x.cycle === m.cycle);
+        if (!g) { const c = this.cycles.find(x => x.name === m.cycle); g = { cycle: m.cycle, closed: c ? !c.open : false, items: [] }; out.push(g); }
+        g.items.push(m);
+      });
+      return out;
+    }
   };
 }
 </script>

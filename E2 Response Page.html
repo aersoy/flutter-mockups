@@ -2,6 +2,12 @@
 <!--
   E2 · The Response Page  (Flutter Purchase Planning Agent, Phase 1)
   ===================================================================
+  IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
+    D2, D7 Answering in the platform needs a sign-in: SSO, or a one-time code sent to the
+        owner's email. The code path is now drawn too. A forwarded link no longer acts as
+        the owner: whoever signs in is who answered.
+    D17 Owners' experience is otherwise unchanged. They never see the line's stream.
+
   Source: `Tiered Solution/Scope and Flow.md` → "A response answers two questions, not one",
                                                 "Reaching Business Units Where They Already Are"
           `Tiered Solution/Screen Inventory.md` → "E2. The response page"
@@ -87,7 +93,7 @@
           <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
         </div>
         <div class="flex-1 bg-white rounded px-3 py-1 text-[11px] text-slate-500 mono truncate border border-slate-200">
-          <span x-text="signedIn ? 'plan.flutter.com/respond/' + landed.ref + '?answer=confirm' : 'login.microsoftonline.com'"></span>
+          <span x-text="signedIn ? 'plan.flutter.com/respond/' + landed.ref + '?answer=confirm' : (otp ? 'plan.flutter.com/signin/code' : 'login.microsoftonline.com')"></span>
         </div>
       </div>
 
@@ -95,8 +101,8 @@
            What a click in E1 opens first: the owner's Microsoft work account, already
            known to the browser, picked with one click. Drawn to show how light it is. -->
       <template x-if="!signedIn">
-        <div class="px-8 py-16 flex justify-center bg-slate-50">
-          <div class="w-[380px] bg-white border border-slate-200 shadow-sm rounded px-9 py-8">
+        <div class="px-8 py-16 flex flex-col items-center bg-slate-50">
+          <div x-show="!otp" class="w-[380px] bg-white border border-slate-200 shadow-sm rounded px-9 py-8">
             <div class="flex items-center gap-2">
               <span class="grid grid-cols-2 gap-[2px] w-[18px] h-[18px]">
                 <span class="bg-[#f25022]"></span><span class="bg-[#7fba00]"></span>
@@ -118,6 +124,25 @@
             </button>
             <button class="mt-2 w-full text-left px-3 py-2.5 text-[12.5px] text-slate-600 hover:bg-slate-50">Use another account</button>
           </div>
+          <!-- D7: the alternative to SSO, a one-time code sent to the owner's work email.
+               Our page, not Microsoft's, so it sits outside the Microsoft card. -->
+          <div x-show="otp" x-cloak class="w-[380px] bg-white border border-slate-200 shadow-sm rounded-xl px-9 py-8">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center"><span class="text-white text-[10px] font-bold">E</span></div>
+              <span class="text-[13px] font-semibold text-slate-700">Purchase Planning</span>
+            </div>
+            <h2 class="text-[20px] font-semibold text-slate-900 mt-5">Enter your code</h2>
+            <p class="text-[12.5px] text-slate-500 mt-1">We sent a 6-digit code to <span class="font-medium text-slate-800" x-text="email()"></span>. It expires in 10 minutes.</p>
+            <div class="mt-4 flex gap-2">
+              <input type="text" inputmode="numeric" maxlength="6" placeholder="000000" x-model="otpCode"
+                     class="flex-1 min-w-0 text-[15px] tracking-[0.3em] mono px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+              <button @click="signedIn = true" :disabled="otpCode.length < 6"
+                      class="text-[12.5px] font-semibold px-4 rounded-lg"
+                      :class="otpCode.length < 6 ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Continue</button>
+            </div>
+            <button @click="otp = false; otpCode = ''" class="mt-3 text-[11.5px] text-slate-500 hover:underline">Use Microsoft sign-in instead</button>
+          </div>
+          <button x-show="!otp" @click="otp = true" class="mt-4 text-[12px] text-indigo-700 hover:underline">Not a Microsoft account? Sign in with a code sent to your email</button>
         </div>
       </template>
 
@@ -648,6 +673,8 @@ function responsePage() {
   return {
     size: 'small',
     signedIn: false,
+    otp: false,        // D7: signing in with an email code instead of SSO
+    otpCode: '',
     open: null,
     showDone: true,
     draft: { real: null, route: null, poValue: null },
@@ -778,7 +805,7 @@ function responsePage() {
         ? { ref: 'PP-2027-0451', desc: 'Developer tooling subscriptions' }
         : { ref: 'PP-2027-1067', desc: 'Source control and CI seats' };
     },
-    reset() { this.setSize(this.size); this.signedIn = false; },
+    reset() { this.setSize(this.size); this.signedIn = false; this.otp = false; this.otpCode = ''; },
 
     emptyDraft() { return { real: null, route: null, poValue: null }; },
 
