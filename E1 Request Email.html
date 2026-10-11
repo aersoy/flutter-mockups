@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-11 (D2 deferred, D25, D28, D29, Q29)
+    A second variant beside the owner email: the launch email RU 4.2 describes, one per
+    Purchasing Group, to its Starters and copying its Requestor, with a link to the group's
+    lines and the Contract_Data extract of unmatched expiring contracts attached (D29). The
+    owner email stays, since D2 is deferred until Flutter confirms the email path (Q28).
+    Owner answers now go to the Requestor for approval once they pass validation (D25, Q29),
+    and a confirmed cancel goes for approval too (D8). "Freeze" reads "submissions close" (D28).
+
   IA CHANGE BRIEF, 2026-10-09: the links sign in with SSO or an email code (D2, D7). Replies
   and returned workbooks stay valid without signing in. Otherwise unchanged (D17).
 
@@ -83,6 +91,13 @@
     </div>
     <div class="flex items-center gap-2">
       <div class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
+        <span class="text-[10px] text-slate-400 px-1.5">Email</span>
+        <template x-for="k in ['To an owner', 'Launch, to a Purchasing Group']" :key="k">
+          <button @click="kind = k" class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
+                  :class="kind === k ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'" x-text="k"></button>
+        </template>
+      </div>
+      <div x-show="kind === 'To an owner'" class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
         <span class="text-[10px] text-slate-400 px-1.5">Owner set size</span>
         <button @click="setSize('small')"
                 class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
@@ -91,7 +106,7 @@
                 class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
                 :class="size === 'large' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">63 lines</button>
       </div>
-      <div class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
+      <div x-show="kind === 'To an owner'" class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
         <span class="text-[10px] text-slate-400 px-1.5">View</span>
         <template x-for="v in ['Request', 'Workbook', 'On return']" :key="v">
           <button @click="setView(v)"
@@ -103,8 +118,60 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════ LAUNCH VARIANT (RU 4.2, D29) ══════════════════════════ -->
+  <template x-if="kind === 'Launch, to a Purchasing Group'">
+    <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center gap-3">
+        <div class="flex gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span></div>
+        <span class="text-[11px] text-slate-500">Outlook · Inbox · Luca Moretti</span>
+      </div>
+      <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+        <h2 class="text-[17px] font-semibold text-slate-900 mailfont">Purchasing plan Q1-Q2 2027 is open · M01 Technology</h2>
+        <div class="flex items-start gap-3 mt-3">
+          <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">PP</div>
+          <div class="min-w-0 text-[12px] leading-relaxed">
+            <div class="text-slate-800"><span class="font-semibold">Purchase Planning</span> <span class="mono text-slate-500">&lt;plan+m01@procurement.flutter.com&gt;</span></div>
+            <div class="text-slate-500">To: <span class="mono">the 9 Starters of M01 Technology</span> &nbsp;·&nbsp; Cc: <span class="mono">Requestor, Barbara Neri</span></div>
+            <div class="text-slate-400 text-[11px] mt-0.5">Mon 21 Sep 2026, 08:00 · sent when Sara Lombardi launched the campaign</div>
+          </div>
+        </div>
+      </div>
+      <div class="scroll px-6 py-6 mailfont text-[13.5px] leading-[1.65] text-slate-800 max-h-[640px] overflow-y-auto">
+        <p>Buongiorno,</p>
+        <p class="mt-3">The purchasing plan campaign for <strong>Q1&ndash;Q2 2027</strong> is open. It covers the purchases <strong>M01 Technology</strong> expects to start or renew between January and June 2027.</p>
+        <p class="mt-3">Please enter your initiatives in Purchase Planning and submit them to Barbara by <strong>Friday 16 October</strong>. You do not have to finish everything at once: select the initiatives that are complete and submit them, and submit the rest later. Each submitted initiative goes to Barbara for approval, then to Procurement.</p>
+        <div class="mt-4">
+          <a href="Plan.html?as=starter" class="inline-block text-[13px] font-semibold text-indigo-700 underline underline-offset-2">Open M01 Technology in Purchase Planning</a>
+          <div class="text-[11.5px] text-slate-500 mt-1">Sign in once with your Microsoft work account, or with a code we email you.</div>
+        </div>
+        <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-3">
+          <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
+          <div class="min-w-0">
+            <div class="text-[12.5px] font-semibold text-slate-800">Expiring contracts · M01 Technology · Jan&ndash;Sep 2027.xlsx</div>
+            <div class="text-[11px] text-slate-500">17 contracts expiring in the next nine months that are not yet in the plan · from Contract_Data, 18 Sep 2026</div>
+          </div>
+        </div>
+        <p class="mt-3 text-[12.5px] text-slate-600">The attachment is for information. If any of these will be renewed, renegotiated or replaced, enter it as an initiative in Purchase Planning. The 45 contracts already in the plan are there for you to review.</p>
+        <div class="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[12px]">
+          <template x-for="c in expiring" :key="c.n">
+            <div class="flex items-center gap-3 px-3.5 py-1.5 border-b border-slate-100 last:border-0">
+              <span class="mono text-[11px] text-slate-500 w-[70px] shrink-0" x-text="c.n"></span>
+              <span class="flex-1 min-w-0 truncate" x-text="c.what"></span>
+              <span class="text-slate-500 shrink-0" x-text="c.sup"></span>
+              <span class="shrink-0 font-medium text-slate-700" x-text="'ends ' + c.ends"></span>
+            </div>
+          </template>
+          <div class="px-3.5 py-1.5 text-[11px] text-slate-400 bg-slate-50">... 13 more in the attachment</div>
+        </div>
+        <p class="mt-4">Questions about an initiative can go in its chat in Purchase Planning, where the Procurement contacts for it will see them.</p>
+        <p class="mt-4 text-slate-600">Grazie,<br>Ellie · Purchase Planning Agent<br><span class="text-[12px] text-slate-500">on behalf of Procurement Italia · Flutter Southern Europe &amp; Africa</span></p>
+        <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">You are receiving this because you are a Starter for Purchasing Group M01 Technology. One email per Purchasing Group per campaign.</p>
+      </div>
+    </div>
+  </template>
+
   <!-- ══════════════════════════ REQUEST VIEW ══════════════════════════ -->
-  <template x-if="view === 'Request'">
+  <template x-if="kind === 'To an owner' && view === 'Request'">
   <div>
 
     <!-- ══════════════════ The mail client ══════════════════ -->
@@ -148,7 +215,8 @@
         <p class="mt-3">
           We are putting together the purchasing plan for <strong>Q1&ndash;Q2 2027</strong>.
           You are the business owner for <strong x-text="lineCount() + ' contracts'"></strong> that expire in that window.
-          Please tell us what happens to each one by <strong>Friday 16 October</strong>.
+          Please tell us what happens to each one before submissions close on <strong>Friday 16 October</strong>.
+          Once you answer, each line goes to your Requestor, Silvia Marchetti, for approval.
         </p>
 
         <p class="mt-3" x-show="size === 'small'">
@@ -265,7 +333,7 @@
   </template>
 
   <!-- ══════════════════════════ WORKBOOK VIEW ══════════════════════════ -->
-  <template x-if="view === 'Workbook'">
+  <template x-if="kind === 'To an owner' && view === 'Workbook'">
     <div>
 
       <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
@@ -284,7 +352,7 @@
             <li>Only the four <strong>green</strong> columns are editable. Everything grey is locked.</li>
             <li>Use the dropdowns. Free text in these columns cannot be read reliably.</li>
             <li>Send the file back as a reply to the email it came with. Do not rename it.</li>
-            <li>To <strong>cancel</strong> a line, choose Cancel and give a reason. I will confirm it with you in the email thread before it takes effect.</li>
+            <li>To <strong>cancel</strong> a line, choose Cancel and give a reason. I will confirm it with you in the email thread before it goes for approval.</li>
           </ol>
         </div>
 
@@ -384,8 +452,8 @@
           <div class="p-5">
             <p class="text-[12.5px] text-slate-600 leading-relaxed max-w-2xl">
               If you are running a contract that is not in your list, or you know about a need
-              coming up, add it here. Anything you add joins this quarter's plan, takes the same
-              freeze date, and counts toward your set.
+              coming up, add it here. Anything you add joins this quarter's plan, has the same
+              submission deadline, and counts toward your set.
             </p>
             <p class="text-[12px] text-slate-500 mt-2 max-w-2xl leading-relaxed">
               You do not need to know the sourcing strategy or the deadline. I derive the decision
@@ -455,7 +523,7 @@
         <!-- Version stamp footer. Visible in the artifact, not hidden in metadata. -->
         <div class="border-t border-slate-200 bg-slate-50 px-4 py-2 flex items-center justify-between text-[11px] text-slate-500">
           <span class="mono" x-text="'Issued to ' + email() + ' · cycle 2027H1 · v1'"></span>
-          <span>Freeze: 16 Oct 2026</span>
+          <span>Submissions close: 16 Oct 2026</span>
         </div>
       </div>
 
@@ -466,7 +534,7 @@
        The fourth mechanic: the agent replies in the thread on receipt, saying what
        it accepted and what it is querying. THAT REPLY IS THE CHALLENGE LOOP. Without
        it a file round trip is a black hole. -->
-  <template x-if="view === 'On return'">
+  <template x-if="kind === 'To an owner' && view === 'On return'">
     <div>
 
       <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
@@ -492,7 +560,7 @@
             <div class="text-[12px] font-semibold text-emerald-900" x-text="ret().accepted"></div>
             <p class="text-[12.5px] text-emerald-900/90 mt-1 leading-relaxed">
               <span x-text="ret().acceptedDetail"></span>
-              These are in the plan and you do not need to do anything more with them.
+              These have gone to your Requestor for approval, and you do not need to do anything more with them.
             </p>
           </div>
 
@@ -517,8 +585,8 @@
             <p class="text-[12.5px] text-rose-900/90 mt-1 leading-relaxed">
               You marked <span class="mono text-[11.5px]">PP-2027-1184</span>
               <strong>Load testing platform, Neustar</strong> as canceled, reason
-              <em>moved in-house</em>. Canceling removes it from the plan and there is no further
-              review behind it, so I am asking once before it takes effect.
+              <em>moved in-house</em>. Once you confirm, the cancellation goes to your Requestor and then
+              Procurement for approval. Free text can be misread, so I am asking once before it does.
             </p>
             <div class="flex items-center gap-2 mt-3 text-[12.5px] font-medium">
               <a href="#" class="text-rose-800 underline underline-offset-2">Yes, cancel it</a>
@@ -533,7 +601,7 @@
             <p class="text-[12.5px] text-indigo-900/90 mt-1 leading-relaxed">
               Incident response retainer with Swascan Srl, ending 31 August 2027. That is outside this
               window, so I have put it in the backlog and will bring it to you in the Q3 cycle.
-              Procurement will review it before it joins the plan. Your set is now 64 lines.
+              It goes to your Requestor for approval with the rest. Your set is now 64 lines.
             </p>
           </div>
 
@@ -552,6 +620,14 @@ function requestEmail() {
   return {
     size: 'small',
     view: 'Request',
+    kind: 'To an owner',
+    // The Contract_Data extract for M01, contracts not matched to a plan line (D29).
+    expiring: [
+      { n: 'C-118204', what: 'Network security appliances, support', sup: 'Fortinet', ends: '31 Jan 2027' },
+      { n: 'C-119377', what: 'Service desk outsourcing',             sup: 'Almaviva',  ends: '28 Feb 2027' },
+      { n: 'C-120015', what: 'Backup software licences',             sup: 'Veeam',     ends: '31 Mar 2027' },
+      { n: 'C-121442', what: 'Mobile device management',             sup: 'Jamf',      ends: '30 Jun 2027' }
+    ],
 
     lines: [
       { id: 1, title: 'Cloud hosting, production estate',      supplier: 'Amazon Web Services EMEA', entity: 'Sisal Italia', ref: 'PP-2027-0412',
@@ -652,7 +728,7 @@ function requestEmail() {
       { ref: 'PP-2027-1014', title: 'CDN and edge delivery, Akamai',
         why: 'New value € 146,000 is recorded against a Direct Negotiation. Renewing directly at this value needs authorization. Will you justify a direct renewal, or run a tender?' },
       { ref: 'PP-2027-1201', title: 'Object storage, Wasabi',
-        why: 'Left blank. Low value and not urgent, but I need an answer before the freeze on 16 October.' }
+        why: 'Left blank. Low value and not urgent, but I need an answer before submissions close on 16 October.' }
     ]
   };
 }

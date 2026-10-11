@@ -42,6 +42,16 @@
   warning, the control-group experiment) was removed from the page. That reasoning lives
   in Scope and Flow, "The Agent States The Consequence".
 
+  IA CHANGE BRIEF, 2026-10-11 (D28, Q31)
+    Flutter's phase configuration runs reminders, the consequence sentence and escalation
+    during collection. This goes beyond RU V4, which describes notifications only, so it is
+    to confirm with Flutter (Q31). Two recipients now:
+      - Owner or Starter: the same line at three distances, as before. Escalation copies the
+        line's Requestor rather than a BU manager (Flutter's roles, D23).
+      - Requestor: lines submitted to them and waiting on their approval step (D25).
+    Answering a line counts as submitted once it passes validation and enters the
+    Requestor's step (Q29), so the answer links now say where the line goes next.
+
   Stack: Tailwind CDN + Alpine.js CDN + IBM Plex Sans.
   Alpine rule: no double quotes inside the x-data attribute value.
 -->
@@ -70,9 +80,57 @@
 
 <div class="max-w-[960px] mx-auto px-5 py-5">
 
-  <div class="mb-4">
+  <div class="mb-4 flex items-center justify-between gap-4">
     <h1 class="text-lg font-semibold text-slate-900">E3 · The reminder that states the consequence</h1>
+    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
+      <template x-for="w in ['Owner or Starter', 'Requestor']" :key="w">
+        <button @click="who = w" class="text-[11.5px] px-2.5 py-1 rounded-md"
+                :class="who === w ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-500 hover:bg-slate-50'" x-text="w"></button>
+      </template>
+    </div>
   </div>
+
+  <!-- ══════════ Requestor variant (D25, D28): lines waiting on their approval ══════════ -->
+  <template x-if="who === 'Requestor'">
+    <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+        <span class="text-[11px] text-slate-500">Outlook · Inbox · Francesca Bassi</span>
+        <span class="text-[10px] text-slate-400 mono">in thread · cycle.2027H1.pg.I02</span>
+      </div>
+      <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+        <h2 class="text-[16px] font-semibold text-slate-900 mailfont">I02 Regional Finance · 6 lines waiting for your approval</h2>
+        <div class="text-[12px] text-slate-500 mt-1"><span class="font-medium text-slate-700">Purchase Planning</span> <span class="mono">&lt;plan+i02@procurement.flutter.com&gt;</span> &nbsp;·&nbsp; Mon 12 Oct 2026, 08:15</div>
+      </div>
+      <div class="px-6 py-6 mailfont text-[13.5px] leading-[1.65] text-slate-800">
+        <p>Ciao Francesca,</p>
+        <p class="mt-3">Your Starters in <strong>I02 Regional Finance</strong> have submitted 6 lines that are waiting for you. Procurement can only accept a line once you have approved it.</p>
+        <div class="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[12.5px]">
+          <template x-for="r in waiting" :key="r.id">
+            <div class="flex items-center gap-3 px-3.5 py-2 border-b border-slate-100 last:border-0">
+              <span class="mono text-[11px] text-slate-500 w-[92px] shrink-0" x-text="r.id"></span>
+              <span class="flex-1 min-w-0 truncate" x-text="r.what"></span>
+              <span class="text-slate-500 shrink-0" x-text="'submitted by ' + r.by"></span>
+              <span class="shrink-0 font-medium" :class="r.soon ? 'text-amber-700' : 'text-slate-600'" x-text="'decide by ' + r.decide"></span>
+            </div>
+          </template>
+        </div>
+        <div class="mt-4 rounded-lg px-4 py-3.5 border bg-amber-50 border-amber-200">
+          <div class="text-[11px] font-semibold uppercase tracking-wide mb-1.5 text-amber-900">Why these first</div>
+          <div class="text-[13px] leading-relaxed">Two of them reach their notice date within 10 working days. While a line waits for your approval, Procurement cannot start on it, so the time it waits comes out of the notice period. Submissions for this campaign close on Friday 16 October.</div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium">
+          <a href="Plan.html?as=requestor" class="text-indigo-700 underline underline-offset-2">Review and approve all 6</a>
+          <span class="text-slate-300">&middot;</span>
+          <a href="Plan.html?as=requestor" class="text-indigo-700 underline underline-offset-2">Open the two closest first</a>
+        </div>
+        <p class="mt-2 text-[11.5px] text-slate-500">You can approve them together, ask a Starter for changes, or reject one with a reason. Sign in once with your Microsoft work account, or with a code we email you.</p>
+        <p class="mt-4 text-slate-600">Grazie,<br>Ellie · Purchase Planning Agent<br><span class="text-[12px] text-slate-500">on behalf of Procurement Italia</span></p>
+        <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">Sent because lines submitted to you have waited more than 3 working days. One message per Requestor per Purchasing Group per cycle.</p>
+      </div>
+    </div>
+  </template>
+
+  <div x-show="who === 'Owner or Starter'">
 
   <!-- ══════════ Stage selector ══════════
        Drawn as a timeline rather than tabs, because the point of the feature is
@@ -155,7 +213,7 @@
             <a href="E2%20Response%20Page.html" class="text-rose-700 underline underline-offset-2">Cancel this line</a>
           </div>
 
-          <p class="mt-2 text-[11.5px] text-slate-500">Each link opens Purchase Planning; sign in once with your Microsoft work account.</p>
+          <p class="mt-2 text-[11.5px] text-slate-500">Each link opens Purchase Planning; sign in once with your Microsoft work account, or with a code we email you. Once answered, the line goes to your Requestor for approval.</p>
 
           <p class="mt-4 text-slate-600">
             Grazie,<br>
@@ -169,12 +227,22 @@
     </div>
 
   </div>
+  </div>
 </div>
 
 <script>
 function reminder() {
   return {
     stage: 'early',
+    who: 'Owner or Starter',
+    waiting: [
+      { id: 'PP-2027-1311', what: 'Tax advisory retainer, transfer pricing', by: 'Giorgia Villa', decide: '23 Oct', soon: true },
+      { id: 'PP-2027-1312', what: 'Regulatory reporting tool licences',       by: 'Davide Greco', decide: '27 Oct', soon: true },
+      { id: 'PP-2027-1318', what: 'Statutory audit support, Sisal Gaming',     by: 'Giorgia Villa', decide: '12 Nov', soon: false },
+      { id: 'PP-2027-1320', what: 'Treasury platform renewal',                 by: 'Davide Greco', decide: '20 Nov', soon: false },
+      { id: 'PP-2027-1324', what: 'E-invoicing service, addendum for volumes', by: 'Giorgia Villa', decide: '4 Dec', soon: false },
+      { id: 'PP-2027-1329', what: 'Credit information provider',               by: 'Davide Greco', decide: '15 Jan', soon: false }
+    ],
 
     stages: [
       { k: 'early', when: '20 working days out', reads: 'reads as information', dot: 'border-sky-500' },
@@ -219,7 +287,7 @@ function reminder() {
         labelClass: 'text-rose-900',
         citeClass: 'border-rose-200 text-rose-900',
         consequence: 'This is now recorded as a <strong>non-compliant RFE</strong>. Your function has picked up the related activities, including the negotiation and the Appian contract entry. Procurement has been asked to assess achievable delivery times. Non-compliant RFEs are included in the quarterly report to the CEO.<br><br>Answering now still helps: it lets Procurement support the negotiation even though the standard window has closed.',
-        foot: 'Sent because a line you own has passed its notice date. Your BU manager, Chiara Mancini, has been copied on a separate summary of what is outstanding for the unit.'
+        foot: 'Sent because a line you own has passed its notice date. The Requestor for your Purchasing Group, Silvia Marchetti, has been copied on a separate summary of what is outstanding for the group.'
       }
     },
 

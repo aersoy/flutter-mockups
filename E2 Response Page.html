@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-11 (D8, D25, D28, D34, Q29)
+    An answer is submitted when it passes validation and enters the first approval step, the
+    Requestor's (Q29, D25). The confirmation and each answered line say so. A line with
+    changes but no route stays a draft and is not submitted.
+    A cancel is a request that goes to the Requestor, then Procurement (D8).
+    "Freeze" reads "submissions close" (D28).
+    Add a line: Legal Entity is a multi-select (D34, RU 5.1), Purchasing Group is shown
+    (D1), SEU joins the brands (RU 4.3.1, field 9), and the entities are RU 1.3's.
+
   E2 · The Response Page  (Flutter Purchase Planning Agent, Phase 1)
   ===================================================================
   IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
@@ -183,7 +192,7 @@
                     Recorded: <span x-text="landed.desc"></span> confirmed as planned
                   </div>
                   <div class="text-[12px] text-emerald-800/85 mt-0.5 leading-relaxed">
-                    That is done, nothing else needed on it.
+                    It has gone to your Requestor, Silvia Marchetti, for approval. Nothing else needed from you on it.
                     <span x-text="remaining() + ' more line' + (remaining() === 1 ? '' : 's') + ' below, and you can finish them all here.'"></span>
                   </div>
                 </div>
@@ -205,7 +214,7 @@
             </span>
           </div>
           <div class="text-[12px] text-slate-500 shrink-0">
-            Freeze: <strong class="text-slate-700">Friday 16 October</strong>
+            Submissions close: <strong class="text-slate-700">Friday 16 October</strong>
           </div>
         </div>
 
@@ -361,8 +370,8 @@
                     <div class="fade mt-3 rounded-lg border-2 border-rose-200 bg-rose-50/60 p-3.5">
                       <div class="text-[12.5px] font-semibold text-rose-900">Why is this being canceled?</div>
                       <p class="text-[11.5px] text-rose-800/80 mt-1 leading-relaxed">
-                        A reason is required. The line is not deleted: Procurement reviews it with the other
-                        canceled lines at the freeze.
+                        A reason is required. The line is not deleted: the cancellation goes to your Requestor,
+                        then Procurement, for approval.
                       </p>
                       <select class="mt-2 w-full max-w-sm text-[12.5px] px-3 py-2 border border-rose-300 rounded-lg bg-white">
                         <option>Select a reason...</option>
@@ -444,7 +453,7 @@
                        this revision is that there IS a next, right here. -->
                   <div class="mt-4 pt-3.5 border-t border-slate-200 flex items-center justify-between">
                     <span class="text-[11.5px] text-slate-500">
-                      You can change any answer until the freeze on 16 October.
+                      You can change any answer until submissions close on 16 October.
                     </span>
                     <div class="flex items-center gap-2">
                       <button @click="open = null; draft = emptyDraft()" class="text-[12.5px] font-medium px-3.5 py-2 rounded-lg text-slate-500 hover:text-slate-700">Cancel</button>
@@ -466,8 +475,8 @@
           <div>
             <div class="text-[13px] font-semibold text-slate-800">Something missing from the plan?</div>
             <p class="text-[12px] text-slate-500 mt-0.5 leading-relaxed">
-              A contract you are already running, or a need coming up. It joins this cycle, takes the same
-              freeze date and counts toward your set.
+              A contract you are already running, or a need coming up. It joins this cycle, has the same
+              submission deadline and counts toward your set.
             </p>
           </div>
           <button @click="openE2AddLine()" class="text-[12px] font-medium px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shrink-0">Add a line</button>
@@ -509,7 +518,7 @@
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-full flex flex-col">
           <div class="px-6 pt-5 pb-4 border-b border-slate-200 shrink-0">
             <h2 class="text-[16px] font-semibold text-slate-900">Something missing from the plan?</h2>
-            <p class="text-[12px] text-slate-500 mt-1">Joins this cycle under <strong x-text="owner()"></strong>, takes the same freeze date, and counts toward your set.</p>
+            <p class="text-[12px] text-slate-500 mt-1">Joins this cycle under <strong x-text="owner()"></strong>, has the same submission deadline, and counts toward your set.</p>
           </div>
 
           <div class="px-6 py-4 overflow-y-auto space-y-4">
@@ -565,9 +574,14 @@
               <div class="grid grid-cols-3 gap-3">
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Legal Entity</span>
-                  <select x-model="e2Nd.ent" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                  <select multiple x-model="e2Nd.ent" size="4" class="w-full mt-1 text-[12px] px-2 py-1 border border-slate-300 rounded-lg">
                     <template x-for="o in e2Entities" :key="o"><option :value="o" x-text="o"></option></template>
                   </select>
+                  <span class="block text-[10px] text-slate-400 mt-0.5">One or more. Several entities stay one line.</span>
+                </label>
+                <label class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Purchasing Group</span>
+                  <input type="text" readonly :value="e2Pg[owner()] || ''" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
                 </label>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Business Owner</span>
@@ -585,6 +599,7 @@
                   <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.sisal"> Sisal</label>
                   <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.pkr"> PokerStars Italy</label>
                   <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.snai"> Snaitech</label>
+                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.seu"> SEU</label>
                 </div>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Opex / Capex</span>
@@ -654,7 +669,7 @@
           </div>
 
           <div class="px-6 py-4 border-t border-slate-200 flex items-center gap-2 shrink-0">
-            <span class="text-[11px] text-slate-400">You can change any answer until the freeze on 16 October.</span>
+            <span class="text-[11px] text-slate-400">You can change any answer until submissions close on 16 October.</span>
             <div class="flex-1"></div>
             <button @click="addLineOpen = false" class="text-[12.5px] font-medium px-3.5 py-2 rounded-lg text-slate-500 hover:text-slate-700">Cancel</button>
             <button @click="addE2Need()" :disabled="!canAddE2Need()"
@@ -712,9 +727,14 @@ function responsePage() {
     addLineOpen: false,
     e2Cats: ['Technology', 'Marketing', 'Professional Services', 'Facility Management',
              'Retail', 'Human Resources', 'Content Feeds', 'Customer Operations', 'Affiliation'],
-    e2Entities: ['Sisal Italia', 'Snaitech', 'PokerStars Italy', 'Sisal Albania',
-                 'Sisal Technology Turkey', 'Sisal Jeux Maroc', 'Sisal Loterie Tunisie/Maroc',
-                 'TSG Italy', 'Sisal Gaming'],
+    // RU 1.3's companies.
+    e2Entities: ['Sisal Italia', 'Sisal Gaming', 'Sisal S.p.A.', 'Epiqa', 'Snaitech', 'Snai Rete Italia',
+                 'Snai Smart Technologies', 'U4LINE', 'TSG Italy', 'Sisal Sans', 'Sisal Albania',
+                 'Sisal Technology Turkey', 'Sisal Loterie Maroc', 'Sisal Jeux Maroc',
+                 'TSG Platform (Ireland)', 'TSG Interactive'],
+    // The owner's Purchasing Group, from the people mapping (D1).
+    e2Pg: { 'Marco Ferretti': 'M05 Digital Operations', 'Alessandro Conti': 'M02 Tech Infrastructure & Ops' },
+    requestor: 'Silvia Marchetti',
     e2BUs: ['Digital Operations', 'Data & Analytics', 'Retail Estate', 'Brand & Media',
             'Facilities Italia', 'Platform Engineering', 'Legal & Compliance',
             'Retail Network IT', 'Payments & Risk'],
@@ -728,19 +748,19 @@ function responsePage() {
     e2BuGuess: { 'Marco Ferretti': 'Digital Operations', 'Alessandro Conti': 'Platform Engineering' },
     emptyE2Nd() {
       return { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
-               ent: (this.lines[0] && this.lines[0].entity) || 'Sisal Italia',
-               sisal: false, pkr: false, snai: false, bu: this.e2BuGuess[this.owner()] || '',
+               ent: [(this.lines[0] && this.lines[0].entity) || 'Sisal Italia'],
+               sisal: false, pkr: false, snai: false, seu: false, bu: this.e2BuGuess[this.owner()] || '',
                opx: '', sup: '', inc: '', fopp: false, strat: '', ratio: '',
                value: '', start: '', end: '', ramt: '', notes: '' };
     },
-    e2Nd: { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start', ent: '',
-            sisal: false, pkr: false, snai: false, bu: '', opx: '', sup: '', inc: '',
+    e2Nd: { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start', ent: [],
+            sisal: false, pkr: false, snai: false, seu: false, bu: '', opx: '', sup: '', inc: '',
             fopp: false, strat: '', ratio: '', value: '', start: '', end: '', ramt: '', notes: '' },
     openE2AddLine() { this.e2Nd = this.emptyE2Nd(); this.addLineOpen = true; },
     canAddE2Need() {
       const n = this.e2Nd;
       const stratOk = !!n.strat && (n.strat !== 'Direct Negotiation' || !!n.ratio.trim());
-      return !!(n.subject.trim() && n.cat && n.ent && n.bu && n.opx && stratOk && n.value && n.start);
+      return !!(n.subject.trim() && n.cat && n.ent.length && n.bu && n.opx && stratOk && n.value && n.start);
     },
     e2NoticeDays(v) { v = Number(v); return v <= 1000 ? 25 : (v <= 10000 ? 30 : (v <= 50000 ? 40 : 60)); },
     e2Decide(iso) {
@@ -754,14 +774,14 @@ function responsePage() {
     addE2Need() {
       if (!this.canAddE2Need()) return;
       const n = this.e2Nd;
-      const brandFlags = [n.sisal && 'Sisal', n.pkr && 'PokerStars Italy', n.snai && 'Snaitech'].filter(Boolean);
+      const brandFlags = [n.sisal && 'Sisal', n.pkr && 'PokerStars Italy', n.snai && 'Snaitech', n.seu && 'SEU'].filter(Boolean);
       const nums = this.lines.map(l => Number((l.ref || '').split('-').pop())).filter(x => !isNaN(x));
       const nextNum = (nums.length ? Math.max(...nums) : 999) + 1;
       const rawValue = Math.round(Number(n.value));
       const decideDays = Math.max(0, Math.round((new Date(n.start) - new Date()) / 86400000));
       this.lines.push({
         ref: 'PP-2027-' + nextNum, desc: n.subject.trim(), supplier: n.sup.trim() || 'Supplier not chosen',
-        entity: n.ent, value: '€ ' + rawValue.toLocaleString('en-GB'), method: n.strat,
+        entity: n.ent.join(' / '), value: '€ ' + rawValue.toLocaleString('en-GB'), method: n.strat,
         decide: this.e2Decide(n.start), notice: this.e2NoticeDays(n.value), days: decideDays,
         answer: null, route: null, poValue: null, owner: this.owner(),
         // Rest of Required Information, kept even though this screen's own list only
@@ -884,12 +904,14 @@ function responsePage() {
     },
 
     answerSummary(l) {
-      if (l.answer === 'cancel')  return 'Canceled, reason recorded. Procurement reviews it at the freeze.';
+      if (l.answer === 'cancel')  return 'Cancellation requested, reason recorded · sent to ' + this.requestor + ' for approval';
       if (l.answer === 'notmine') return 'Passed on. I will chase them rather than you.';
+      if (l.answer === 'changes' && !l.route) return 'Draft: how it will be bought is missing, so it is not submitted yet';
       const routes = { renewal: 'renewal', addendum: 'addendum to an active contract', new: 'new good or service', framework: 'covered by a framework agreement' };
       let s = (l.answer === 'confirm' ? 'Confirmed as planned' : 'Changes recorded') + ' · ' + (routes[l.route] || '');
       if (l.route === 'framework') s += l.poValue === 'yes' ? ' → Purchase Request, RFE skipped' : ' → RFE required';
-      return s;
+      if (l.route === 'renewal') s += ' · the renewal becomes a new linked line';
+      return s + ' · submitted to ' + this.requestor + ' for approval';
     }
   };
 }

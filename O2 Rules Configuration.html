@@ -1,5 +1,19 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-11 (D22 to D35)
+    D21 One group rule set plus overrides per legal entity. The entity picker says which
+        entities have an override and whether it is confirmed. An entity without one runs
+        on the group set, its lines flagged unconfirmed, and its consequence sentence off.
+        The cycle can be scheduled once the group set is confirmed.
+    D35 The approval ladder is the Approval Required field: its tiers are the field's options
+        for that entity. The group set starts from RU 4.9's four values. The Turkey override
+        adds a Local Procurement Manager tier.
+    D34 A line naming several entities takes the strictest value among them.
+    D6  Team mappings are not part of this fixed rule set. They are live until a line is
+        submitted and are edited in the cycle's People tab.
+    D9, D30 Who may edit is a permission. For Flutter: the Sr. Procurement Director and
+        Procurement Excellence (RU 3.3). The viewer here is Procurement Excellence.
+
   IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
     D6  A rule set is fixed for a cycle once the cycle starts. Effective dating is replaced
         by one version per cycle; every version is kept (P33). This screen edits only the
@@ -83,6 +97,7 @@
           <p class="text-[11px] text-gray-400 mb-0.5"><a href="P0%20Purchasing%20Plans.html" class="hover:underline">Cycles</a> · <span x-text="ver().cycle"></span> · Rules</p>
           <h1 class="text-lg font-semibold text-gray-900">Procurement rules</h1>
           <p class="text-xs mt-1" :class="ver().draft ? 'text-indigo-700' : 'text-gray-500'" x-text="ver().note"></p>
+          <p class="text-[11px] text-gray-400 mt-0.5">Viewing as <span class="text-gray-600 font-medium">Giulia Rossi, Procurement Excellence</span>. Editing is allowed for Procurement Excellence and the Sr. Procurement Director; everyone else in Procurement sees this read-only.</p>
         </div>
         <div class="flex items-center gap-2">
           <select x-model="verId" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-700 bg-white font-medium">
@@ -92,7 +107,7 @@
           </select>
           <select x-model="entity" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-700 bg-white font-medium">
             <template x-for="e in entities" :key="e.k">
-              <option :value="e.k" :selected="e.k === entity" x-text="e.k + (e.inherits ? ' (inherits)' : '')"></option>
+              <option :value="e.k" :selected="e.k === entity" x-text="e.k + ' · ' + e.state"></option>
             </template>
           </select>
           <a x-show="ver().draft" href="P0b%20Review%20Before%20Scheduling.html" class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Back to the start-of-cycle review</a>
@@ -109,12 +124,19 @@
 
     <div class="scroll flex-1 overflow-y-auto px-6 py-5">
 
+      <!-- D21: what applies to the selected entity. -->
+      <div class="rounded-xl border px-4 py-3 mb-3 flex items-center gap-3"
+           :class="ent().kind === 'none' ? 'border-amber-200 bg-amber-50' : (ent().kind === 'group' ? 'border-indigo-100 bg-indigo-50/60' : 'border-gray-200 bg-white')">
+        <span class="text-base leading-none shrink-0" :class="ent().kind === 'none' ? 'text-amber-600' : 'text-indigo-500'" x-text="ent().kind === 'none' ? '\u26a0' : '\u25a3'"></span>
+        <div class="text-[12px]" :class="ent().kind === 'none' ? 'text-amber-900' : 'text-gray-700'" x-text="entNote()"></div>
+      </div>
+
       <!-- Pending confirmation. Two values are not in any Italian document we hold. -->
-      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-4 flex items-center gap-3">
+      <div x-show="ent().kind !== 'override'" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-4 flex items-center gap-3">
         <span class="text-amber-600 text-base leading-none shrink-0">&#9888;</span>
         <div class="text-[12px] text-amber-900">
-          <strong>2 values pending confirmation by Procurement:</strong>
-          the minimum notice periods, and the approvers below &euro; 50,000.
+          <strong>2 group values pending confirmation by Procurement:</strong>
+          the minimum notice periods, and the Head of Category tier from &euro; 10,000 to &euro; 50,000.
         </div>
       </div>
 
@@ -141,7 +163,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <template x-for="b in bands" :key="b.band">
+                <template x-for="b in bandsOf()" :key="b.band">
                   <tr class="hover:bg-gray-50/70">
                     <td class="px-4 py-2.5 font-medium text-gray-900 mono" x-text="b.band"></td>
                     <td class="px-3 py-2.5 text-gray-700" x-text="b.method"></td>
@@ -174,7 +196,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <template x-for="n in notice" :key="n.strat + n.amt">
+                <template x-for="n in noticeOf()" :key="n.strat + n.amt">
                   <tr class="hover:bg-gray-50/70">
                     <td class="px-4 py-2.5 font-medium text-gray-900" x-text="n.strat"></td>
                     <td class="px-3 py-2.5 text-gray-700 mono" x-text="n.amt"></td>
@@ -186,6 +208,11 @@
                 </template>
               </tbody>
             </table>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 text-[11.5px] text-gray-600 leading-relaxed">
+            <span class="font-medium text-gray-800">Lines naming several legal entities</span> use the strictest value among those entities, rule by rule, and show which entity each value came from.
+            <span class="font-medium text-gray-800">Procurement team mappings</span> are not part of this rule set: they stay live until a line is submitted, and are edited in the cycle's People tab.
           </div>
         </div>
       </template>
@@ -206,13 +233,14 @@
           <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200">
               <h2 class="text-[13.5px] font-semibold text-gray-900">Who authorizes, by purchase amount</h2>
+              <p class="text-[11.5px] text-gray-500 mt-0.5">These tiers are the options of the <span class="font-medium text-gray-700">Approval Required</span> field for this entity. Adding or removing a tier here adds or removes the option, so a routed or suggested tier is always a value the field accepts.</p>
             </div>
             <div class="p-4 space-y-2.5">
-              <template x-for="(r, i) in ladder" :key="r.rung">
+              <template x-for="(r, i) in ladderOf()" :key="r.rung">
                 <div class="flex items-stretch gap-3">
                   <div class="flex flex-col items-center shrink-0">
                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" :class="r.tone" x-text="i + 1"></div>
-                    <div x-show="i < ladder.length - 1" class="flex-1 w-px bg-gray-200 mt-1"></div>
+                    <div x-show="i < ladderOf().length - 1" class="flex-1 w-px bg-gray-200 mt-1"></div>
                   </div>
                   <div class="flex-1 rounded-lg border border-gray-200 px-4 py-3 mb-1">
                     <div class="flex items-start justify-between gap-4">
@@ -292,7 +320,7 @@ function rules() {
   return {
     tab: 'Methods and notice',
     tabs: ['Methods and notice', 'Authorization', 'Change history'],
-    entity: 'Sisal Italia',
+    entity: 'Group set',
     // D6: one rule set version per cycle. Only the next cycle's draft can be edited.
     verId: 'c3',
     versions: [
@@ -310,18 +338,31 @@ function rules() {
       { k: 'Suppl', i: '⚑', on: false }, { k: 'Report', i: '◔', on: false }, { k: 'Audit', i: '⎘', on: false }, { k: 'Setup', i: '⚙', on: false }
     ],
 
-    // Session 22: the Italian entities share one configuration. Turkey keeps its own.
+    // D21: one group set, with overrides only where an entity differs. Entities from RU 1.3.
+    // kind: group, override (its own values), none (runs on the group set, unconfirmed).
     entities: [
-      { k: 'Group default',     inherits: false },
-      { k: 'Sisal Italia',      inherits: true },
-      { k: 'Snaitech',          inherits: true },
-      { k: 'Sisal Gaming',      inherits: true },
-      { k: 'TSG Italy',         inherits: true },
-      { k: 'Sisal Tech Turkey', inherits: false },
-      { k: 'Albania',           inherits: true },
-      { k: 'Morocco',           inherits: true },
-      { k: 'Tunisia',           inherits: true }
+      { k: 'Group set',               kind: 'group',    state: 'confirmed' },
+      { k: 'Sisal Italia',            kind: 'same',     state: 'group set, confirmed' },
+      { k: 'Snaitech',                kind: 'same',     state: 'group set, confirmed' },
+      { k: 'Sisal Gaming',            kind: 'same',     state: 'group set, confirmed' },
+      { k: 'TSG Italy',               kind: 'same',     state: 'group set, confirmed' },
+      { k: 'Sisal Technology Turkey', kind: 'override', state: 'override, confirmed' },
+      { k: 'Sisal Sans',              kind: 'none',     state: 'unconfirmed' },
+      { k: 'Sisal Albania',           kind: 'none',     state: 'unconfirmed' },
+      { k: 'Sisal Jeux Maroc',        kind: 'none',     state: 'unconfirmed' },
+      { k: 'TSG Interactive (Spain)', kind: 'none',     state: 'unconfirmed' }
     ],
+    ent() { return this.entities.find(e => e.k === this.entity) || this.entities[0]; },
+    entNote() {
+      const e = this.ent();
+      if (e.kind === 'group') return 'The group rule set. Every entity uses it unless it has an override. It must be confirmed before the next cycle can be scheduled.';
+      if (e.kind === 'same') return e.k + ' uses the group rule set with no override. Confirmed for this entity.';
+      if (e.kind === 'override') return e.k + ' has its own override, from its procedure (rev 2.0). Values not overridden come from the group set.';
+      return e.k + ' has no confirmed rules yet. Its lines run on the group set and are flagged as unconfirmed, and the consequence sentence is off for it until its procedure arrives and an override, or the group set, is confirmed.';
+    },
+    bandsOf()  { return this.ent().kind === 'override' ? this.bandsTR : this.bands; },
+    noticeOf() { return this.ent().kind === 'override' ? this.noticeTR : this.notice; },
+    ladderOf() { return this.ent().kind === 'override' ? this.ladderTR : this.ladder; },
 
     // The decided values (Tiered Solution/Scope and Flow.md, Decisions Locked, Session 22).
     bands: [
@@ -339,11 +380,32 @@ function rules() {
       { strat: 'Full Tender',  amt: 'Any',                      days: 60, src: 'Your plan’s RFE deadline formula', st: 'To confirm' }
     ],
 
+    // D35: the tiers are the Approval Required options. Group set from RU 4.9's four values.
     ladder: [
-      { rung: 'Local Procurement Manager', when: 'Up to € 10,000',        src: 'STH procurement procedure',                     st: 'To confirm', tone: 'bg-slate-400' },
-      { rung: 'Head of Procurement',       when: '€ 10,000 – € 50,000',   src: 'STH procurement procedure',                     st: 'To confirm', tone: 'bg-sky-500' },
-      { rung: 'Sr Procurement Director',   when: '€ 50,000 – € 500,000',  src: 'FSEA user guide, STH procurement procedure',    st: 'Confirmed',  tone: 'bg-amber-500' },
-      { rung: 'FSEA CFO',                  when: 'Above € 500,000',       src: 'FSEA user guide, STH procurement procedure',    st: 'Confirmed',  tone: 'bg-rose-500' }
+      { rung: 'No Approval Required',      when: 'Up to € 10,000',        src: 'RU 4.9, FSEA user guide',                       st: 'Confirmed',  tone: 'bg-slate-400' },
+      { rung: 'Head of Category',          when: '€ 10,000 – € 50,000',   src: 'RU 4.9; band from the STH procedure',           st: 'To confirm', tone: 'bg-sky-500' },
+      { rung: 'Sr. Procurement Director',  when: '€ 50,000 – € 500,000',  src: 'RU 4.9, FSEA user guide',                       st: 'Confirmed',  tone: 'bg-amber-500' },
+      { rung: 'CFO',                       when: 'Above € 500,000',       src: 'RU 4.9, FSEA user guide',                       st: 'Confirmed',  tone: 'bg-rose-500' }
+    ],
+    // The Sisal Technology Turkey override: its procedure adds a Local Procurement Manager tier.
+    ladderTR: [
+      { rung: 'Local Procurement Manager', when: '€ 1,000 – € 10,000',    src: 'STH procurement procedure, override',           st: 'Confirmed',  tone: 'bg-slate-400' },
+      { rung: 'Head of Category',          when: '€ 10,000 – € 50,000',   src: 'STH procurement procedure, override',           st: 'Confirmed',  tone: 'bg-sky-500' },
+      { rung: 'Sr. Procurement Director',  when: '€ 50,000 – € 500,000',  src: 'Group set',                                     st: 'Confirmed',  tone: 'bg-amber-500' },
+      { rung: 'CFO',                       when: 'Above € 500,000',       src: 'Group set',                                     st: 'Confirmed',  tone: 'bg-rose-500' }
+    ],
+    bandsTR: [
+      { band: 'Up to € 1,000',         method: 'A quote from a single supplier',                        src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { band: '€ 1,000 – € 10,000',    method: 'At least three quotes',                                 src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { band: '€ 10,000 – € 50,000',   method: 'Structured competitive comparison, three suppliers',     src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { band: 'Above € 50,000',        method: 'Tender through the Procurement portal, three suppliers', src: 'STH procurement procedure, override', st: 'Confirmed' }
+    ],
+    noticeTR: [
+      { strat: 'Direct Nego',  amt: 'Up to € 50,000',           days: 30, src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { strat: 'Direct Nego',  amt: '€ 50,000 – € 1,000,000',   days: 40, src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { strat: 'Direct Nego',  amt: 'Above € 1,000,000',        days: 60, src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { strat: 'Light Tender', amt: 'Any',                      days: 40, src: 'STH procurement procedure, override', st: 'Confirmed' },
+      { strat: 'Full Tender',  amt: 'Any',                      days: 60, src: 'STH procurement procedure, override', st: 'Confirmed' }
     ],
 
     validity: [
@@ -353,8 +415,8 @@ function rules() {
     ],
 
     history: [
-      { i: 1, ver: 'c0', from: 'Cycle 0', status: 'closed', what: 'Rule set created from the FSEA user guide and the plan\'s RFE deadline formula', entity: 'Italian entities', by: 'Set at the import, confirmed by Procurement', n: '5,465' },
-      { i: 2, ver: 'c0', from: 'Cycle 0', status: 'closed', what: 'Derogations section from the procedure, version 2.0', entity: 'Sisal Tech Turkey', by: 'Set at the import', n: '112' },
+      { i: 1, ver: 'c0', from: 'Cycle 0', status: 'closed', what: 'Rule set created from the FSEA user guide and the plan\'s RFE deadline formula', entity: 'Group set', by: 'Set at the import, confirmed by Procurement', n: '5,465' },
+      { i: 2, ver: 'c0', from: 'Cycle 0', status: 'closed', what: 'Derogations section from the procedure, version 2.0', entity: 'Sisal Technology Turkey (override)', by: 'Set at the import', n: '112' },
       { i: 3, ver: 'c1', from: 'Cycle 1', status: 'closed', what: 'No change from Cycle 0', entity: 'All', by: 'Confirmed by Sara Lombardi', n: '' },
       { i: 4, ver: 'c2', from: 'Cycle 2', status: 'in force', what: 'No change from Cycle 1', entity: 'All', by: 'Confirmed by Sara Lombardi', n: '' },
       { i: 5, ver: 'c3', from: 'Cycle 3', status: 'draft', what: 'Copied from Cycle 2, not yet confirmed', entity: 'All', by: 'Copied at the start-of-cycle review', n: '' }

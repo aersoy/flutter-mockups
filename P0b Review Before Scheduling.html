@@ -1,5 +1,22 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-11 (D21, D28, D29, D34, D35, Q34)
+    Four steps now: Lines, Contracts, Rules, Dates.
+    D29 Contracts: Procurement uploads Flutter's Contract_Data file. Contracts in the window
+        (a setting; nine months for Flutter, RU 4.2.1) are matched to lines. Unmatched ones go
+        to each Purchasing Group's Starters as a list with the launch email; the Starters
+        create the lines. Nothing is added to the plan here.
+    D21 Rules: one group rule set, which must be confirmed, and overrides per legal entity
+        where an entity differs. An entity without an override uses the group set; one whose
+        procedure we have not seen is flagged unconfirmed, with its consequence sentence off.
+    D35 The ladder's tiers are the entity's Approval Required options. The group set uses
+        RU 4.9's four; the Turkey override adds a Local Procurement Manager tier.
+    D6  Team mappings are not in this rule set; they stay live and are edited in People.
+    D28 Dates are phases: planned launch (launched by hand), submission close, and campaign
+        closure after the review window. P0 receives ?launch, ?subclose and ?closure.
+    D34, D1 Add a line: Legal Entity is multi-select, SEU joins the brands. The import reads
+        the Purchasing Group column Flutter is asked to add (Q34).
+
   IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
   This is the start-of-cycle review. The next cycle starts as a copy of the open one (D4),
   and this is where Procurement reviews what the copy will send out before it starts.
@@ -201,7 +218,7 @@
 
       <!-- steps -->
       <div class="flex items-center gap-2 shrink-0">
-        <template x-for="(s, i) in ['Lines', 'Rules', 'Dates']" :key="s">
+        <template x-for="(s, i) in ['Lines', 'Contracts', 'Rules', 'Dates']" :key="s">
           <div class="flex items-center gap-2">
             <button @click="step = i + 1"
                     class="flex items-center gap-2 text-[12px] px-2.5 py-1 rounded-lg"
@@ -211,7 +228,7 @@
                     x-text="i + 1 < step ? '✓' : i + 1"></span>
               <span x-text="s"></span>
             </button>
-            <span x-show="i < 2" class="text-gray-300">&mdash;</span>
+            <span x-show="i < 3" class="text-gray-300">&mdash;</span>
           </div>
         </template>
       </div>
@@ -239,12 +256,12 @@
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
                       Cycle 3 starts as a copy of Cycle 2's live lines. From them I picked the contracts that end between <span class="font-semibold">1 Apr and 30 Sep 2027</span>:
                       <span class="font-semibold">1,146 lines</span> in nine product categories. Three needs raised in earlier alignments are already in.
-                      Take out what does not belong, add what is missing, then set the dates.
+                      Take out what does not belong, add what is missing, then upload Contract_Data, confirm the rules and set the dates.
                       If the contracts are kept in Appian or SAP, you can import an export from there instead of adding them one by one.
                     </p>
                     <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
                       Contracts that end in April to June were also in Cycle 2's window. I marked them and left them in.
-                      Lines deferred at the 27 Oct authorization meeting, and any unfinished work, move forward with their lines.
+                      Lines still waiting on a Requestor or an approval, and any unfinished work, move forward with their lines. Rejected and Cancelled lines, and Completed lines whose contract has ended, stay in Cycle 2.
                     </p>
                     <!-- P17, P19: the start-of-cycle check on the copy, and holding flagged lines back. -->
                     <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 flex items-start gap-3">
@@ -262,18 +279,27 @@
                 </template>
                 <template x-if="step === 2">
                   <div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">The rule set for Cycle 3</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Expiring contracts</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      These are Cycle 2's rule sets, copied, one per legal entity. Once Cycle 3 starts they are fixed until Cycle 4 starts, and each line is judged against its own entity's rules.
-                      Change what Flutter has decided to change, then confirm each entity.
+                      Upload the latest Contract_Data extract. I match each contract ending in the window to a line already in the plan.
+                      The ones that match nothing go to the Starters of their Purchasing Group as a list, attached to the launch email; the Starters decide whether to enter them. Nothing is added to the plan here.
                     </p>
                   </div>
                 </template>
                 <template x-if="step === 3">
                   <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">The rule set for Cycle 3</div>
+                    <p class="text-sm text-slate-800 leading-relaxed mt-1">
+                      Cycle 2's group rule set and entity overrides, copied. Once Cycle 3 starts they are fixed until Cycle 4 starts. Every entity uses the group set unless it has an override.
+                      Confirm the group set to continue; overrides are confirmed as each entity's procedure arrives.
+                    </p>
+                  </div>
+                </template>
+                <template x-if="step === 4">
+                  <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Last step</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      The dates below are what I proposed. Business owners are emailed on the morning the cycle starts, not before, and Cycle 2 closes that morning.
+                      The dates below are what I proposed. The campaign starts when someone allowed to launch it does, on or after the planned date; they are reminded 7 days and 2 days before, and on the day. At launch each Purchasing Group's Starters are emailed and Cycle 2 closes.
                     </p>
                   </div>
                 </template>
@@ -408,10 +434,10 @@
                 <div class="grid grid-cols-3 gap-x-4 gap-y-3">
                   <label class="block">
                     <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal Entity</span>
-                    <select x-model="nd.ent" class="fld mt-1">
-                      <option value="">Choose</option>
+                    <select multiple size="3" x-model="nd.ent" class="fld mt-1">
                       <template x-for="o in entities" :key="o"><option :value="o" x-text="o"></option></template>
                     </select>
+                    <span class="block text-[10px] text-gray-400 mt-0.5">One or more. Several entities stay one line.</span>
                   </label>
                   <label class="block">
                     <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Owner</span>
@@ -432,6 +458,7 @@
                     <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.sisal"> Sisal</label>
                     <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.pkr"> PokerStars Italy</label>
                     <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.snai"> Snaitech</label>
+                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.seu"> SEU</label>
                   </div>
                   <label class="block">
                     <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Opex / Capex</span>
@@ -578,7 +605,7 @@
 
                     <template x-if="imp.ownerMap.length">
                       <div>
-                        <div class="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Purchasing groups, matched to a Business Owner</div>
+                        <div class="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Purchasing Group column, with the Business Owner from the people mapping</div>
                         <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] items-center" id="owner-lookup">
                           <template x-for="m in imp.ownerMap" :key="m.from">
                             <span class="flex items-center gap-1.5">
@@ -862,6 +889,73 @@
             </div>
           </div>
 
+          <!-- ══════════ STEP 2 · CONTRACTS (IA brief D29, RU 4.2.1) ══════════ -->
+          <div x-show="step === 2" class="space-y-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-4">
+              <div class="flex items-start gap-4">
+                <div class="flex-1 min-w-0">
+                  <div class="text-[12.5px] font-semibold text-gray-900">Contract_Data</div>
+                  <template x-if="!cd.uploaded">
+                    <div class="mt-2 rounded-lg border-2 border-dashed border-gray-200 px-4 py-6 text-center">
+                      <div class="text-[12.5px] text-gray-600">Drop the latest Contract_Data extract here, or choose a file</div>
+                      <div class="text-[11px] text-gray-400 mt-1">The file Procurement keeps on SharePoint. A direct connection comes later, when Flutter IT agrees.</div>
+                      <button @click="cd.uploaded = true" class="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Try it with a sample file</button>
+                    </div>
+                  </template>
+                  <template x-if="cd.uploaded">
+                    <div class="mt-2 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5">
+                      <span class="w-8 h-8 rounded bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">XLSX</span>
+                      <div class="min-w-0 flex-1">
+                        <div class="text-[12px] font-medium text-gray-800">Contract_Data_18092026.xlsx</div>
+                        <div class="text-[11px] text-gray-500">3,912 contracts read · uploaded by Sara Lombardi, Mon 12 Oct 2026</div>
+                      </div>
+                      <button @click="cd.uploaded = false" class="text-[11.5px] font-medium text-indigo-600">Choose another file</button>
+                    </div>
+                  </template>
+                </div>
+                <label class="block w-44 shrink-0">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Window</span>
+                  <div class="flex items-center gap-2 mt-1"><input type="number" min="1" max="24" x-model.number="cd.months" class="fld !w-16 text-right mono"><span class="text-[12px] text-gray-600">months from launch</span></div>
+                  <span class="block text-[10.5px] text-gray-400 mt-1">A setting. Flutter's is nine.</span>
+                </label>
+              </div>
+            </div>
+
+            <template x-if="cd.uploaded">
+              <div class="space-y-4">
+                <div class="grid grid-cols-3 gap-4">
+                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900" x-text="cdInWindow().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500" x-text="'contracts end within ' + cd.months + ' months of launch'"></div></div>
+                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900" x-text="cdMatched().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500">matched to a line already in the plan</div></div>
+                  <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><div class="text-xl font-semibold text-amber-900" x-text="cdUnmatched().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-amber-800">match no line, listed to the Starters</div></div>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                    <span class="text-[12px] font-semibold text-gray-800">What each Purchasing Group receives at launch</span>
+                    <a href="E1%20Request%20Email.html" target="_blank" class="text-[11.5px] font-medium text-indigo-600">See the launch email &rarr;</a>
+                  </div>
+                  <table class="w-full text-[12px]">
+                    <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                      <th class="px-4 py-2 font-medium">Purchasing Group</th><th class="px-4 py-2 font-medium">Requestor</th>
+                      <th class="px-4 py-2 font-medium text-right">Starters</th><th class="px-4 py-2 font-medium text-right">Matched</th><th class="px-4 py-2 font-medium text-right">Unmatched, in the list</th>
+                    </tr></thead>
+                    <tbody>
+                      <template x-for="g in cd.groups" :key="g.pg">
+                        <tr class="border-b border-gray-50 last:border-0">
+                          <td class="px-4 py-2 text-gray-800 font-medium" x-text="g.pg"></td>
+                          <td class="px-4 py-2 text-gray-600" x-text="g.req"></td>
+                          <td class="px-4 py-2 text-right text-gray-600" x-text="g.starters"></td>
+                          <td class="px-4 py-2 text-right text-gray-600" x-text="g.matched"></td>
+                          <td class="px-4 py-2 text-right font-medium" :class="g.unmatched ? 'text-amber-700' : 'text-gray-400'" x-text="g.unmatched"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                  <div class="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-100">Showing 6 of 58 Purchasing Groups. 11 contracts have no Purchasing Group in Contract_Data and are listed to Procurement instead.</div>
+                </div>
+              </div>
+            </template>
+          </div>
+
           <!-- ══════════ STEP 2 · RULES (IA brief D6, D21) ══════════
                The only point at which a rule set can change. Each legal entity has its own
                rule set, configured independently (D21): value bands, minimum notice, the
@@ -871,23 +965,23 @@
                Values: Italian entities from the FSEA user guide and their own RFE deadline
                formula; Sisal Technology Turkey from the STH procedure. Albania and Morocco
                are shown with the Turkey hub values, illustrative until Flutter confirms. -->
-          <div x-show="step === 2" class="flex gap-4 items-start">
+          <div x-show="step === 3" class="flex gap-4 items-start">
 
             <!-- Entities -->
             <div class="w-60 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden sticky top-0">
               <div class="px-3.5 py-2.5 border-b border-gray-100">
                 <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal entities</div>
                 <div class="text-[11.5px] mt-0.5" :class="rulesOk ? 'text-emerald-700' : 'text-gray-500'"
-                     x-text="confirmedCount() + ' of ' + ruleEnts.length + ' confirmed'"></div>
+                     x-text="rulesOk ? 'Group set confirmed' : 'Group set to confirm'"></div>
               </div>
               <template x-for="en in ruleEnts" :key="en.k">
                 <button @click="entSel = en.k" class="w-full text-left px-3.5 py-2.5 border-l-2 border-b border-b-gray-50 flex items-center gap-2"
                         :class="entSel === en.k ? 'border-l-indigo-600 bg-indigo-50/60' : 'border-l-transparent hover:bg-gray-50'">
                   <span class="w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[9px] text-white"
-                        :class="en.confirmed ? 'bg-emerald-500' : 'bg-gray-200'" x-text="en.confirmed ? '✓' : ''"></span>
+                        :class="entOk(en) ? 'bg-emerald-500' : (en.kind === 'inherit' && !en.known ? 'bg-amber-400' : 'bg-gray-200')" x-text="entOk(en) ? '✓' : (en.kind === 'inherit' && !en.known ? '!' : '')"></span>
                   <span class="min-w-0 flex-1">
                     <span class="block text-[12px] font-medium truncate" :class="entSel === en.k ? 'text-indigo-700' : 'text-gray-800'" x-text="en.k"></span>
-                    <span class="block text-[10.5px] text-gray-400" x-text="en.lines + ' lines' + (entChanges(en) ? ' · ' + entChanges(en) + ' changed' : '')"></span>
+                    <span class="block text-[10.5px]" :class="en.kind === 'inherit' && !en.known ? 'text-amber-600' : 'text-gray-400'" x-text="kindLabel(en) + ' · ' + en.lines + ' lines' + (en.kind !== 'inherit' && entChanges(en) ? ' · ' + entChanges(en) + ' changed' : '')"></span>
                   </span>
                 </button>
               </template>
@@ -908,6 +1002,15 @@
                 </label>
               </div>
 
+              <template x-if="ent().kind === 'inherit'">
+                <div class="rounded-xl border px-4 py-4" :class="ent().known ? 'border-gray-200 bg-white' : 'border-amber-200 bg-amber-50'">
+                  <div class="text-[12.5px] font-semibold" :class="ent().known ? 'text-gray-800' : 'text-amber-900'" x-text="ent().known ? 'Uses the group set' : 'Uses the group set, unconfirmed'"></div>
+                  <p class="text-[12px] mt-1 leading-relaxed" :class="ent().known ? 'text-gray-600' : 'text-amber-900'"
+                     x-text="ent().known ? ent().k + ' has no override. Its lines are judged against the group set, and it is confirmed when the group set is.' : 'We have not seen ' + ent().k + '\'s procedure. Its lines run on the group set and are flagged as unconfirmed, and the consequence sentence is off for it. Add an override when its rules are known.'"></p>
+                  <button @click="addOverride()" class="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Add an override for this entity</button>
+                </div>
+              </template>
+              <div x-show="ent().kind !== 'inherit'" class="space-y-4">
               <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                 <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Sourcing method by purchase amount</div>
                 <table class="w-full text-[12px]">
@@ -957,7 +1060,10 @@
 
               <div class="grid grid-cols-2 gap-4">
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Who authorizes a derogation</div>
+                  <div class="px-4 py-2.5 border-b border-gray-100">
+                    <div class="text-[12px] font-semibold text-gray-800">Who authorizes a derogation</div>
+                    <div class="text-[10.5px] text-gray-400 mt-0.5">These tiers are this entity's Approval Required options.</div>
+                  </div>
                   <table class="w-full text-[12px]">
                     <tbody>
                       <template x-for="(l, i) in ent().ladder" :key="l.rung">
@@ -995,16 +1101,18 @@
                      :class="ent().confirmed ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-200 bg-white'">
                 <input type="checkbox" x-model="ent().confirmed" class="accent-indigo-600 w-4 h-4 mt-0.5">
                 <span class="text-[12.5px] text-gray-800 leading-relaxed">
-                  <strong x-text="'I confirm ' + ent().k + '\'s rule set for Cycle 3.'"></strong>
+                  <strong x-text="ent().kind === 'group' ? 'I confirm the group rule set for Cycle 3.' : 'I confirm ' + ent().k + '\'s override for Cycle 3.'"></strong>
                   <span class="text-gray-600" x-text="entChanges(ent()) ? entChanges(ent()) + (entChanges(ent()) === 1 ? ' value differs' : ' values differ') + ' from Cycle 2, and the change is audited.' : 'No value differs from Cycle 2.'"></span>
                   It cannot change again until Cycle 4 starts.
                 </span>
               </label>
+              </div>
+              <p class="text-[11.5px] text-gray-500 leading-relaxed">Lines naming several entities use the strictest value among them, rule by rule. Procurement team mappings are not part of this rule set: they stay live until a line is submitted, and are edited in the cycle's People tab.</p>
             </div>
           </div>
 
           <!-- ══════════ STEP 3 · DATES ══════════ -->
-          <div x-show="step === 3">
+          <div x-show="step === 4">
             <div class="rounded-xl border border-gray-200 bg-white p-4">
               <div class="grid grid-cols-3 gap-x-5 gap-y-4">
                 <label class="block">
@@ -1022,25 +1130,25 @@
                   <span class="block text-[10.5px] text-gray-400 mt-1" x-text="longDate(dates.to)"></span>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Cycle starts</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Planned launch</span>
                   <input type="date" x-model="dates.opens" class="fld mt-1" id="d-opens">
                   <span class="block text-[10.5px] mt-1" :class="weekend(dates.opens) ? 'text-amber-600' : 'text-gray-400'" x-text="longDate(dates.opens) + (weekend(dates.opens) ? ' is a weekend' : '')"></span>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Freeze date</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Submissions close</span>
                   <input type="date" x-model="dates.freeze" class="fld mt-1" id="d-freeze">
                   <span class="block text-[10.5px] mt-1" :class="weekend(dates.freeze) ? 'text-amber-600' : 'text-gray-400'"
-                        x-text="longDate(dates.freeze) + (weekend(dates.freeze) ? ' is a weekend' : '') + '. ' + gap(dates.opens, dates.freeze) + ' days after opening. The usual gap is 25, and the holiday break falls inside this one.'"></span>
+                        x-text="longDate(dates.freeze) + (weekend(dates.freeze) ? ' is a weekend' : '') + '. ' + gap(dates.opens, dates.freeze) + ' days after launch. The usual gap is 25, and the holiday break falls inside this one.'"></span>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Authorization meeting</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Campaign closes</span>
                   <input type="date" x-model="dates.session" class="fld mt-1" id="d-session">
                   <span class="block text-[10.5px] mt-1" :class="weekend(dates.session) ? 'text-amber-600' : 'text-gray-400'"
-                        x-text="longDate(dates.session) + (weekend(dates.session) ? ' is a weekend' : '') + '. ' + gap(dates.freeze, dates.session) + ' days after the freeze, as in the last four cycles.'"></span>
+                        x-text="longDate(dates.session) + (weekend(dates.session) ? ' is a weekend' : '') + '. ' + gap(dates.freeze, dates.session) + ' days after submissions close: the review window. Its length is a setting.'"></span>
                 </label>
               </div>
               <div x-show="!orderOk()" class="mt-4 text-[12px] rounded-lg border border-red-200 bg-red-50 text-red-800 px-3 py-2" id="date-err">
-                The dates need to run in order: the cycle starts, then the freeze, then the authorization meeting.
+                The dates need to run in order: launch, then submissions close, then the campaign closes.
               </div>
             </div>
 
@@ -1053,7 +1161,7 @@
                 <div><div class="text-xl font-semibold text-gray-900" x-text="removedCount() + ' out, ' + (addedCount() + importedCount()) + ' in'"></div><div class="text-[11.5px] text-gray-500">changed by you</div></div>
               </div>
               <p class="text-[12px] text-gray-500 mt-3 leading-relaxed">
-                Lines that a business unit adds later join the cycle, as in every cycle. Lines deferred at the 27 Oct authorization meeting move forward with their lines.
+                Lines Starters add later join the cycle, as in every cycle, until the review window ends. After closure, changes go to the Sr. Procurement Director as requests.
               </p>
               <p x-show="noReasonText()" class="text-[12px] text-gray-500 mt-1.5 leading-relaxed" x-text="noReasonText()"></p>
               <button @click="step = 1" class="mt-2 text-[12px] font-medium text-indigo-600 hover:text-indigo-800">&larr; Back to the lines</button>
@@ -1069,10 +1177,13 @@
               <span x-text="noReasonText() || 'Nothing is scheduled and nobody is emailed until you confirm on the next step.'"></span>
             </template>
             <template x-if="step === 2">
-              <span x-text="rulesOk ? 'Every legal entity\'s rule set is confirmed for Cycle 3.' : 'Confirm each legal entity\'s rule set to continue (' + confirmedCount() + ' of ' + ruleEnts.length + ' done).'"></span>
+              <span x-text="cd.uploaded ? 'Unmatched contracts are listed to each Purchasing Group\'s Starters at launch. Nothing joins the plan here.' : 'Upload Contract_Data, or continue without it and the launch email goes out with no list.'"></span>
             </template>
             <template x-if="step === 3">
-              <span x-text="blockReason() || 'Business owners are emailed on the morning the cycle starts, and Cycle 2 closes. That is the step that cannot be undone.'"
+              <span x-text="rulesOk ? 'The group set is confirmed for Cycle 3. ' + unconfirmedText() : 'Confirm the group rule set to continue. ' + unconfirmedText()"></span>
+            </template>
+            <template x-if="step === 4">
+              <span x-text="blockReason() || 'Scheduling sets the plan. Nothing is sent until an authorized person launches the campaign; at launch the Starters are emailed and Cycle 2 closes, which cannot be undone.'"
                     :class="blockReason() ? 'text-amber-700 font-medium' : ''"></span>
             </template>
           </div>
@@ -1080,11 +1191,13 @@
             <a x-show="step === 1" href="P0%20Purchasing%20Plans.html" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Cancel</a>
             <button x-show="step > 1" @click="step = step - 1" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Back</button>
             <button x-show="step === 1" @click="step = 2; document.getElementById('main').scrollTop = 0"
+                    class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to contracts</button>
+            <button x-show="step === 2" @click="step = 3; document.getElementById('main').scrollTop = 0"
                     class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to rules</button>
-            <button x-show="step === 2" @click="toDates()" :disabled="!rulesOk"
+            <button x-show="step === 3" @click="toDates()" :disabled="!rulesOk"
                     class="text-[12px] font-semibold px-4 py-2 rounded-lg"
                     :class="rulesOk ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Continue to dates</button>
-            <button x-show="step === 3" @click="confirm()" :disabled="!!blockReason()"
+            <button x-show="step === 4" @click="confirm()" :disabled="!!blockReason()"
                     class="text-[12px] font-semibold px-4 py-2 rounded-lg"
                     :class="blockReason() ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Confirm and schedule Cycle 3</button>
           </div>
@@ -1142,7 +1255,19 @@ function review() {
     // D6, D21: one rule set per legal entity, copied from Cycle 2, configured independently.
     entSel: 'Sisal Italia',
     ruleEnts: [],
-    get rulesOk() { return this.ruleEnts.length > 0 && this.ruleEnts.every(e => e.confirmed); },
+    get rulesOk() { const g = this.ruleEnts.find(e => e.kind === 'group'); return !!(g && g.confirmed); },
+    entOk(e) { return e.kind === 'inherit' ? (e.known && this.rulesOk) : e.confirmed; },
+    kindLabel(e) { return e.kind === 'group' ? 'group set' : (e.kind === 'override' ? 'override' : (e.known ? 'uses group set' : 'uses group set, unconfirmed')); },
+    unconfirmedText() {
+      const n = this.ruleEnts.filter(e => (e.kind === 'inherit' && !e.known) || (e.kind === 'override' && !e.confirmed)).length;
+      return n ? n + (n === 1 ? ' entity is' : ' entities are') + ' unconfirmed; their lines are flagged and their consequence sentence is off.' : '';
+    },
+    addOverride() {
+      const e = this.ent(); const g = this.ruleEnts.find(x => x.kind === 'group'); if (!e || !g) return;
+      e.bands = g.bands.map(b => Object.assign({}, b)); e.notice = g.notice.map(n => Object.assign({}, n));
+      e.ladder = g.ladder.map(l => Object.assign({}, l)); e.floor = g.floor; e.pct = g.pct; e.abs = g.abs;
+      e.kind = 'override'; e.known = true; e.confirmed = false; e.src = 'Override, copied from the group set';
+    },
     confirmedCount() { return this.ruleEnts.filter(e => e.confirmed).length; },
     ent() { return this.ruleEnts.find(e => e.k === this.entSel) || this.ruleEnts[0]; },
     bdChanged(b) { return b.to !== b.prevTo || b.method !== b.prevMethod; },
@@ -1175,8 +1300,8 @@ function review() {
         notice: [ { strat: 'Direct Nego', amt: 'Below € 100,000', days: 30, lines: 214 }, { strat: 'Direct Nego', amt: '€ 100,000 – € 1,000,000', days: 40, lines: 131 },
                   { strat: 'Direct Nego', amt: 'Above € 1,000,000', days: 60, lines: 22 }, { strat: 'Light Tender', amt: 'Any', days: 40, lines: 188 },
                   { strat: 'Full Tender', amt: 'Any', days: 60, lines: 96 } ],
-        ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Procurement', to: 50000 },
-                  { rung: 'Sr Procurement Director', to: 500000 }, { rung: 'FSEA CFO', to: null } ],
+        ladder: [ { rung: 'No Approval Required', to: 10000 }, { rung: 'Head of Category', to: 50000 },
+                  { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
         floor: 10000, pct: 10, abs: 50000 });
       const tr = () => ({
         bands: [ { to: 1000, method: 'A quote from a single supplier' }, { to: 10000, method: 'At least three quotes' },
@@ -1184,27 +1309,43 @@ function review() {
         notice: [ { strat: 'Direct Nego', amt: 'Up to € 50,000', days: 25, lines: 18 }, { strat: 'Direct Nego', amt: '€ 50,000 – € 1,000,000', days: 40, lines: 9 },
                   { strat: 'Direct Nego', amt: 'Above € 1,000,000', days: 60, lines: 1 }, { strat: 'Quote comparison', amt: '€ 1,000 – € 10,000', days: 30, lines: 7 },
                   { strat: 'Structured comparison', amt: '€ 10,000 – € 50,000', days: 40, lines: 6 }, { strat: 'Tender', amt: 'Above € 50,000', days: 60, lines: 4 } ],
-        ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Procurement', to: 50000 },
-                  { rung: 'Sr Procurement Director', to: 500000 }, { rung: 'FSEA CFO', to: null } ],
+        ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Category', to: 50000 },
+                  { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
         floor: 1000, pct: 10, abs: 50000 });
+      // D21: the group set, then entities. kind: group, override, inherit (no override).
+      // known: we have seen the entity's procedure, so inheriting is a confirmed choice.
       const list = [
-        { k: 'Sisal Italia',            lines: 612, src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
-        { k: 'Snaitech',                lines: 148, src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
-        { k: 'Sisal Gaming',            lines: 96,  src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
-        { k: 'TSG Italy',               lines: 41,  src: 'FSEA user guide and the plan\'s RFE deadline formula', f: it },
-        { k: 'Sisal Technology Turkey', lines: 38,  src: 'STH procurement procedure', f: tr },
-        { k: 'Sisal Albania',           lines: 52,  src: 'Local units guide, to confirm', f: tr },
-        { k: 'Sisal Jeux Maroc',        lines: 46,  src: 'Local units guide, to confirm', f: tr }
+        { k: 'Group set',               kind: 'group',    known: true,  lines: 1146, src: 'RU 4.9, the FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'Sisal Italia',            kind: 'inherit',  known: true,  lines: 612, src: 'Group set', f: it },
+        { k: 'Snaitech',                kind: 'inherit',  known: true,  lines: 148, src: 'Group set', f: it },
+        { k: 'Sisal Gaming',            kind: 'inherit',  known: true,  lines: 96,  src: 'Group set', f: it },
+        { k: 'TSG Italy',               kind: 'inherit',  known: true,  lines: 41,  src: 'Group set', f: it },
+        { k: 'Sisal Technology Turkey', kind: 'override', known: true,  lines: 38,  src: 'Override from the STH procurement procedure', f: tr },
+        { k: 'Sisal Albania',           kind: 'inherit',  known: false, lines: 52,  src: 'Group set, procedure not seen', f: it },
+        { k: 'Sisal Jeux Maroc',        kind: 'inherit',  known: false, lines: 46,  src: 'Group set, procedure not seen', f: it }
       ];
       this.ruleEnts = list.map(x => {
         const v = x.f();
-        return { k: x.k, lines: x.lines, src: x.src, confirmed: false,
+        return { k: x.k, kind: x.kind, known: x.known, lines: x.lines, src: x.src, confirmed: false,
           bands: v.bands.map(b => Object.assign({}, b, { prevTo: b.to, prevMethod: b.method })),
           notice: v.notice.map(n => Object.assign({}, n, { prev: n.days })),
           ladder: v.ladder.map(l => Object.assign({}, l, { prevTo: l.to })),
           floor: v.floor, prevFloor: v.floor, pct: v.pct, prevPct: v.pct, abs: v.abs, prevAbs: v.abs };
       });
     },
+    // D29: the Contract_Data step. Illustrative counts.
+    cd: { uploaded: false, months: 9,
+      groups: [
+        { pg: 'M01 Technology',             req: 'Barbara Neri',     starters: 9,  matched: 45, unmatched: 17 },
+        { pg: 'M02 Tech Infrastructure & Ops', req: 'Marco Bellini', starters: 6,  matched: 38, unmatched: 9 },
+        { pg: 'M05 Digital Operations',     req: 'Silvia Marchetti', starters: 4,  matched: 21, unmatched: 3 },
+        { pg: 'K01 Retail Operations',      req: 'Paola Ferraro',    starters: 7,  matched: 33, unmatched: 6 },
+        { pg: 'I02 Regional Finance',       req: 'Francesca Bassi',  starters: 4,  matched: 12, unmatched: 2 },
+        { pg: 'A60 HUB Turchia Technology', req: 'Emre Kaya',        starters: 17, matched: 19, unmatched: 4 }
+      ] },
+    cdInWindow()  { return Math.round(1388 * this.cd.months / 9); },
+    cdUnmatched() { return Math.round(214 * this.cd.months / 9); },
+    cdMatched()   { return this.cdInWindow() - this.cdUnmatched(); },
     addOpen: false,
     addMode: 'existing',
     q: '',
@@ -1227,7 +1368,8 @@ function review() {
              'Sofia Neri', 'Andrea Villa', 'Marta Longo', 'Sara Bianchi', 'Giorgio Fabbri', 'Matteo Carli', 'Federica Poli', 'Ilaria Costa', 'Nicola Testa'],
 
     // The dates the agent proposed. ISO, so they can be checked; shown in long form.
-    dates: { from: '2027-04-01', to: '2027-09-30', opens: '2026-12-14', freeze: '2027-01-15', session: '2027-01-26' },
+    // opens = planned launch, freeze = submission close, session = campaign closure (D28).
+    dates: { from: '2027-04-01', to: '2027-09-30', opens: '2026-12-14', freeze: '2027-01-15', session: '2027-01-29' },
 
     // Product categories are the ones in their Purchasing Plan spreadsheet.
     // count = contract lines the agent picked; valueM = their value in € M. Both illustrative.
@@ -1247,8 +1389,11 @@ function review() {
     // because a draft plan's rows do not carry ent/bu, so there is nothing to read them
     // from yet. Matches Plan.html's own entity, business unit, status, opex/capex and
     // sourcing strategy vocabulary so a line added here lines up with the live grid.
-    entities: ['Sisal Italia', 'Snaitech', 'PokerStars Italy', 'Sisal Albania', 'Sisal Technology Turkey',
-               'Sisal Jeux Maroc', 'Sisal Loterie Tunisie/Maroc', 'TSG Italy'],
+    // RU 1.3's companies.
+    entities: ['Sisal Italia', 'Sisal Gaming', 'Sisal S.p.A.', 'Epiqa', 'Snaitech', 'Snai Rete Italia',
+               'Snai Smart Technologies', 'U4LINE', 'TSG Italy', 'Sisal Sans', 'Sisal Albania',
+               'Sisal Technology Turkey', 'Sisal Loterie Maroc', 'Sisal Jeux Maroc',
+               'TSG Platform (Ireland)', 'TSG Interactive'],
     businessUnits: ['Digital Operations', 'Data & Analytics', 'Retail Estate', 'Brand & Media',
                      'Facilities Italia', 'Platform Engineering', 'Legal & Compliance',
                      'Retail Network IT', 'Payments & Risk'],
@@ -1309,7 +1454,7 @@ function review() {
     // Required Information, per Procurement's own plan-update request
     // (Product Work/Flutter Purchase Planning/attachments/PP_Email_template.docx).
     nd: { subject: '', owner: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
-          ent: '', sisal: false, pkr: false, snai: false, bu: '', opx: '',
+          ent: [], sisal: false, pkr: false, snai: false, seu: false, bu: '', opx: '',
           sup: '', inc: '', fopp: false, strat: '', ratio: '',
           value: '', by: '', end: '', ramt: '', notes: '' },
     seq: 0,
@@ -1700,19 +1845,19 @@ function review() {
       if (!n.value || !n.by) return '';
       const e = this.earliest(n);
       return this.short(n)
-        ? 'Counted from the authorization session, the earliest start at this value is ' + this.longDate(e) + ', after the date asked for.'
-        : 'Counted from the authorization session, the date asked for leaves enough time.';
+        ? 'Counted from campaign closure, the earliest start at this value is ' + this.longDate(e) + ', after the date asked for.'
+        : 'Counted from campaign closure, the date asked for leaves enough time.';
     },
     emptyNd() {
       return { subject: '', owner: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
-               ent: '', sisal: false, pkr: false, snai: false, bu: '', opx: '',
+               ent: [], sisal: false, pkr: false, snai: false, seu: false, bu: '', opx: '',
                sup: '', inc: '', fopp: false, strat: '', ratio: '',
                value: '', by: '', end: '', ramt: '', notes: '' };
     },
     canAdd() {
       const n = this.nd;
       const stratOk = !!n.strat && (n.strat !== 'Direct Nego' || !!n.ratio.trim());
-      return !!(n.subject.trim() && n.owner && n.cat && n.ent && n.bu && n.opx && stratOk && n.value && n.by);
+      return !!(n.subject.trim() && n.owner && n.cat && n.ent.length && n.bu && n.opx && stratOk && n.value && n.by);
     },
     addNeed() {
       if (!this.canAdd()) return;
@@ -1727,7 +1872,7 @@ function review() {
         // plan-update request. Kept under the same ids Plan.html's `cols` schema uses,
         // so a line added here reads correctly if it is ever shown with more columns.
         sub: n.sub.trim(), proj: n.proj.trim(), act: n.act.trim(), status: n.status,
-        ent: n.ent, sisal: n.sisal ? 'Y' : '', pkr: n.pkr ? 'Y' : '', snai: n.snai ? 'Y' : '',
+        ent: n.ent.join(' / '), sisal: n.sisal ? 'Y' : '', pkr: n.pkr ? 'Y' : '', snai: n.snai ? 'Y' : '',
         brand: brandFlags.length > 1 ? 'Multi-brand' : (brandFlags[0] || ''),
         bu: n.bu, opx: n.opx, sup: supplierName, inc: n.inc.trim(),
         fopp: n.fopp ? 'Y' : 'N', strat: n.strat, ratio: n.ratio.trim(),
@@ -1846,13 +1991,13 @@ function review() {
     },
 
     // ── steps and confirming ──
-    toDates() { if (!this.rulesOk) return; this.step = 3; document.getElementById('main').scrollTop = 0; },
+    toDates() { if (!this.rulesOk) return; this.step = 4; document.getElementById('main').scrollTop = 0; },
     orderOk() { return this.dates.opens && this.dates.freeze && this.dates.session && this.dates.opens < this.dates.freeze && this.dates.freeze < this.dates.session; },
     // A missing reason does not block. Justifying a removal is something we are proposing and
     // not something their procedure asks for, so it is information rather than a gate.
     blockReason() {
       if (this.totalLines() === 0) return 'The plan has no lines.';
-      if (!this.rulesOk) return 'Confirm every legal entity\'s rule set on the Rules step first.';
+      if (!this.rulesOk) return 'Confirm the group rule set on the Rules step first.';
       if (!this.orderOk()) return 'Fix the order of the dates first.';
       return '';
     },
@@ -1861,7 +2006,7 @@ function review() {
       const p = new URLSearchParams({
         scheduled: '1', lines: String(this.totalLines()),
         from: this.fmt(this.dates.from), to: this.fmt(this.dates.to),
-        opens: this.longDate(this.dates.opens), freeze: this.longDate(this.dates.freeze), session: this.longDate(this.dates.session)
+        launch: this.longDate(this.dates.opens), subclose: this.longDate(this.dates.freeze), closure: this.longDate(this.dates.session)
       });
       window.location.href = 'P0%20Purchasing%20Plans.html?' + p.toString();
     }

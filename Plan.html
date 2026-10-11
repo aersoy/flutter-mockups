@@ -2,6 +2,30 @@
   ═══════════════════════════════════════════════════════════════════════════════════════
   Plan.html · One cycle's workspace
 
+  IA CHANGE BRIEF, 2026-10-11 (D22 to D35: Flutter's RU V4 process as configuration)
+    D23, D30 "Viewing as" switcher in the header: Head of Category, Procurement Excellence,
+        Starter, Requestor. Each role sees its own records and tabs. Roles are tenant
+        configuration; these four are Flutter's.
+    D26 As a Starter: the Purchasing Group's lines, Submit selected initiatives, validation
+        on the selected lines only (RU 4.4.2).
+    D25 As a Requestor: only submitted lines; approve, ask for changes or reject, one by one
+        or in bulk with a confirmation (RU 4.5).
+    D33 As Procurement: an Awaiting acceptance view, Accept in the line panel, and the
+        Procurement Assignee limited to the line's team with RU 4.7's confirmation. A
+        Mine/All switch (RU 4.3.3).
+    D24 Fields: Initiative Status, Negotiation Approval Status, Purchasing Plan Status,
+        Purchasing Group, Procurement Assignee, Acceptance, Submission. Our Stage, Response,
+        and Authorization Outcome are hidden in Flutter's configuration (kept, switchable in
+        Fields). Authorization Rung is now the suggested approval level (D27, Q30).
+    D35 The ladder is RU 4.9's Approval Required values. P38: recording under a different
+        tier warns, it does not block.
+    D13, D15, D17 Line panel: Linked contracts (renewal and addendum links) replaces the
+        contract terms; a Chat tab beside the Stream; business roles never see the Stream.
+    D34 A line naming several entities shows which entity each rule value came from.
+    D28 Phases replace the freeze: collection, submission close, review window, closure.
+    D9, D23, D30 People tab is back: roles, Purchasing Groups, team mappings, permissions.
+        Editable as Procurement Excellence, read-only otherwise.
+
   IA CHANGE BRIEF, 2026-10-09 (Information Architecture/IA Change Brief.md)
   This file is now the workspace of one cycle, and the cycle is the root of purchase
   planning (D1, P31). What changed here, by decision:
@@ -244,8 +268,14 @@
           <span class="text-[11px] text-gray-400 truncate" x-text="'Plan ' + cyc().horizon + ' · ' + cyc().lines + ' lines · ' + cyc().requested + ' requested this cycle'"></span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <button x-show="area === 'lines'" class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" x-text="exportLabel()"></button>
-          <button x-show="!readOnly && area === 'lines'" class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" x-text="v().action || 'Send reminders'"></button>
+          <label class="flex items-center gap-1.5 text-[11px] text-gray-500 mr-1" title="Roles are configuration (D23). These are Flutter's.">
+            Viewing as
+            <select x-model="as" @change="onRole()" class="text-[11.5px] font-medium text-gray-800 border border-gray-200 rounded-md pl-2 pr-7 py-1 bg-white">
+              <template x-for="r in roles" :key="r.k"><option :value="r.k" :selected="as === r.k" x-text="r.label"></option></template>
+            </select>
+          </label>
+          <button x-show="area === 'lines' && !bizRole()" class="px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50" x-text="exportLabel()"></button>
+          <button x-show="!readOnly && area === 'lines' && !bizRole()" class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" x-text="v().action || 'Send reminders'"></button>
         </div>
       </div>
     </header>
@@ -254,7 +284,7 @@
          IA brief D1: the four top-level areas of the first build (Plan, Cycles, Rules,
          Owners & Setup) are now three tabs inside a cycle. The cycle itself is the header. -->
     <div class="bg-white border-b border-gray-200 px-5 flex items-center gap-1 shrink-0 z-30">
-      <template x-for="t in areas" :key="t.k">
+      <template x-for="t in areasFor()" :key="t.k">
         <button @click="area = t.k; selected = null"
                 class="px-3 py-2.5 text-[12.5px] font-semibold border-b-2 transition-colors"
                 :class="area === t.k ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-700'">
@@ -272,8 +302,133 @@
       <button @click="cycleId = openCycle().id" class="text-[11.5px] font-medium text-indigo-600 hover:underline shrink-0" x-text="'Go to ' + openCycle().name"></button>
     </div>
 
+    <!-- ══════════ STARTER (D26, RU 4.4) ══════════ -->
+    <div x-show="area === 'lines' && as === 'starter'" x-cloak class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-5">
+      <div class="max-w-6xl mx-auto space-y-4">
+        <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-[12px] text-indigo-900 leading-relaxed">
+          <strong x-text="starterPg"></strong>. You see your Purchasing Group's lines from the moment they are created. Select the complete ones and submit them to your Requestor,
+          <span class="font-medium">Silvia Marchetti</span>; submit the rest later. Submissions close on <strong>Fri 16 Oct 2026</strong>. Procurement's fields are read-only for you.
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[12px] text-gray-600" x-text="starterSel().length + ' selected'"></span>
+          <button @click="submitSelected()" :disabled="!starterSel().length"
+                  class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg"
+                  :class="starterSel().length ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Submit selected initiatives</button>
+          <button @click="openAlignAddLine()" class="text-[12px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">&plus; Add an initiative</button>
+          <div class="flex-1"></div>
+          <span x-show="subMsg" class="text-[12px] font-medium" :class="subMsgBad ? 'text-amber-700' : 'text-emerald-700'" x-text="subMsg"></span>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table class="w-full text-[12px]">
+            <thead><tr class="text-left text-gray-500 border-b border-gray-100 bg-gray-50">
+              <th class="px-3 py-2 w-8"></th><th class="px-3 py-2 font-medium">Initiative</th><th class="px-3 py-2 font-medium">Product Category</th>
+              <th class="px-3 py-2 font-medium">Legal Entity</th><th class="px-3 py-2 font-medium">Sourcing Strategy</th>
+              <th class="px-3 py-2 font-medium text-right">Total value (K&euro;)</th><th class="px-3 py-2 font-medium">Contract end</th>
+              <th class="px-3 py-2 font-medium">Submission</th><th class="px-3 py-2 font-medium">Initiative Status</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="r in starterRows()" :key="r.n">
+                <tr class="border-b border-gray-50 last:border-0 align-top" :class="r.subErr ? 'bg-amber-50/70' : 'hover:bg-gray-50/60'">
+                  <td class="px-3 py-2"><input type="checkbox" class="accent-indigo-600" :disabled="!canSubmit(r)" :checked="!!starterPick[r.n]" @change="starterPick[r.n] = $event.target.checked"></td>
+                  <td class="px-3 py-2">
+                    <button @click="openRow(r)" class="text-left font-medium text-gray-900 hover:text-indigo-700" x-text="r.subj"></button>
+                    <div class="text-[10.5px] text-gray-400 mono" x-text="r.ref + ' · ' + (r.owner || '')"></div>
+                    <div x-show="r.subErr" class="text-[11px] text-amber-800 mt-0.5" x-text="'Missing: ' + missingOf(r).join(', ')"></div>
+                    <div x-show="r.bstat === 'Returned'" class="text-[11px] text-amber-800 mt-0.5" x-text="'Returned by Silvia Marchetti: ' + (r.retReason || '')"></div>
+                  </td>
+                  <td class="px-3 py-2" :class="r.subErr && !r.cat ? 'text-amber-800 font-medium' : 'text-gray-700'" x-text="r.cat || 'Empty'"></td>
+                  <td class="px-3 py-2 text-gray-700" x-text="r.ent"></td>
+                  <td class="px-3 py-2" :class="r.subErr && !r.strat ? 'text-amber-800 font-medium' : 'text-gray-700'" x-text="r.strat || 'Empty'"></td>
+                  <td class="px-3 py-2 text-right mono text-gray-700" x-text="fmtK(r.tot)"></td>
+                  <td class="px-3 py-2 text-gray-700" x-text="r.end"></td>
+                  <td class="px-3 py-2"><span class="text-[10.5px] px-2 py-0.5 rounded-full border whitespace-nowrap" :class="bstatClass(r.bstat)" x-text="r.bstat"></span></td>
+                  <td class="px-3 py-2 text-gray-600" x-text="r.istat"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+            <span class="text-[12px] font-semibold text-gray-800">Expiring contracts not in the plan</span>
+            <span class="text-[11px] text-gray-400">from Contract_Data, also attached to the launch email · for information</span>
+          </div>
+          <template x-for="c in starterExpiring" :key="c.n">
+            <div class="px-4 py-2 border-b border-gray-50 last:border-0 flex items-center gap-3 text-[12px]">
+              <span class="mono text-[11px] text-gray-400 w-20 shrink-0" x-text="c.n"></span>
+              <span class="flex-1 text-gray-800" x-text="c.what + ' · ' + c.sup"></span>
+              <span class="text-gray-500 shrink-0" x-text="'ends ' + c.ends"></span>
+              <button @click="openAlignAddLine()" class="text-[11.5px] font-medium text-indigo-600 shrink-0">Enter as an initiative</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ REQUESTOR (D25, RU 4.5) ══════════ -->
+    <div x-show="area === 'lines' && as === 'requestor'" x-cloak class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-5">
+      <div class="max-w-6xl mx-auto space-y-4">
+        <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-[12px] text-indigo-900 leading-relaxed">
+          <strong x-text="starterPg"></strong>. You see only the initiatives your Starters have submitted. Approve them one by one or together, ask a Starter for changes, or reject with a reason.
+          Approved initiatives go to Procurement, who are notified.
+        </div>
+        <template x-for="sec in reqSections()" :key="sec.k">
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+              <span class="text-[12px] font-semibold text-gray-800" x-text="sec.k"></span>
+              <span class="text-[11px] text-gray-400" x-text="sec.rows.length"></span>
+              <div class="flex-1"></div>
+              <template x-if="sec.k === 'Waiting for you' && sec.rows.length">
+                <button @click="reqConfirm = true" :disabled="!reqSel().length"
+                        class="text-[11.5px] font-semibold px-3 py-1 rounded-lg"
+                        :class="reqSel().length ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'"
+                        x-text="'Approve selected (' + reqSel().length + ')'"></button>
+              </template>
+            </div>
+            <table class="w-full text-[12px]" x-show="sec.rows.length">
+              <tbody>
+                <template x-for="r in sec.rows" :key="r.n">
+                  <tr class="border-b border-gray-50 last:border-0 align-top">
+                    <td class="px-3 py-2 w-8"><input x-show="sec.k === 'Waiting for you'" type="checkbox" class="accent-indigo-600" :checked="!!reqPick[r.n]" @change="reqPick[r.n] = $event.target.checked"></td>
+                    <td class="px-3 py-2">
+                      <button @click="openRow(r)" class="text-left font-medium text-gray-900 hover:text-indigo-700" x-text="r.subj"></button>
+                      <div class="text-[10.5px] text-gray-400" x-text="r.ref + ' · submitted by ' + (r.owner || 'a Starter') + (r.batch ? ' in batch ' + r.batch : '')"></div>
+                      <div x-show="r.retReason && sec.k !== 'Waiting for you'" class="text-[11px] text-gray-500 mt-0.5" x-text="'Your note: ' + r.retReason"></div>
+                    </td>
+                    <td class="px-3 py-2 text-gray-600" x-text="r.cat"></td>
+                    <td class="px-3 py-2 text-gray-600" x-text="r.strat"></td>
+                    <td class="px-3 py-2 text-right mono text-gray-700" x-text="fmtK(r.tot) + ' K€'"></td>
+                    <td class="px-3 py-2 text-right w-[330px]">
+                      <template x-if="sec.k === 'Waiting for you' && !r.reqAct">
+                        <span class="flex items-center justify-end gap-1.5">
+                          <button @click="reqApprove(r)" class="text-[11px] font-medium px-2 py-0.5 rounded border border-emerald-200 text-emerald-700 hover:bg-emerald-50">Approve</button>
+                          <button @click="r.reqAct = 'changes'" class="text-[11px] font-medium px-2 py-0.5 rounded border border-amber-200 text-amber-700 hover:bg-amber-50">Ask for changes</button>
+                          <button @click="r.reqAct = 'reject'" class="text-[11px] font-medium px-2 py-0.5 rounded border border-rose-200 text-rose-700 hover:bg-rose-50">Reject</button>
+                        </span>
+                      </template>
+                      <template x-if="sec.k === 'Waiting for you' && r.reqAct">
+                        <span class="flex items-center justify-end gap-1.5">
+                          <input type="text" x-model="r.reqNote" :placeholder="r.reqAct === 'reject' ? 'Reason for rejecting (required)' : 'What should the Starter change?'" class="text-[11.5px] px-2 py-1 border border-gray-300 rounded-md w-52">
+                          <button @click="reqSend(r)" :disabled="!(r.reqNote || '').trim()" class="text-[11px] font-semibold px-2 py-1 rounded-md" :class="(r.reqNote || '').trim() ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'">Send</button>
+                          <button @click="r.reqAct = ''" class="text-[11px] text-gray-500">Cancel</button>
+                        </span>
+                      </template>
+                      <template x-if="sec.k !== 'Waiting for you'">
+                        <span class="text-[10.5px] px-2 py-0.5 rounded-full border whitespace-nowrap" :class="bstatClass(r.bstat)" x-text="r.bstat"></span>
+                      </template>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+            <div x-show="!sec.rows.length" class="px-4 py-3 text-[11.5px] text-gray-400">Nothing here.</div>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <!-- ══════════ LINES TAB ══════════ -->
-    <div x-show="area === 'lines'" class="flex-1 min-h-0 flex flex-col">
+    <div x-show="area === 'lines' && !bizRole()" class="flex-1 min-h-0 flex flex-col">
 
     <!-- ══════════ View bar ══════════
          This was a tab bar of six task-named screens. It is now a list of saved views
@@ -294,6 +449,11 @@
       <div class="flex-1"></div>
       <!-- P20: a cycle holds every live line but asks owners about some of them. The scope
            is a property of the tab, not of a view, so every view respects it. -->
+      <!-- RU 4.3.3: a personal/all selection over the lines within the viewer's scope. -->
+      <div class="flex items-center rounded-lg border border-gray-200 p-0.5 my-1.5 mr-2 shrink-0" title="Lines where you are in the Procurement team, or all lines">
+        <button @click="mine = true" class="text-[11px] px-2.5 py-1 rounded-md" :class="mine ? 'bg-gray-900 text-white font-medium' : 'text-gray-500 hover:text-gray-800'" x-text="'Mine · ' + mineCount()"></button>
+        <button @click="mine = false" class="text-[11px] px-2.5 py-1 rounded-md" :class="!mine ? 'bg-gray-900 text-white font-medium' : 'text-gray-500 hover:text-gray-800'">All</button>
+      </div>
       <div class="flex items-center rounded-lg border border-gray-200 p-0.5 my-1.5 shrink-0" title="Which lines of this cycle the views show">
         <button @click="scope = 'requested'" class="text-[11px] px-2.5 py-1 rounded-md"
                 :class="scope === 'requested' ? 'bg-gray-900 text-white font-medium' : 'text-gray-500 hover:text-gray-800'"
@@ -440,7 +600,7 @@
          class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-6 shrink-0 z-20">
       <div>
         <div class="text-[10px] text-gray-400 uppercase tracking-wider">Cycle</div>
-        <div class="text-[12px] font-medium text-gray-800"><span x-text="cyc().name"></span> &middot; freezes Fri 16 Oct 2026</div>
+        <div class="text-[12px] font-medium text-gray-800"><span x-text="cyc().name"></span> &middot; submissions close Fri 16 Oct 2026 &middot; campaign closes Fri 30 Oct</div>
       </div>
       <template x-for="s in cycleStats" :key="s.label">
         <div>
@@ -450,7 +610,14 @@
         </div>
       </template>
       <div class="flex-1"></div>
-      <span class="text-[11px] text-gray-400">24 lines added by business units since the cycle opened</span>
+      <span class="text-[11px] text-gray-400">24 lines added by Starters since the cycle opened</span>
+    </div>
+
+    <!-- D33: lines the Requestor approved, waiting for Procurement to accept. -->
+    <div x-show="viewId === 'accept'" class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-3 shrink-0 z-20">
+      <span class="text-[12px] text-gray-700">Approved by their Requestor and waiting for Procurement. Accepting records who accepted and when, and opens the Procurement Assignee, chosen from the line's team.</span>
+      <div class="flex-1"></div>
+      <span class="text-[11px] text-gray-400">Open a line to accept it</span>
     </div>
 
     <!-- Review: the state at the freeze, the outcome mix, and the rule set this plan was
@@ -463,7 +630,7 @@
       <div class="flex items-center gap-6">
         <div>
           <div class="text-[10px] text-gray-400 uppercase tracking-wider">State</div>
-          <div class="text-[12px] font-medium text-gray-800">Frozen Fri 16 Oct 2026 &middot; 1,284 lines</div>
+          <div class="text-[12px] font-medium text-gray-800">Submissions closed Fri 16 Oct 2026 &middot; review window until Fri 30 Oct &middot; 1,284 lines</div>
         </div>
         <template x-for="o in outcomeMix" :key="o.k">
           <div>
@@ -477,14 +644,14 @@
       </div>
       <div x-show="rulesOpen" x-cloak class="mt-2.5 rounded-lg border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-3 py-1.5 text-[10.5px] text-gray-500 border-b border-gray-200">
-          Fixed for this cycle when it opened, Mon 21 Sep 2026 (D6). Italian entities. The full rule set is on the Rules tab.
+          Fixed for this cycle when it opened, Mon 21 Sep 2026 (D6). The group set. Entity overrides are on the Rules tab.
         </div>
         <div class="grid grid-cols-2 divide-x divide-gray-200">
           <table class="w-full text-[11.5px]">
             <thead><tr class="text-left text-gray-500 bg-white border-b border-gray-100">
               <th class="px-3 py-1.5 font-medium">Purchase amount</th>
               <th class="px-3 py-1.5 font-medium">Required method</th>
-              <th class="px-3 py-1.5 font-medium">Authorizer for a derogation</th>
+              <th class="px-3 py-1.5 font-medium">Approval Required for a derogation</th>
               <th class="px-3 py-1.5 font-medium text-right">Lines</th>
             </tr></thead>
             <tbody>
@@ -579,6 +746,7 @@
                 class="text-[11.5px] px-2.5 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 shrink-0">Open the authorization pack</button>
       </div>
       <p x-show="authMismatch()" class="text-[11px] text-amber-700 mt-1.5" x-text="authMismatch()"></p>
+      <p class="text-[11px] text-gray-400 mt-1">The suggested level comes from the rules; for Flutter it is a suggestion only. Procurement records Approval Required and Negotiation Approval Status (RU 4.9).</p>
     </div>
 
     <!-- Alignment: a view and a pack, not a meeting mode (D19). The focused business unit is
@@ -703,19 +871,22 @@
                                staging and no commit step; the stream records who decided and
                                who entered it (P38). -->
                           <template x-if="isOutcomeCell(c)">
-                            <span class="flex items-center gap-1 flex-wrap">
-                              <template x-for="o in outcomeOptions" :key="o">
-                                <button @click="setOutcome(r, o)" :disabled="!canRecord(r)"
-                                        class="chip text-[10.5px] px-2 py-0.5 rounded-full border transition-colors"
-                                        :class="r.outcome === o ? chipClass(c.id, o) + ' font-medium ring-1 ring-indigo-400' : (canRecord(r) ? 'border-gray-200 text-gray-400 hover:bg-gray-100' : 'border-gray-100 text-gray-300 cursor-not-allowed')"
-                                        x-text="o"></button>
-                              </template>
+                            <span class="flex items-center gap-1.5">
+                              <select x-model="r.nastat" :disabled="!canRecord(r)" @change="noteMismatch(r)"
+                                      class="text-[11px] border border-gray-200 rounded-md px-1.5 py-0.5 bg-white max-w-[205px]">
+                                <template x-for="o in outcomeOptions" :key="o"><option :value="o" :selected="r.nastat === o" x-text="o"></option></template>
+                              </select>
+                              <span x-show="r.tierWarn" class="text-[10px] text-amber-700" title="P38: recorded under a different tier than the value suggests. Saved with a reason in the stream.">&#9888; tier</span>
                             </span>
                           </template>
 
                           <template x-if="c.t === 'sel' && !isOutcomeCell(c)">
-                            <span x-show="r[c.id]" class="chip inline-block max-w-full truncate align-middle text-[10.5px] px-2 py-0.5 rounded-full border"
-                                  :class="chipClass(c.id, r[c.id])" x-text="r[c.id]"></span>
+                            <span class="flex items-center gap-1 min-w-0">
+                              <span x-show="r[c.id]" class="chip inline-block max-w-full truncate align-middle text-[10.5px] px-2 py-0.5 rounded-full border"
+                                    :class="chipClass(c.id, r[c.id])" x-text="r[c.id]"></span>
+                              <!-- D27, Q30: the engine's suggestion beside Approval Required, never written into it for Flutter. -->
+                              <span x-show="c.id === 'appr' && rungOf(r) && rungOf(r) !== r.appr" class="text-[10px] text-indigo-600 whitespace-nowrap" x-text="'suggested: ' + rungOf(r)"></span>
+                            </span>
                           </template>
                           <template x-if="c.t === 'per'">
                             <span x-show="r[c.id]" class="flex items-center gap-1.5 min-w-0">
@@ -1132,7 +1303,7 @@
                   </div>
                   <div class="rounded-xl border-2 border-rose-200 bg-white overflow-hidden">
                     <div class="bg-rose-50 border-b border-rose-200 px-4 py-2.5 text-[11.5px] text-rose-900 leading-relaxed">
-                      Canceled lines stay in the plan and in coverage reporting. Reinstate any line that should not have been canceled.
+                      Cancellations are requests: approved by the Requestor, then set to Cancelled by Procurement. Canceled lines stay in the plan and in coverage reporting. Reinstate any line that should not have been canceled.
                     </div>
                     <table class="w-full text-[12px]">
                       <thead class="bg-gray-50 text-gray-500">
@@ -1141,7 +1312,7 @@
                           <th class="px-3 py-2 font-medium">Business unit</th>
                           <th class="px-3 py-2 font-medium">Reason</th>
                           <th class="px-3 py-2 font-medium text-right">Yearly value</th>
-                          <th class="px-3 py-2 font-medium">Canceled by</th>
+                          <th class="px-3 py-2 font-medium">Requested by</th>
                           <th class="px-3 py-2 font-medium"></th>
                         </tr>
                       </thead>
@@ -1180,15 +1351,15 @@
 
                 <section class="mb-5">
                   <div class="flex items-baseline gap-2 mb-2">
-                    <h2 class="text-[13px] font-semibold text-gray-900">Frozen without an answer</h2>
-                    <span class="text-[11.5px] text-gray-500">38 lines · escalation ran out</span>
+                    <h2 class="text-[13px] font-semibold text-gray-900">Not submitted at submission close</h2>
+                    <span class="text-[11.5px] text-gray-500">38 lines · still drafts on 16 Oct</span>
                   </div>
                   <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                     <div class="bg-slate-50 border-b border-gray-200 px-4 py-2.5 text-[11.5px] text-gray-600 leading-relaxed">
-                      These lines were reminded, passed to a named backup, and escalated to the BU manager.
-                      Nothing came back, so they are frozen as they stand and the business unit has been told
-                      what happened. They carry their existing plan data and will still be monitored against
-                      their notice dates.
+                      These lines were still drafts when submissions closed. Reminders went to the Starters, and the
+                      Requestor was copied. Starters can still submit them during the review window, until 30 Oct;
+                      after closure they go to the Sr. Procurement Director as change requests. They keep their plan
+                      data and are still monitored against their notice dates.
                     </div>
                     <table class="w-full text-[12px]">
                       <thead class="bg-gray-50 text-gray-500">
@@ -1197,7 +1368,7 @@
                           <th class="px-3 py-2 font-medium">Owner</th>
                           <th class="px-3 py-2 font-medium text-right">Lines</th>
                           <th class="px-3 py-2 font-medium text-right">Value</th>
-                          <th class="px-3 py-2 font-medium">Escalation reached</th>
+                          <th class="px-3 py-2 font-medium">Reminders reached</th>
                           <th class="px-3 py-2 font-medium">Earliest notice date</th>
                         </tr>
                       </thead>
@@ -1218,7 +1389,7 @@
                 </section>
 
                 <p class="text-[10.5px] text-gray-400">
-                  Includes 24 lines added by business units during the cycle.
+                  Includes 24 lines added by Starters during the cycle.
                 </p>
               </div>
             </template>
@@ -1447,8 +1618,8 @@
           <span class="text-[14px] mt-0.5">&#128274;</span>
           <div class="text-[12px] text-indigo-900 leading-relaxed min-w-0 flex-1">
             <strong>Fixed for this cycle</strong> since it opened on <span x-text="cyc().opened"></span>. Every line in
-            <span x-text="cyc().name"></span> is judged against these values. Changes are made at the start of the next cycle,
-            when Procurement reviews the rules together with the lines going out to owners.
+            <span x-text="cyc().name"></span> is judged against the group set, with its entity's override where there is one.
+            Changes are made at the start of the next cycle. Team mappings are not part of this: they stay live until a line is submitted (People tab).
           </div>
           <a href="O2%20Rules%20Configuration.html" class="text-[11.5px] font-medium text-indigo-700 hover:underline shrink-0">Rules for the next cycle</a>
         </div>
@@ -1468,7 +1639,7 @@
           <table class="w-full text-[12px]">
             <thead><tr class="text-left text-gray-500 border-b border-gray-100">
               <th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Required method</th>
-              <th class="px-4 py-2 font-medium">Authorizer for a derogation</th><th class="px-4 py-2 font-medium text-right">Lines this cycle</th>
+              <th class="px-4 py-2 font-medium">Approval Required for a derogation</th><th class="px-4 py-2 font-medium text-right">Lines this cycle</th>
             </tr></thead>
             <tbody>
               <template x-for="r in rulesFor().bands" :key="r.band">
@@ -1513,11 +1684,131 @@
          IA brief D1: Owners & Setup, inside the cycle. The directory itself is organisation-
          level (and may come from Flutter's identity provider); this tab shows the people who
          owe answers or approvals in this cycle, with their progress. -->
+    <!-- 2026-10-11: back on. D9, D23, D30, RU 2.1, 2.2, 3. Roles, Purchasing Groups, team
+         mappings and permissions are configuration, edited here by Procurement Excellence. -->
     <div x-show="area === 'people'" x-cloak class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-5">
       <div class="max-w-6xl mx-auto space-y-4">
+        <div class="rounded-xl border px-4 py-3 text-[12px] leading-relaxed"
+             :class="as === 'excellence' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-gray-200 bg-white text-gray-600'">
+          <span x-show="as === 'excellence'">You can edit roles, Purchasing Groups, team mappings and permissions (RU 2.1, 2.2). Mapping changes reach lines not yet submitted; submitted lines keep the team they were submitted with (D6).</span>
+          <span x-show="as !== 'excellence'">Read-only. Procurement Excellence and the Sr. Procurement Director edit these (RU 2.1, 2.2).</span>
+        </div>
+
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-            <span class="text-[12px] font-semibold text-gray-800">Business owners in this cycle</span>
+            <span class="text-[12px] font-semibold text-gray-800">Roles</span>
+            <span class="text-[11px] text-gray-400">· Flutter's, from RU 3.1. Another customer defines its own.</span>
+            <div class="flex-1"></div>
+            <button x-show="as === 'excellence'" class="text-[11.5px] font-medium text-indigo-600">&plus; Add a role</button>
+          </div>
+          <table class="w-full text-[12px]">
+            <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="px-4 py-2 font-medium w-56">Role</th><th class="px-4 py-2 font-medium w-48">Scope from</th><th class="px-4 py-2 font-medium">Can</th><th class="px-4 py-2 font-medium text-right w-20">People</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="r in roleDefs" :key="r.k">
+                <tr class="border-b border-gray-50 last:border-0 align-top">
+                  <td class="px-4 py-2 text-gray-900 font-medium" x-text="r.k"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="r.scope"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="r.can"></td>
+                  <td class="px-4 py-2 text-right mono text-gray-700" x-text="r.n"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+            <span class="text-[12px] font-semibold text-gray-800">Purchasing Groups</span>
+            <span class="text-[11px] text-gray-400">· imported from Mapping of Requesting Functions, Purchasing Groups and Related Users</span>
+            <div class="flex-1"></div>
+            <button x-show="as === 'excellence'" class="text-[11.5px] font-medium text-indigo-600">Import a new version</button>
+          </div>
+          <table class="w-full text-[12px]">
+            <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="px-4 py-2 font-medium">Purchasing Group</th><th class="px-4 py-2 font-medium">Requestor</th><th class="px-4 py-2 font-medium">Starters</th>
+              <th class="px-4 py-2 font-medium text-right">Lines</th><th class="px-4 py-2 font-medium text-right">Submitted</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="g in pgDefs" :key="g.k">
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-4 py-2 text-gray-900" x-text="g.k"></td>
+                  <td class="px-4 py-2 text-gray-700" x-text="g.req"></td>
+                  <td class="px-4 py-2 text-gray-600" x-text="g.starters"></td>
+                  <td class="px-4 py-2 text-right mono text-gray-700" x-text="g.lines"></td>
+                  <td class="px-4 py-2 text-right mono text-gray-700" x-text="g.sub"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100">
+              <div class="text-[12px] font-semibold text-gray-800">Procurement teams, Italian companies</div>
+              <div class="text-[11px] text-gray-400">By Product Category (RU 2.2). The Head of Category also applies abroad.</div>
+            </div>
+            <table class="w-full text-[12px]">
+              <thead><tr class="text-left text-gray-500 border-b border-gray-100"><th class="px-4 py-1.5 font-medium">Category</th><th class="px-4 py-1.5 font-medium">Head of Category</th><th class="px-4 py-1.5 font-medium">Category Manager</th><th class="px-4 py-1.5 font-medium">Buyers</th></tr></thead>
+              <tbody>
+                <template x-for="t in catTeamList()" :key="t.k">
+                  <tr class="border-b border-gray-50 last:border-0">
+                    <td class="px-4 py-1.5 text-gray-900" x-text="t.k"></td><td class="px-4 py-1.5 text-gray-700" x-text="t.hoc"></td>
+                    <td class="px-4 py-1.5 text-gray-700" x-text="t.cm"></td><td class="px-4 py-1.5 text-gray-600" x-text="t.buyers.join(', ')"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-gray-100">
+              <div class="text-[12px] font-semibold text-gray-800">Procurement teams, foreign companies</div>
+              <div class="text-[11px] text-gray-400">By Purchasing Group (RU 2.2). Empty cells are as Flutter's file has them.</div>
+            </div>
+            <table class="w-full text-[12px]">
+              <thead><tr class="text-left text-gray-500 border-b border-gray-100"><th class="px-4 py-1.5 font-medium">Purchasing Group</th><th class="px-4 py-1.5 font-medium">Local Procurement Manager</th><th class="px-4 py-1.5 font-medium">Local Buyer</th></tr></thead>
+              <tbody>
+                <template x-for="t in foreignTeams" :key="t.k">
+                  <tr class="border-b border-gray-50 last:border-0">
+                    <td class="px-4 py-1.5 text-gray-900" x-text="t.k"></td><td class="px-4 py-1.5 text-gray-700" x-text="t.lpm"></td>
+                    <td class="px-4 py-1.5" :class="t.lb ? 'text-gray-700' : 'text-amber-700'" x-text="t.lb || 'Not set'"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+            <span class="text-[12px] font-semibold text-gray-800">Permissions on the status and assignment fields</span>
+            <span class="text-[11px] text-gray-400">· RU 3.2 as the default; the full field table is still to come from Flutter (Q33)</span>
+          </div>
+          <table class="w-full text-[12px]">
+            <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="px-4 py-2 font-medium">Field</th>
+              <template x-for="r in permRoles" :key="r"><th class="px-3 py-2 font-medium text-center" x-text="r"></th></template>
+            </tr></thead>
+            <tbody>
+              <template x-for="f in permMatrix" :key="f.k">
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-4 py-2 text-gray-900" x-text="f.k"></td>
+                  <template x-for="(v, i) in f.v" :key="i">
+                    <td class="px-3 py-2 text-center">
+                      <span class="text-[10.5px] px-1.5 py-0.5 rounded" :class="v === 'Edit' ? 'bg-emerald-50 text-emerald-700' : (v === 'View' ? 'bg-gray-100 text-gray-500' : 'text-gray-300')" x-text="v || '·'"></span>
+                    </td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+            <span class="text-[12px] font-semibold text-gray-800">Business owners on the email path</span>
             <span class="text-[11px] text-gray-400">· signed in with SSO or an email code, or answering by email</span>
             <div class="flex-1"></div>
             <span class="text-[11px] text-gray-400">Directory synced from Flutter's identity provider</span>
@@ -1546,7 +1837,7 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Who approves which value band</div>
+            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Approval Required, group set <span class="font-normal text-gray-400">· tiers and bands per entity on the Rules tab</span></div>
             <table class="w-full text-[12px]">
               <tbody>
                 <template x-for="a in approvers" :key="a.name">
@@ -1599,7 +1890,7 @@
             <button @click="selected = null" class="w-7 h-7 rounded-lg text-gray-400 hover:bg-gray-100 shrink-0">&times;</button>
           </div>
           <div class="flex gap-0.5 mt-3 -mb-3">
-            <template x-for="t in panelTabs" :key="t.k">
+            <template x-for="t in panelTabsFor()" :key="t.k">
               <button @click="pane = t.k"
                       class="px-3 py-2 text-[12px] font-medium border-b-2 transition-colors flex items-center gap-1.5"
                       :class="pane === t.k ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
@@ -1612,6 +1903,54 @@
 
         <template x-if="pane === 'Details'">
           <div class="scroll flex-1 overflow-y-auto px-5 py-4">
+            <!-- D23, D30: a business role sees the line read-only outside its own fields. -->
+            <div x-show="bizRole()" class="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 mb-4 text-[11.5px] text-gray-600 leading-relaxed"
+                 x-text="as === 'starter' ? (canSubmit(row()) ? 'You can edit the fields in your area while the line is a draft or returned. Procurement fields are read-only.' : 'Read-only: the line has been submitted. Procurement fields are never editable for you.') : 'Read-only. You approve, ask for changes or reject from your list.'"></div>
+
+            <!-- D33, RU 2.2, 4.7: the team from the mappings, acceptance, then the assignee. -->
+            <div x-show="!bizRole()" class="rounded-lg border border-gray-200 mb-4 overflow-hidden">
+              <div class="px-3.5 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                <span class="text-[11.5px] font-semibold text-gray-800">Procurement team</span>
+                <span class="text-[10.5px] text-gray-400" x-text="'from the ' + (row().foreign ? 'foreign companies' : 'Italian companies') + ' mapping'"></span>
+              </div>
+              <div class="px-3.5 py-2 space-y-1">
+                <template x-for="m in teamOf(row())" :key="m.role + m.name">
+                  <div class="flex items-center gap-2 text-[11.5px]">
+                    <span class="text-gray-500 w-36 shrink-0" x-text="m.role"></span>
+                    <span class="text-gray-900" x-text="m.name"></span>
+                  </div>
+                </template>
+              </div>
+              <div class="px-3.5 py-2.5 border-t border-gray-100 space-y-2">
+                <div class="flex items-center gap-2 text-[11.5px]">
+                  <span class="text-gray-500 w-36 shrink-0">Acceptance</span>
+                  <span x-show="row().accepted" class="text-emerald-700" x-text="'Accepted by ' + row().acceptedBy + ', ' + row().acceptedAt"></span>
+                  <span x-show="!row().accepted && canAccept(row())" class="text-amber-700">Approved by the Requestor, waiting for you</span>
+                  <span x-show="!row().accepted && !canAccept(row())" class="text-gray-400" x-text="row().bstat === 'Rejected by Requestor' ? 'Rejected by the Requestor, cannot be accepted' : 'Not yet approved by the Requestor'"></span>
+                  <div class="flex-1"></div>
+                  <button x-show="!row().accepted && canAccept(row()) && !readOnly" @click="accept(row())"
+                          class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Accept</button>
+                </div>
+                <div class="flex items-center gap-2 text-[11.5px]">
+                  <span class="text-gray-500 w-36 shrink-0">Procurement Assignee</span>
+                  <select :disabled="!row().accepted || readOnly" @change="askAssign(row(), $event.target.value); $event.target.value = row().assignee"
+                          class="text-[11.5px] border border-gray-200 rounded-md px-1.5 py-0.5 bg-white disabled:bg-gray-50 disabled:text-gray-400">
+                    <option value="" :selected="!row().assignee">Not assigned</option>
+                    <template x-for="m in assignOpts(row())" :key="m.name"><option :value="m.name" :selected="row().assignee === m.name" x-text="m.name + ' · ' + m.role"></option></template>
+                  </select>
+                </div>
+                <p class="text-[10.5px] text-gray-400 leading-relaxed">Options are the line's Head of Category and Category Manager (RU 4.7). RU 2.2 also names the Buyer; to confirm with Flutter.</p>
+              </div>
+            </div>
+
+            <!-- D34: a line naming several entities takes the strictest value, and says where it came from. -->
+            <div x-show="entsOf(row()).length > 1" class="rounded-lg border border-indigo-100 bg-indigo-50/50 px-3.5 py-2.5 mb-4">
+              <div class="text-[11.5px] font-semibold text-indigo-900 mb-1" x-text="'Names ' + entsOf(row()).length + ' legal entities, kept as one line'"></div>
+              <template x-for="x in ruleSource(row())" :key="x.k">
+                <div class="text-[11.5px] text-indigo-900/90 flex gap-2"><span class="w-36 shrink-0 text-indigo-700/80" x-text="x.k"></span><span x-text="x.v"></span></div>
+              </template>
+            </div>
+
             <template x-if="rowFlags().length">
               <div class="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 mb-4">
                 <div class="text-[11.5px] font-semibold text-amber-900 mb-1.5"
@@ -1647,37 +1986,68 @@
         <!-- IA brief D15, P15, P23: one record per contract. Renewals are new terms on the
              same line; addenda are amendments within a term. The import merged Flutter's
              separate rows into this line (P16). -->
-        <template x-if="pane === 'Contract'">
-          <div class="scroll flex-1 overflow-y-auto px-5 py-4 space-y-3">
-            <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic">Mockup: the contract of line 412 is shown for every line.</p>
-            <template x-for="t in contractTerms" :key="t.k">
-              <div class="rounded-lg border" :class="t.current ? 'border-indigo-200 bg-indigo-50/40' : 'border-gray-200'">
-                <div class="px-3.5 py-2.5 flex items-start gap-3">
+        <!-- D13, D15, Q27: each renewal and addendum is its own line, linked by type, so the
+             history of a contract reads as a chain. -->
+        <template x-if="pane === 'Linked contracts'">
+          <div class="scroll flex-1 overflow-y-auto px-5 py-4 space-y-2">
+            <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic">Mockup: the chain of line 412 is shown for every line.</p>
+            <template x-for="(l, li) in linkedChain" :key="l.ref">
+              <div>
+                <div x-show="li > 0" class="flex items-center gap-2 pl-4 py-1 text-[10.5px] text-gray-400">
+                  <span>&#8595;</span><span x-text="l.link"></span>
+                </div>
+                <div class="rounded-lg border px-3.5 py-2.5 flex items-start gap-3" :class="l.current ? 'border-indigo-200 bg-indigo-50/40' : 'border-gray-200'">
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
-                      <span class="text-[12.5px] font-semibold text-gray-900" x-text="t.k"></span>
-                      <span x-show="t.current" class="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">CURRENT</span>
+                      <span class="text-[11px] mono text-gray-500" x-text="l.ref"></span>
+                      <span class="text-[9.5px] font-semibold px-1.5 py-0.5 rounded" :class="l.current ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'" x-text="l.type"></span>
+                      <span x-show="l.current" class="text-[9.5px] text-indigo-600">this line</span>
                     </div>
-                    <div class="text-[11.5px] text-gray-600 mt-0.5" x-text="t.sup + ' · ' + t.dates"></div>
-                    <div class="text-[11px] text-gray-400 mt-0.5" x-text="t.src"></div>
+                    <div class="text-[12px] text-gray-900 mt-0.5" x-text="l.what"></div>
+                    <div class="text-[11px] text-gray-500 mt-0.5" x-text="l.sup + ' · ' + l.dates + ' · ' + l.cycle"></div>
                   </div>
                   <div class="text-right shrink-0">
-                    <div class="text-[12.5px] font-semibold text-gray-900 mono" x-text="t.value"></div>
-                    <div class="text-[10.5px] text-gray-400" x-text="t.rfe"></div>
+                    <div class="text-[12.5px] font-semibold text-gray-900 mono" x-text="l.value"></div>
+                    <div class="text-[10.5px] text-gray-400" x-text="l.status"></div>
                   </div>
                 </div>
-                <template x-for="am in t.amendments" :key="am.k">
-                  <div class="px-3.5 py-2 border-t border-gray-100 text-[11.5px] text-gray-700 flex gap-2">
-                    <span class="text-gray-400">&#8627;</span>
-                    <span class="flex-1"><span class="font-medium" x-text="am.k"></span> &middot; <span x-text="am.what"></span></span>
-                    <span class="text-gray-400 shrink-0" x-text="am.when"></span>
-                  </div>
-                </template>
               </div>
             </template>
-            <p class="text-[10.5px] text-gray-400 leading-relaxed">An addendum that raises the value re-runs the authorization validity check on the term's total (P24).</p>
+            <div x-show="!readOnly && !bizRole()" class="pt-1 flex items-center gap-2">
+              <button class="text-[11.5px] font-medium px-2.5 py-1 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">&plus; Link a line</button>
+              <span class="text-[10.5px] text-gray-400">Renewal of, addendum to, replaces</span>
+            </div>
+            <p class="text-[10.5px] text-gray-400 leading-relaxed">An addendum that raises the value re-runs the authorization validity check on the chain's total (P24).</p>
           </div>
         </template>
+
+        <!-- D17: a chat between the Starters and the line's Procurement team. It is not the stream:
+             the stream stays Procurement-only, and chat messages do not appear in it. -->
+        <template x-if="pane === 'Chat'">
+          <div class="flex-1 flex flex-col min-h-0">
+            <div class="px-5 py-2 border-b border-gray-100 text-[11px] text-gray-500 shrink-0">
+              <span x-text="(row().pg || 'The Purchasing Group') + ' Starters and the line\'s Procurement team'"></span>
+              <span class="text-gray-400">&middot; not part of the stream</span>
+            </div>
+            <div class="scroll flex-1 overflow-y-auto px-5 py-3 space-y-3">
+              <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic">Mockup: the chat of line 412 is shown for every line.</p>
+              <template x-for="m in chatMsgs" :key="m.i">
+                <div class="flex gap-2.5">
+                  <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white" :class="m.side === 'proc' ? 'bg-slate-600' : 'bg-emerald-600'" x-text="m.init"></div>
+                  <div class="min-w-0 flex-1">
+                    <div class="rounded-xl px-3 py-2 text-[12px] leading-relaxed border" :class="m.side === 'proc' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100'" x-html="m.body"></div>
+                    <div class="text-[10px] text-gray-400 mt-0.5" x-text="m.meta"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div x-show="!readOnly" class="px-5 py-3 border-t border-gray-200 shrink-0">
+              <textarea rows="2" placeholder="Write a message. Use @ to mention someone on the line..." class="w-full text-[12px] px-3 py-2 border border-gray-300 rounded-lg resize-none"></textarea>
+              <div class="text-[10px] text-gray-400 mt-1">Everyone on the line's chat is notified. Mentions notify only the person named.</div>
+            </div>
+          </div>
+        </template>
+
 
         <!-- IA brief D16, D17, P25 to P30: one stream for history, audit and discussion,
              across every cycle the line has been in. Procurement only; owners never see it.
@@ -1754,12 +2124,50 @@
         </template>
 
         <div class="px-5 py-3 border-t border-gray-200 flex items-center gap-2 shrink-0">
-          <button x-show="!readOnly" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Reassign</button>
+          <button x-show="!readOnly && !bizRole()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Set Initiative Status</button>
           <div class="flex-1"></div>
-          <button x-show="!readOnly" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
+          <button x-show="!readOnly && !bizRole()" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
           <span x-show="readOnly" class="text-[11px] text-gray-400">Read-only in a closed cycle</span>
         </div>
       </aside>
+    </div>
+  </template>
+
+  <!-- RU 4.7: the confirmation before the Procurement Assignee changes. -->
+  <template x-if="assignConfirm">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center">
+      <div class="absolute inset-0 bg-gray-900/40" @click="assignConfirm = null"></div>
+      <div class="relative bg-white rounded-xl shadow-2xl w-[420px] p-5">
+        <h3 class="text-[14px] font-semibold text-gray-900">Change the Procurement Assignee</h3>
+        <p class="text-[12px] text-gray-700 mt-2 leading-relaxed"
+           x-text="'Do you confirm the change of Procurement Assignee from \'' + (assignConfirm.from || 'Not assigned') + '\' to \'' + (assignConfirm.to || 'Not assigned') + '\'?'"></p>
+        <p class="text-[11px] text-gray-400 mt-2">The change is recorded in the stream and the new assignee is notified. The team from the mappings does not change.</p>
+        <div class="mt-4 flex justify-end gap-2">
+          <button @click="assignConfirm = null" class="text-[12px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600">Cancel</button>
+          <button @click="doAssign()" class="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- RU 4.5.1: bulk approval asks first, counts the lines and lists what it leaves out. -->
+  <template x-if="reqConfirm">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center">
+      <div class="absolute inset-0 bg-gray-900/40" @click="reqConfirm = false"></div>
+      <div class="relative bg-white rounded-xl shadow-2xl w-[460px] p-5">
+        <h3 class="text-[14px] font-semibold text-gray-900" x-text="'Approve ' + reqBulk().ok.length + ' initiatives?'"></h3>
+        <p class="text-[12px] text-gray-600 mt-1.5 leading-relaxed">They go to Procurement, who are notified. Initiatives you leave unselected stay with you.</p>
+        <div x-show="reqBulk().out.length" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+          <div class="text-[11.5px] font-semibold text-amber-900 mb-1" x-text="reqBulk().out.length + ' left out'"></div>
+          <template x-for="x in reqBulk().out" :key="x.r.n">
+            <div class="text-[11.5px] text-amber-900/90" x-text="x.r.subj + ': ' + x.why"></div>
+          </template>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button @click="reqConfirm = false" class="text-[12px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600">Cancel</button>
+          <button @click="reqApproveBulk()" :disabled="!reqBulk().ok.length" class="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white">Approve</button>
+        </div>
+      </div>
     </div>
   </template>
 
@@ -2035,6 +2443,183 @@ function planApp() {
     // agenda item in the alignment session filters to.
     alignBU: 'Digital Operations',
 
+    // ══ 2026-10-11: ROLES (D23, D30) ═══════════════════════════════════════════════════
+    // Roles are tenant configuration. These four are the ones the mockup can be viewed as.
+    as: 'hoc',
+    roles: [
+      { k: 'hoc',        label: 'Sara Lombardi · Head of Category' },
+      { k: 'excellence', label: 'Giulia Rossi · Procurement Excellence' },
+      { k: 'starter',    label: 'Elena Carbone · Starter, M05' },
+      { k: 'requestor',  label: 'Silvia Marchetti · Requestor, M05' }
+    ],
+    viewerName() { return ({ hoc: 'Sara Lombardi', excellence: 'Giulia Rossi', starter: 'Elena Carbone', requestor: 'Silvia Marchetti' })[this.as]; },
+    bizRole() { return this.as === 'starter' || this.as === 'requestor'; },
+    onRole() {
+      this.area = 'lines'; this.selected = null; this.subMsg = ''; this.reqConfirm = false;
+      if (this.as === 'excellence') this.mine = false;
+    },
+    areasFor() {
+      if (this.bizRole()) return [{ k: 'lines', label: this.as === 'starter' ? 'My Purchasing Group' : 'To approve', note: '' }];
+      return this.areas.concat([{ k: 'people', label: 'People', note: '' }]);
+    },
+    mine: false,
+    mineCount() { return this.rowsAll.filter(r => r.cycle && (r.team || []).some(m => m.name === this.viewerName())).length; },
+
+    // ── Starter (D26, RU 4.4) ──
+    starterPg: 'M05 Digital Operations',
+    starterPick: {},
+    subMsg: '', subMsgBad: false, batchN: 7,
+    starterRows() { return this.rowsAll.filter(r => r.pg === this.starterPg); },
+    canSubmit(r) { return r.bstat === 'Not submitted' || r.bstat === 'Returned'; },
+    starterSel() { return this.starterRows().filter(r => this.starterPick[r.n] && this.canSubmit(r)); },
+    missingOf(r) {
+      const req = [['cat', 'Product Category'], ['ent', 'Legal Entity'], ['opx', 'Opex / Capex'], ['strat', 'Sourcing Strategy'],
+                   ['start', 'Contract Start Date'], ['end', 'Contract End Date'], ['tot', 'Total Contract Value']];
+      const out = req.filter(x => r[x[0]] === undefined || r[x[0]] === '' || r[x[0]] === null).map(x => x[1]);
+      if (this.isDirect(r) && !r.ratio) out.push('Strategy Rationals');
+      return out;
+    },
+    // RU 4.4.2: validation runs on the selected lines only; the valid ones go, the rest stay.
+    submitSelected() {
+      const sel = this.starterSel();
+      if (!sel.length) return;
+      const bad = sel.filter(r => this.missingOf(r).length);
+      const ok  = sel.filter(r => !this.missingOf(r).length);
+      this.rowsAll.forEach(r => { r.subErr = false; });
+      bad.forEach(r => { r.subErr = true; });
+      const b = 'B-' + String(++this.batchN).padStart(3, '0');
+      ok.forEach(r => { r.bstat = 'Submitted'; r.batch = b; r.retReason = ''; this.starterPick[r.n] = false; });
+      this.subMsgBad = !!bad.length;
+      this.subMsg = (ok.length ? ok.length + ' submitted to Silvia Marchetti in batch ' + b + '. ' : '') +
+                    (bad.length ? bad.length + ' not submitted: complete the missing fields.' : '');
+    },
+    bstatClass(v) {
+      return ({
+        'Not submitted': 'bg-gray-50 text-gray-500 border-gray-200',
+        'Submitted': 'bg-sky-50 text-sky-700 border-sky-200',
+        'Returned': 'bg-amber-50 text-amber-700 border-amber-200',
+        'Approved by Requestor': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'Rejected by Requestor': 'bg-rose-50 text-rose-700 border-rose-200'
+      })[v] || 'bg-gray-50 text-gray-500 border-gray-200';
+    },
+    starterExpiring: [
+      { n: 'CD-20931', what: 'Mobile device management', sup: 'Jamf Ltd', ends: '31 May 2027' },
+      { n: 'CD-21177', what: 'Service desk outsourcing', sup: 'Sirti Digital Solutions', ends: '30 Jun 2027' }
+    ],
+
+    // ── Requestor (D25, RU 4.5) ──
+    reqPick: {}, reqConfirm: false,
+    reqSections() {
+      const rs = this.starterRows();
+      return [
+        { k: 'Waiting for you',        rows: rs.filter(r => r.bstat === 'Submitted') },
+        { k: 'Returned to Starters',   rows: rs.filter(r => r.bstat === 'Returned') },
+        { k: 'Approved',               rows: rs.filter(r => r.bstat === 'Approved by Requestor') },
+        { k: 'Rejected',               rows: rs.filter(r => r.bstat === 'Rejected by Requestor') }
+      ];
+    },
+    reqSel() { return this.starterRows().filter(r => r.bstat === 'Submitted' && this.reqPick[r.n]); },
+    reqBulk() {
+      const ok = [], out = [];
+      this.reqSel().forEach(r => {
+        if (this.missingOf(r).length) out.push({ r: r, why: 'missing ' + this.missingOf(r).join(', ') });
+        else if (r.reqAct) out.push({ r: r, why: 'a request for changes is open' });
+        else ok.push(r);
+      });
+      return { ok: ok, out: out };
+    },
+    reqApprove(r) {
+      r.bstat = 'Approved by Requestor'; r.istat = 'Entered'; r.reqAct = ''; r.reqAt = '11 Oct 2026, 10:42';
+      this.reqPick[r.n] = false;
+    },
+    reqApproveBulk() { this.reqBulk().ok.forEach(r => this.reqApprove(r)); this.reqConfirm = false; },
+    // RU 4.5.2, 4.5.3: changes and rejection are workflow events; Initiative Status stays Proposal.
+    reqSend(r) {
+      const note = (r.reqNote || '').trim(); if (!note) return;
+      if (r.reqAct === 'reject') r.bstat = 'Rejected by Requestor'; else r.bstat = 'Returned';
+      r.retReason = note; r.reqAct = ''; r.reqNote = ''; this.reqPick[r.n] = false;
+    },
+
+    // ── Acceptance and assignee (D33, RU 4.7) ──
+    assignConfirm: null,
+    canAccept(r) { return r.bstat === 'Approved by Requestor' && !r.accepted && !this.bizRole(); },
+    accept(r) { r.accepted = true; r.acceptedBy = this.viewerName(); r.acceptedAt = '11 Oct 2026, 10:50'; },
+    teamOf(r) { return r.team || []; },
+    assignOpts(r) { return this.teamOf(r).filter(m => m.role === 'Head of Category' || m.role === 'Category Manager' || m.role === 'Local Procurement Manager'); },
+    askAssign(r, to) { if (to === r.assignee) return; this.assignConfirm = { r: r, from: r.assignee, to: to }; },
+    doAssign() { const a = this.assignConfirm; if (a) a.r.assignee = a.to; this.assignConfirm = null; },
+
+    // ── Multi-entity lines (D34) ──
+    entsOf(r) { return String(r.ent || '').split(' / ').filter(Boolean); },
+    ruleSource(r) {
+      return [
+        { k: 'Approval Required', v: rungOrNone(this.rungOf(r)) + ', group set (both entities use it)' },
+        { k: 'Notice period',     v: 'the longer of the two, from Snaitech' },
+        { k: 'Procurement team',  v: 'the union of both entities\' mappings' }
+      ];
+      function rungOrNone(x) { return x || 'No Approval Required'; }
+    },
+
+    // ── People tab (D9, D23, D30) ──
+    roleDefs: [
+      { k: 'Starter',                     scope: 'Purchasing Group',            can: 'Enter and edit initiatives in Proposal or To be reviewed; submit them to the Requestor', n: 214 },
+      { k: 'Requestor',                   scope: 'Purchasing Group',            can: 'See submitted initiatives; approve, ask for changes or reject', n: 41 },
+      { k: 'Head of Category',            scope: 'Product Category',            can: 'Every field; statuses and Procurement Assignee on their lines', n: 6 },
+      { k: 'Sr. Procurement Director',    scope: 'Every line',                  can: 'Every field; change requests after closure; mappings', n: 1 },
+      { k: 'Category Manager',            scope: 'Product Category',            can: 'Initiative, Negotiation Approval and Purchasing Plan statuses; assignee', n: 9 },
+      { k: 'Buyer',                       scope: 'Product Category',            can: 'Purchasing Plan Status and assignee', n: 17 },
+      { k: 'Local Procurement Manager',   scope: 'Purchasing Group, abroad',    can: 'As Category Manager, for foreign companies', n: 4 },
+      { k: 'Local Buyer',                 scope: 'Purchasing Group, abroad',    can: 'As Buyer, for foreign companies', n: 3 },
+      { k: 'Procurement Excellence',      scope: 'Every line',                  can: 'Administration: roles, mappings, permissions, campaigns', n: 3 }
+    ],
+    pgDefs: [
+      { k: 'M05 Digital Operations',               req: 'Silvia Marchetti',  starters: 'Elena Carbone, Marco Ferretti', lines: 62, sub: 41 },
+      { k: 'M02 Tech Infrastructure & Ops',        req: 'Francesca Bassi',   starters: 'Alessandro Conti +3',           lines: 251, sub: 118 },
+      { k: 'M21 Digital',                          req: 'Giorgia Villa',     starters: 'Paolo Rizzo +1',                lines: 44, sub: 40 },
+      { k: 'E00 Brand & Media',                    req: 'Davide Greco',      starters: 'Giulia Rinaldi +4',             lines: 74, sub: 61 },
+      { k: 'K04 Retail Network IT',                req: 'Barbara Neri',      starters: 'Chiara Mancini',                lines: 38, sub: 0 },
+      { k: 'K12 Corporate Real Estate & Workspace', req: 'Luca Moretti',     starters: 'Luca Bertani +1',               lines: 31, sub: 29 },
+      { k: 'S30 Gaming Malta',                     req: 'Not set',           starters: 'Stefano Villa',                 lines: 17, sub: 0 }
+    ],
+    catTeams: {
+      'Technology':            { hoc: 'Sara Lombardi', cm: 'Roberto Galli', buyers: ['Silvia Fontana', 'Andrea Leone'] },
+      'Professional Services': { hoc: 'Laura Monti',   cm: 'Roberto Galli', buyers: ['Silvia Fontana', 'Andrea Leone'] },
+      'Facility Management':   { hoc: 'Marta Colombo', cm: 'Elisa Marchi',  buyers: ['Paola Serra'] },
+      'Marketing':             { hoc: 'Chiara Bellini', cm: 'Stefano Riva', buyers: ['Andrea Leone'] }
+    },
+    catTeamList() { return Object.keys(this.catTeams).map(k => Object.assign({ k: k }, this.catTeams[k])); },
+    foreignTeams: [
+      { k: 'T10 Sisal Technology Turkey', lpm: 'Emre Kaya',   lb: 'Deniz Arslan' },
+      { k: 'A10 Sisal Albania',           lpm: 'Arben Hoxha', lb: '' },
+      { k: 'R10 Sisal Jeux Maroc',        lpm: 'Youssef Alami', lb: '' }
+    ],
+    permRoles: ['Starter', 'Requestor', 'Head of Category', 'Sr. Proc. Director', 'Category Manager', 'Buyer'],
+    permMatrix: [
+      { k: 'Initiative Status',            v: ['View', 'View', 'Edit', 'Edit', 'Edit', 'View'] },
+      { k: 'Negotiation Approval Status',  v: ['', 'View', 'Edit', 'Edit', 'Edit', 'View'] },
+      { k: 'Purchasing Plan Status',       v: ['View', 'View', 'Edit', 'Edit', 'Edit', 'Edit'] },
+      { k: 'Procurement Assignee',         v: ['View', 'View', 'Edit', 'Edit', 'Edit', 'Edit'] },
+      { k: 'Approval Required',            v: ['', '', 'Edit', 'Edit', 'Edit', 'View'] },
+      { k: 'Starter fields (RU 4.3.1)',    v: ['Edit', 'View', 'Edit', 'Edit', 'View', 'View'] }
+    ],
+
+    // ── Line panel: linked lines and chat (D13, D15, D17) ──
+    linkedChain: [
+      { ref: 'PP-2025-0188', type: 'ORIGINAL', link: '', what: 'Cloud hosting, production estate', sup: 'Amazon Web Services EMEA', dates: '1 Apr 2023 to 31 Mar 2025', cycle: 'imported in Cycle 0', value: '€ 1,860K', status: 'Completed', current: false },
+      { ref: 'PP-2025-0241', type: 'ADDENDUM', link: 'addendum to PP-2025-0188', what: 'Snai workloads added', sup: 'Amazon Web Services EMEA', dates: 'from 1 Sep 2024', cycle: 'imported in Cycle 0', value: '€ 300K', status: 'Completed', current: false },
+      { ref: 'PP-2027-0412', type: 'RENEWAL', link: 'renewal of PP-2025-0188', what: 'Cloud hosting, production estate', sup: 'Amazon Web Services EMEA', dates: '1 Apr 2025 to 31 Mar 2027', cycle: 'Cycle 2', value: '€ 2,480K', status: 'Entered', current: true }
+    ],
+    chatMsgs: [
+      { i: 1, side: 'biz', init: 'EC', meta: 'Elena Carbone, Starter M05 · 2 Oct, 11:05',
+        body: 'We would like to include the Snai workloads again in the renewal. <strong>@Roberto Galli</strong> can we keep AWS as the only supplier?' },
+      { i: 2, side: 'proc', init: 'RG', meta: 'Roberto Galli, Category Manager · 2 Oct, 14:20',
+        body: 'At this value a direct negotiation needs the CFO. Please add the 2027 workload estimate so we can prepare it.' },
+      { i: 3, side: 'biz', init: 'EC', meta: 'Elena Carbone, Starter M05 · 3 Oct, 09:12',
+        body: 'Added in Detailed Activities. Silvia will approve it this week.' }
+    ],
+
+    // ── Campaign phases (D28, RU 4.10) ──
+
     // The demo's today. It differs by view because the cycle runs in September and October
     // and the tracking and the sessions happen in November, which is their real calendar.
     asOfByView: { responses: '29/09/2026', review: '16/10/2026' },
@@ -2073,36 +2658,44 @@ function planApp() {
       // Tab renamed from Responses in Session 18. The id stays 'responses' so filters,
       // band pins and asOfByView keep working. Opens as its own report (the old P2).
       { id: 'responses', k: 'Progress', n: '1,284', renderer: 'Report',
-        def: 'filter: in the open cycle · grouped by Business Owner · shown as Report',
+        def: 'filter: in the open cycle · grouped by Purchasing Group · shown as Report',
         filter: 'cycle',
-        groupLabel: 'Business Owner', group: 'owner',
-        fields: ['resp', 'owner', 'bu', 'sup', 'end', 'tot', 'strat', 'rfe', 'decide', 'ent', 'cat', 'status'],
+        groupLabel: 'Purchasing Group', group: 'pg',
+        fields: ['istat', 'bstat', 'pg', 'owner', 'sup', 'end', 'tot', 'strat', 'rfe', 'ent', 'cat'],
         report: 'cycle',     // the Report renderer draws the old P2 Cycle Workspace
         action: 'Send reminders' },
+
+      // D33, RU 4.3.3: lines approved by their Requestor, waiting for Procurement to accept.
+      { id: 'accept', k: 'Awaiting acceptance', n: '', renderer: 'Grid',
+        def: 'filter: Initiative Status is Entered and not accepted · grouped by Purchasing Group · shown as Grid',
+        filter: 'awaitAccept',
+        groupLabel: 'Purchasing Group', group: 'pg',
+        fields: ['accept', 'pg', 'istat', 'bstat', 'cat', 'ent', 'tot', 'strat', 'assignee'],
+        action: 'Accept selected' },
 
       // Briefly Changes Review in Session 18, back to Review on Alper's call. The id stays
       // 'review'. Opens as its own report (the old P4); Grid is one click away on Shown as.
       { id: 'review', k: 'Review', n: '1,284', renderer: 'Report',
-        def: 'filter: at the freeze · grouped by Response · shown as Report',
+        def: 'filter: at submission close · grouped by Initiative Status · shown as Report',
         filter: 'frozen',
-        groupLabel: 'Response', group: 'resp',
-        fields: ['resp', 'status', 'owner', 'bu', 'sup', 'tot', 'strat', 'rung', 'end', 'cat', 'ent'],
+        groupLabel: 'Initiative Status', group: 'istat',
+        fields: ['istat', 'bstat', 'pg', 'owner', 'sup', 'tot', 'strat', 'rung', 'end', 'cat', 'ent'],
         report: 'review',    // the Report renderer draws the old P4 Consolidated Review
-        action: 'Freeze and hand to authorization' },
+        action: 'Close the campaign' },
 
       // IA brief D19, D20: no longer run as a session. Procurement records outcomes here.
       { id: 'auth', k: 'Authorization', n: '47', renderer: 'Grid',
-        def: 'filter: reaches an authorization rung · grouped by Authorization Rung · shown as Grid',
+        def: 'filter: a suggested approval level · grouped by Suggested approval level · shown as Grid',
         filter: 'needsAuth',
-        groupLabel: 'Authorization Rung', group: 'rung',
-        fields: ['rung', 'outcome', 'tot', 'strat', 'sup', 'owner', 'bu', 'ent', 'end'],
-        action: 'Notify owners of their outcomes' },
+        groupLabel: 'Suggested approval level', group: 'rung',
+        fields: ['rung', 'appr', 'nastat', 'tot', 'strat', 'sup', 'pg', 'ent', 'end'],
+        action: 'Notify the teams of the outcomes' },
 
       { id: 'tracking', k: 'Tracking', n: '1,127', renderer: 'Kanban',
-        def: 'filter: authorized · grouped by Stage · shown as Kanban',
+        def: 'filter: Initiative Status is Approved · grouped by Purchasing Plan Status · shown as Kanban',
         filter: 'authorized',
-        groupLabel: 'Stage', group: 'stage',
-        fields: ['stage', 'nextstep', 'nextdue', 'rfe', 'owner', 'buyer', 'sup', 'tot', 'cat', 'status'],
+        groupLabel: 'Purchasing Plan Status', group: 'ppstat',
+        fields: ['ppstat', 'nextstep', 'nextdue', 'rfe', 'assignee', 'pg', 'sup', 'tot', 'cat'],
         action: 'Add a next step' },
 
       // IA brief D19: a view and a PDF pack. The meeting is Flutter's.
@@ -2110,7 +2703,7 @@ function planApp() {
         def: 'filter: Business Unit is the focused unit · grouped by Business Unit · shown as Grid',
         filter: 'align',
         groupLabel: 'Business Unit', group: 'bu',
-        fields: ['stage', 'nextstep', 'resp', 'owner', 'sup', 'tot', 'end', 'strat'],
+        fields: ['ppstat', 'nextstep', 'istat', 'owner', 'sup', 'tot', 'end', 'strat'],
         action: 'Email the pack to the attendees' }
     ],
 
@@ -2128,6 +2721,7 @@ function planApp() {
     tabCount(vw) {
       if (vw.id === 'align') return this.rowsAll.filter(r => r.bu === this.alignBU).length;
       if (vw.id === 'table') return this.scope === 'all' ? this.cyc().lines : this.cyc().requested;
+      if (vw.id === 'accept') return this.rowsAll.filter(r => this.filters.awaitAccept.fn(r, this)).length;
       return vw.n;
     },
     // The business units on offer in the switcher, read from the plan itself rather than
@@ -2222,22 +2816,24 @@ function planApp() {
                    fn: (r, s) => r.cycle && r.status !== 'Canceled' },
       frozen:    { label: 'In the cycle frozen on 16 Oct 2026, canceled lines included',
                    fn: (r, s) => r.cycle },
-      needsAuth: { label: 'Authorization Rung is not empty, and Status is not Canceled',
-                   fn: (r, s) => !!s.rungOf(r) && r.status !== 'Canceled' },
+      needsAuth: { label: 'Suggested approval level is not empty, and Purchasing Plan Status is not Cancelled',
+                   fn: (r, s) => !!s.rungOf(r) && r.ppstat !== 'Cancelled' },
+      awaitAccept: { label: 'Initiative Status is Entered, and the line is not yet accepted by Procurement',
+                   fn: (r, s) => r.istat === 'Entered' && !r.accepted },
       // In the product this reads the Authorization Outcome the session wrote. In the mockup
       // the October session's outcomes are carried on the line as `tracked`, so Tracking can
       // be shown before or after the session without the board emptying itself.
-      authorized:{ label: 'In the authorized plan: Authorization Outcome is Authorize or Derogation, or no authorization was needed',
-                   fn: (r, s) => r.tracked && r.status !== 'Canceled' },
+      authorized:{ label: 'Initiative Status is Approved, and Purchasing Plan Status is not Cancelled',
+                   fn: (r, s) => r.istat === 'Approved' && r.ppstat !== 'Cancelled' },
       // The alignment used to be scoped to one product category. Sessions run one business
       // unit at a time instead, so these three read the BU switcher rather than a fixed
       // category, and switching it changes what a session over this view sees.
       align:        { label: 'Business Unit is the unit currently focused for alignment',
                       fn: (r, s) => r.bu === s.alignBU },
-      alignInFlight:{ label: 'Business Unit is the unit currently focused for alignment, and Stage is past Not started',
-                      fn: (r, s) => r.bu === s.alignBU && r.stage !== 'Not started' && r.stage !== 'Canceled' },
-      alignNoAnswer:{ label: 'Business Unit is the unit currently focused for alignment, and Response is Awaiting answer or Needs changes',
-                      fn: (r, s) => r.bu === s.alignBU && (r.resp === 'Awaiting answer' || r.resp === 'Needs changes') }
+      alignInFlight:{ label: 'Business Unit is the unit currently focused for alignment, and Purchasing Plan Status is In progress',
+                      fn: (r, s) => r.bu === s.alignBU && r.ppstat === 'In progress' },
+      alignNoAnswer:{ label: 'Business Unit is the unit currently focused for alignment, and the line is not yet submitted or was returned',
+                      fn: (r, s) => r.bu === s.alignBU && (r.bstat === 'Not submitted' || r.bstat === 'Returned') }
     },
     filterLabelOf(key) { return (this.filters[key] || this.filters.all).label; },
     applyFilter(key, rows) {
@@ -2257,11 +2853,13 @@ function planApp() {
     //                      Turkey procedure; the Italian guide agrees above 50K and leaves
     //                      10K to 50K unassigned. To confirm with Flutter.
     //   derogation         a direct negotiation above 10K (Italian guide, slide 11)
+    // 2026-10-11, D35: the tiers are the Approval Required options (RU 4.9), group set.
+    // The engine only suggests for Flutter (D27, Q30); Procurement records the value.
     ladder: [
-      { min: 0,      rung: 'Local Procurement Manager' },
-      { min: 10000,  rung: 'Head of Procurement' },
-      { min: 50000,  rung: 'Sr Procurement Director' },
-      { min: 500000, rung: 'FSEA CFO' }
+      { min: 0,      rung: 'No Approval Required' },
+      { min: 10000,  rung: 'Head of Category' },
+      { min: 50000,  rung: 'Sr. Procurement Director' },
+      { min: 500000, rung: 'CFO' }
     ],
 
     // An authorization is needed for a derogation (a direct negotiation above the tender
@@ -2300,9 +2898,18 @@ function planApp() {
       { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'What' },
       { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'What' },
       // Status. Theirs, then ours.
-      { id: 'status',k: 'Status',                           t: 'sel', w: 110, g: 'Status' },
-      { id: 'resp',  k: 'Response',                         t: 'sel', w: 135, g: 'Status', plat: true,
-        hint: 'Added by Eluvium, not in your sheet. What the business unit answered in the open collection cycle.' },
+      { id: 'istat', k: 'Initiative Status',                t: 'sel', w: 140, g: 'Status',
+        hint: 'RU 4.6: Proposal, Entered, Pending approval, To be reviewed, Rejected, Approved.' },
+      { id: 'bstat', k: 'Submission',                       t: 'sel', w: 165, g: 'Status', plat: true,
+        hint: 'The workflow trace RU 4.2 keeps outside Initiative Status: submitted, returned, approved or rejected by the Requestor.' },
+      { id: 'nastat',k: 'Negotiation Approval Status',      t: 'sel', w: 280, g: 'Status',
+        hint: 'RU 4.9. Recorded by Procurement.' },
+      { id: 'ppstat',k: 'Purchasing Plan Status',           t: 'sel', w: 150, g: 'Status',
+        hint: 'RU 4.3.2: To start, In progress, On hold, Completed, Cancelled. Set to To start when the initiative is Approved.' },
+      { id: 'status',k: 'Status (imported)',                t: 'sel', w: 120, g: 'Status', off: true,
+        hint: 'The Status column of the imported sheet. Mapped to Purchasing Plan Status at import (P22).' },
+      { id: 'resp',  k: 'Response',                         t: 'sel', w: 135, g: 'Status', plat: true, off: true,
+        hint: 'Added by Eluvium. The email path\'s answer. Hidden in Flutter\'s configuration; switch it on in Fields.' },
       // Entity and brand
       { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Entity and brand' },
       { id: 'sisal', k: 'Sisal',                            t: 'chk', w: 70,  g: 'Entity and brand' },
@@ -2312,6 +2919,8 @@ function planApp() {
       // Ownership
       { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Ownership', rule: true },
       { id: 'bu',    k: 'Business Unit',                    t: 'txt', w: 160, g: 'Ownership' },
+      { id: 'pg',    k: 'Purchasing Group',                 t: 'sel', w: 200, g: 'Ownership',
+        hint: 'RU 2.1. Decides the Starters and the Requestor who see the line.' },
       // Spend
       { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Spend', rule: true },
       { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Spend' },
@@ -2346,9 +2955,13 @@ function planApp() {
       { id: 'dgg',   k: 'Def Goods Group',                  t: 'txt', w: 170, g: 'Procurement' },
       { id: 'head',  k: 'Head of / Manager',                 t: 'per', w: 160, g: 'Procurement' },
       { id: 'buyer', k: 'Procurement Buyer',                t: 'per', w: 160, g: 'Procurement' },
+      { id: 'accept',k: 'Acceptance',                       t: 'cmp', w: 200, g: 'Procurement',
+        hint: 'RU 4.7. Who accepted the line for Procurement, and when.' },
+      { id: 'assignee', k: 'Procurement Assignee',          t: 'per', w: 170, g: 'Procurement',
+        hint: 'RU 4.7. Chosen from the line\'s team after acceptance.' },
       { id: 'award', k: 'Awarding Value (K€)',              t: 'num', w: 120, g: 'Procurement' },
       // Approvals
-      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 150, g: 'Approvals', rule: true },
+      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 250, g: 'Approvals', rule: true },
       { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Approvals' },
       { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Approvals' },
       { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Approvals' },
@@ -2374,7 +2987,7 @@ function planApp() {
       // Stage and Next step are what the Tracking screen used to be. Authorization Rung is a
       // formula computed by the rule set, which is what lets Authorization be a filter rather
       // than a screen. Response sits next to their Status, above, because that is where it reads.
-      { id: 'stage',   k: 'Stage',                  t: 'sel', w: 170, g: 'Eluvium fields', plat: true,
+      { id: 'stage',   k: 'Stage',                  t: 'sel', w: 170, g: 'Eluvium fields', plat: true, off: true,
         hint: 'Added by Eluvium. Where the negotiation has got to. Writes your Status column.' },
       { id: 'nextstep',k: 'Next Step',              t: 'txt', w: 260, g: 'Eluvium fields', plat: true,
         hint: 'Added by Eluvium. Typed by the buyer. This is what you keep on a separate list today.' },
@@ -2382,9 +2995,9 @@ function planApp() {
         hint: 'Added by Eluvium.' },
       { id: 'decide',  k: 'Decision Date',          t: 'dat', w: 120, g: 'Eluvium fields', plat: true,
         hint: 'Added by Eluvium. Proposed from the contract start date, then confirmable.' },
-      { id: 'rung',    k: 'Authorization Rung',     t: 'cmp', w: 185, g: 'Eluvium fields', plat: true,
-        hint: 'Formula field. Computed from the contract value and the sourcing method. Nobody types this.' },
-      { id: 'outcome', k: 'Authorization Outcome',  t: 'sel', w: 300, g: 'Eluvium fields', plat: true,
+      { id: 'rung',    k: 'Suggested approval level', t: 'cmp', w: 185, g: 'Eluvium fields', plat: true,
+        hint: 'Formula field. From the rules, by value and sourcing method. For Flutter a suggestion only: Procurement records Approval Required (D27, Q30).' },
+      { id: 'outcome', k: 'Authorization Outcome',  t: 'sel', w: 300, g: 'Eluvium fields', plat: true, off: true,
         hint: 'Added by Eluvium. Written by the authorization session, one line at a time.' }
     ],
 
@@ -2401,8 +3014,10 @@ function planApp() {
     // not show in this demo and it is the next thing to fix.
     get visCols() {
       const f = this.v().fields;
-      if (!f) return this.cols.filter(c => !this.hidden[c.id]);
-      const inSet = this.cols.filter(c => f.includes(c.id) && !this.hidden[c.id]);
+      // 2026-10-11: a field marked off is hidden in this tenant's configuration unless switched on.
+      const on = c => !c.off || this.shown[c.id];
+      if (!f) return this.cols.filter(c => !this.hidden[c.id] && on(c));
+      const inSet = this.cols.filter(c => f.includes(c.id) && !this.hidden[c.id] && on(c));
       const rest  = this.cols.filter(c => !f.includes(c.id) && !this.hidden[c.id] && this.shown[c.id]);
       inSet.sort((a, b) => f.indexOf(a.id) - f.indexOf(b.id));
       return inSet.concat(rest);
@@ -2448,7 +3063,9 @@ function planApp() {
       { id: 'id',   k: 'ID',               t: 'num' },
       { id: 'subj', k: 'Subject Contract', t: 'txt' }
     ],
-    get detailGroups() { return [{ g: 'Line', cols: this.frozenCols }].concat(this.groupList); },
+    get detailGroups() {
+      return [{ g: 'Line', cols: this.frozenCols }].concat(this.groupList.map(g => ({ g: g.g, cols: g.cols.filter(c => !c.off) })).filter(g => g.cols.length));
+    },
 
     // IA brief D16: Response, Comments and Audit became one Stream. Contract shows the
     // line's terms and amendments (D15).
@@ -2457,6 +3074,13 @@ function planApp() {
       { k: 'Contract', n: '2' },
       { k: 'Stream',   n: '14' }
     ],
+    // 2026-10-11: D13, D15 Linked contracts; D17 Stream for Procurement only, Chat for both.
+    panelTabsFor() {
+      const t = [{ k: 'Details', n: '' }, { k: 'Linked contracts', n: '3' }];
+      if (!this.bizRole()) t.push({ k: 'Stream', n: '14' });
+      t.push({ k: 'Chat', n: '3' });
+      return t;
+    },
 
     rowsAll: [
       { n: 1, ref: 'PP-2027-0412', id: 412, subj: 'Cloud hosting, production estate', comments: 2,
@@ -2470,7 +3094,7 @@ function planApp() {
         head: 'Roberto Galli', buyer: 'Silvia Fontana',
         appr: 'FSEA CFO', rdn: 'Migration cost, incumbent',
         sav: 'Potential', itype: 'RENEW', spct: 5, sfc: 62,
-        bad: { strat: 'Direct negotiation at this value is a derogation. It needs authorization from the FSEA CFO.' } },
+        bad: { strat: 'Direct negotiation at this value is a derogation. It needs approval from the CFO.' } },
 
       { n: 2, ref: 'PP-2027-0417', id: 417, subj: 'Application monitoring licences', comments: 4,
         cat: 'Technology', sub: 'Observability', act: 'Rinnovo licenze annuali',
@@ -2688,10 +3312,42 @@ function planApp() {
         r.nextdue  = e.nextdue || '';
         r.decide   = e.decide || '';
         r.outcome  = '';
+        // ── 2026-10-11: Flutter's fields (D24), Purchasing Group (RU 2.1), team (RU 2.2) ──
+        r.pg = this.pgOfBu[r.bu] || '';
+        r.foreign = false;
+        const mapAppr = { 'FSEA CFO': 'CFO', 'Proc. Director': 'Sr. Procurement Director', 'N/A': 'No Approval Required' };
+        if (mapAppr[r.appr]) r.appr = mapAppr[r.appr];
+        if (r.status === 'To start') { r.istat = 'Pending approval'; r.nastat = 'Pending approval'; r.ppstat = ''; }
+        else { r.istat = 'Approved'; r.nastat = 'In progress';
+               r.ppstat = ({ 'In progress': 'In progress', 'On hold': 'On hold', 'Closed': 'Completed', 'Canceled': 'Cancelled' })[r.status] || 'To start'; }
+        r.bstat = 'Approved by Requestor';
+        r.accepted = true; r.acceptedBy = 'Roberto Galli'; r.acceptedAt = '30 Sep 2026, 15:12';
+        const t = this.catTeams[r.cat] || this.catTeams['Professional Services'];
+        r.team = [{ role: 'Head of Category', name: t.hoc }, { role: 'Category Manager', name: t.cm }]
+                 .concat(t.buyers.map(b => ({ role: 'Buyer', name: b })));
+        r.assignee = t.cm;
+        r.subErr = false; r.reqAct = ''; r.reqNote = ''; r.retReason = ''; r.batch = 'B-00' + (1 + (r.n % 5)); r.tierWarn = false;
         // Decisions are held per session and per agenda item, so the authorization session
         // and the category alignment do not overwrite each other on the same line.
         r.decs     = {};
       });
+      // Demo states for M05 Digital Operations (D25, D26, D33, D34).
+      const by = ref => this.rowsAll.find(r => r.ref === ref);
+      Object.assign(by('PP-2027-0412'), { istat: 'Entered', nastat: '', ppstat: '', accepted: false, acceptedBy: '', acceptedAt: '', assignee: '', ent: 'Sisal Italia / Snaitech' });
+      Object.assign(by('PP-2027-0417'), { istat: 'Proposal', nastat: '', ppstat: '', bstat: 'Submitted', batch: 'B-006', accepted: false, assignee: '' });
+      Object.assign(by('PP-2027-0433'), { istat: 'Proposal', nastat: '', ppstat: '', bstat: 'Not submitted', batch: '', accepted: false, assignee: '', strat: '', start: '' });
+      Object.assign(by('PP-2027-0451'), { istat: 'Proposal', nastat: '', ppstat: '', bstat: 'Returned', batch: 'B-004', accepted: false, assignee: '', retReason: 'Add the 2027 seat count' });
+      const q = new URLSearchParams(window.location.search);
+      const qa = q.get('as');
+      if (qa && this.roles.some(x => x.k === qa)) { this.as = qa; this.onRole(); }
+      const qv = q.get('view');
+      if (qv && this.views.some(x => x.id === qv)) this.go(qv);
+    },
+    pgOfBu: {
+      'Digital Operations': 'M05 Digital Operations', 'Platform Engineering': 'M02 Tech Infrastructure & Ops',
+      'Data & Analytics': 'M21 Digital', 'Facilities Italia': 'K12 Corporate Real Estate & Workspace',
+      'Payments & Risk': 'K25 Payment Solutions', 'Legal & Compliance': 'B00 Legal', 'Retail Estate': 'K13 Retail Estate',
+      'Retail Network IT': 'K04 Retail Network IT', 'Brand & Media': 'E00 Brand & Media', 'Sisal Gaming Malta': 'S30 Gaming Malta'
     },
 
     // ══ VIEW FILTERS ═══════════════════════════════════════════════════════════════════
@@ -2705,6 +3361,8 @@ function planApp() {
       // P20: the scope applies to every view. Requested means inside this cycle's window,
       // or added during the cycle; the rest of the cycle's lines are the backlog.
       if (this.scope === 'requested') rs = rs.filter(r => r.cycle);
+      // RU 4.3.3: Mine is the lines where the viewer is in the Procurement team.
+      if (this.mine) rs = rs.filter(r => (r.team || []).some(m => m.name === this.viewerName()));
       if (this.onlyBad && this.viewId === 'table') rs = rs.filter(r => Object.keys(r.bad).length);
       return rs;
     },
@@ -2722,6 +3380,8 @@ function planApp() {
     bandOrder(g) {
       if (g === 'rung')  return this.ladder.map(l => l.rung).filter(Boolean).reverse();
       if (g === 'stage') return this.stages;
+      if (g === 'ppstat') return ['To start', 'In progress', 'On hold', 'Completed', 'Cancelled'];
+      if (g === 'istat') return ['Proposal', 'Entered', 'Pending approval', 'To be reviewed', 'Approved', 'Rejected'];
       return null;
     },
     // A compensating-control band is not ordered, it is pinned. Not set on Responses is
@@ -2787,9 +3447,9 @@ function planApp() {
 
     // Flags come from dates and amounts only. Everything else on a card is typed.
     flagOf(r) {
-      if (r.stage === 'On hold')  return { text: 'On hold', cls: 'bg-slate-100 text-slate-600 border-slate-200' };
-      if (r.stage === 'Signed')   return { text: 'Signed',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-      if (r.stage === 'Canceled') return { text: 'Canceled', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+      if (r.ppstat === 'On hold')   return { text: 'On hold', cls: 'bg-slate-100 text-slate-600 border-slate-200' };
+      if (r.ppstat === 'Completed') return { text: 'Completed', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      if (r.ppstat === 'Cancelled') return { text: 'Cancelled', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
       const d = this.daysTo(r, r.rfe);
       if (d === null) return null;
       if (d < 0)  return { text: 'Late RFE', cls: 'bg-rose-50 text-rose-700 border-rose-200' };
@@ -2814,7 +3474,7 @@ function planApp() {
 
     // ══ REPORT ═════════════════════════════════════════════════════════════════════════
     reports: ['CEO compliance pack', 'CFO pack', 'Progress by business unit', 'Spend and savings against budget', 'Cycle completion', 'Plan coverage'],
-    get reportByLabel() { return ({ cat: 'Product Category', bu: 'Business Unit', ent: 'Legal Entity', strat: 'Sourcing Strategy' })[this.reportBy]; },
+    get reportByLabel() { return ({ cat: 'Product Category', bu: 'Business Unit', ent: 'Legal Entity', strat: 'Sourcing Strategy', pg: 'Purchasing Group' })[this.reportBy]; },
     reportRows() {
       const out = [];
       this.rows.forEach(r => {
@@ -2993,11 +3653,11 @@ function planApp() {
     // The rule set saved with this plan at the freeze (Session 23). Same values as THE RULE
     // SET above and as O2; the lines column counts are illustrative plan-scale numbers.
     frozenBands: [
-      { band: 'Up to € 10,000',       method: 'A quote from a single supplier',        auth: 'Local Procurement Manager', n: '290' },
-      { band: '€ 10,000 – € 50,000',  method: 'At least two quotes',                   auth: 'Head of Procurement',       n: '313' },
-      { band: '€ 50,000 – € 100,000', method: 'Structured competitive comparison',     auth: 'Sr Procurement Director',   n: '167' },
-      { band: '€ 100,000 – € 500,000',method: 'Tender',                                auth: 'Sr Procurement Director',   n: '316' },
-      { band: 'Above € 500,000',      method: 'Tender',                                auth: 'FSEA CFO',                  n: '222' }
+      { band: 'Up to € 10,000',       method: 'A quote from a single supplier',        auth: 'No Approval Required',      n: '290' },
+      { band: '€ 10,000 – € 50,000',  method: 'At least two quotes',                   auth: 'Head of Category',          n: '313' },
+      { band: '€ 50,000 – € 100,000', method: 'Structured competitive comparison',     auth: 'Sr. Procurement Director',  n: '167' },
+      { band: '€ 100,000 – € 500,000',method: 'Tender',                                auth: 'Sr. Procurement Director',  n: '316' },
+      { band: 'Above € 500,000',      method: 'Tender',                                auth: 'CFO',                       n: '222' }
     ],
     frozenNotice: [
       { strat: 'Direct Nego',  amt: 'Below € 100,000',         days: 30 },
@@ -3076,9 +3736,9 @@ function planApp() {
     // The three rungs a derogation can reach (see THE RULE SET). Local Procurement
     // Manager sits below the 10K derogation floor, so it never appears here.
     rvAuth: [
-      { rung: 'Head of Procurement',     n: 14, value: '€ 0.4M' },
-      { rung: 'Sr Procurement Director', n: 22, value: '€ 5.7M' },
-      { rung: 'FSEA CFO',                n: 11, value: '€ 15.3M' }
+      { rung: 'Head of Category',         n: 14, value: '€ 0.4M' },
+      { rung: 'Sr. Procurement Director', n: 22, value: '€ 5.7M' },
+      { rung: 'CFO',                      n: 11, value: '€ 15.3M' }
     ],
     rvCanceled: [
       { ref: 'PP-2027-1184', desc: 'Load testing platform',       supplier: 'Neustar Inc',      bu: 'Platform Engineering', reason: 'Moved in-house',              value: '€ 41,000',  by: 'A. Conti',   channel: 'workbook, confirmed in thread' },
@@ -3088,9 +3748,9 @@ function planApp() {
       { ref: 'PP-2027-0638', desc: 'Translation services',        supplier: 'Lionbridge Italy', bu: 'Legal & Compliance',   reason: 'Service no longer required',  value: '€ 28,900',  by: 'F. Greco',   channel: 'in the platform' }
     ],
     rvFrozen: [
-      { bu: 'Retail Network IT',  owner: 'Chiara Mancini', n: 22, value: '€ 3.1M',    reached: 'BU manager, no response', notice: '9 Jan 2027',  urgent: true },
-      { bu: 'Sisal Gaming Malta', owner: 'Stefano Villa',  n: 11, value: '€ 840,000', reached: 'Backup, then BU manager', notice: '2 Mar 2027',  urgent: false },
-      { bu: 'Retail Estate',      owner: 'Davide Moretti', n: 5,  value: '€ 412,000', reached: 'BU manager acknowledged', notice: '20 Feb 2027', urgent: false }
+      { bu: 'K04 Retail Network IT',  owner: 'Chiara Mancini', n: 22, value: '€ 3.1M',    reached: '3 reminders, Requestor copied', notice: '9 Jan 2027',  urgent: true },
+      { bu: 'S30 Gaming Malta',       owner: 'Stefano Villa',  n: 11, value: '€ 840,000', reached: '2 reminders, no Requestor set', notice: '2 Mar 2027',  urgent: false },
+      { bu: 'K13 Retail Estate',      owner: 'Davide Moretti', n: 5,  value: '€ 412,000', reached: '3 reminders, Requestor copied', notice: '20 Feb 2027', urgent: false }
     ],
 
     // ══ ROW PANEL ══════════════════════════════════════════════════════════════════════
@@ -3141,6 +3801,7 @@ function planApp() {
       if (id === 'qtr')  return s ? s.y + ' Q' + Math.ceil(s.m / 3) : '';
       if (id === 'tf')   return s ? String(s.y) : '';
       if (id === 'rung') return this.rungOf(r) || '';
+      if (id === 'accept') return r.accepted ? 'Accepted ' + (r.acceptedAt || '').split(',')[0] + ', ' + (r.acceptedBy || '') : (r.istat === 'Entered' ? 'Awaiting acceptance' : '');
       if (id === 'base') {
         if (r.opx === 'Capex') return this.fmtK(r.tot);
         if (r.opx === 'Opex' && yr !== null) return this.fmtK(yr);
@@ -3185,6 +3846,18 @@ function planApp() {
         'Defer': 'bg-sky-50 text-sky-700 border-sky-200',
         'Reject': 'bg-rose-50 text-rose-700 border-rose-200'
       })[val] || 'bg-gray-50 text-gray-500 border-gray-200';
+      if (col === 'istat') return ({
+        'Approved': 'bg-emerald-50 text-emerald-700 border-emerald-200', 'Entered': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        'Pending approval': 'bg-amber-50 text-amber-700 border-amber-200', 'To be reviewed': 'bg-orange-50 text-orange-700 border-orange-200',
+        'Rejected': 'bg-rose-50 text-rose-700 border-rose-200'
+      })[val] || 'bg-slate-100 text-slate-600 border-slate-200';
+      if (col === 'bstat') return this.bstatClass(val);
+      if (col === 'ppstat') return ({
+        'Completed': 'bg-emerald-50 text-emerald-700 border-emerald-200', 'In progress': 'bg-sky-50 text-sky-700 border-sky-200',
+        'On hold': 'bg-amber-50 text-amber-700 border-amber-200', 'Cancelled': 'bg-rose-50 text-rose-700 border-rose-200'
+      })[val] || 'bg-slate-100 text-slate-600 border-slate-200';
+      if (col === 'nastat') return /^Approved|In progress|Confirmed/.test(val) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+      if (col === 'pg') return 'bg-gray-50 text-gray-700 border-gray-200';
       if (col === 'cat') return 'bg-slate-50 text-slate-600 border-slate-200';
       if (col === 'strat') {
         if (val === 'Full Tender')  return 'bg-indigo-50 text-indigo-700 border-indigo-200';
@@ -3192,8 +3865,8 @@ function planApp() {
         return 'bg-violet-50 text-violet-700 border-violet-200';
       }
       if (col === 'appr') {
-        if (val === 'FSEA CFO') return 'bg-rose-50 text-rose-700 border-rose-200';
-        if (val === 'N/A')      return 'bg-gray-50 text-gray-500 border-gray-200';
+        if (val === 'CFO') return 'bg-rose-50 text-rose-700 border-rose-200';
+        if (val === 'No Approval Required') return 'bg-gray-50 text-gray-500 border-gray-200';
         return 'bg-amber-50 text-amber-700 border-amber-200';
       }
       if (col === 'sav') {
@@ -3218,7 +3891,8 @@ function planApp() {
         opened: 'Mon 21 Sep 2026', note: 'Copied from Cycle 1 on 21 Sep 2026' }
     ],
     // The phase follows the demo's calendar, which differs by view (see asOfByView).
-    phaseNow() { return ({ responses: 'Collecting', review: 'Review', auth: 'Authorization' })[this.viewId] || 'Tracking'; },
+    // 2026-10-11, D28: Flutter's phases (RU 4.10). Approvals continue in every phase (RU 4.9).
+    phaseNow() { return ({ responses: 'Collection', review: 'Review window', tracking: 'After closure', align: 'After closure' })[this.viewId] || 'Collection'; },
     cyc() {
       const c = this.cycles.find(x => x.id === this.cycleId) || this.cycles[2];
       return Object.assign({}, c, { phase: c.open ? this.phaseNow() : 'Closed' });
@@ -3235,23 +3909,28 @@ function planApp() {
     exportLabel() { return this.renderer === 'Report' ? 'Export PDF' : 'Export to Excel'; },
 
     // ══ IA BRIEF: AUTHORIZATION WITHOUT A SESSION (D19, D20, P38) ═══════════════════════
-    outcomeOptions: ['Authorize', 'Derogation', 'Defer', 'Reject'],
+    // 2026-10-11: RU 4.9's Negotiation Approval Status values, recorded by Procurement.
+    outcomeOptions: ['Pending approval', 'Approved by Head of Category', 'Approved by Senior Procurement Director', 'Approved by CFO', 'Confirmed – previous approval', 'In progress'],
     approvers: [
-      { rung: 'Local Procurement Manager', band: 'Up to € 10,000',        name: 'Andrea Leone' },
-      { rung: 'Head of Procurement',       band: '€ 10,000 – € 50,000',   name: 'Laura Monti' },
-      { rung: 'Sr Procurement Director',   band: '€ 50,000 – € 500,000',  name: 'Roberto Galli' },
-      { rung: 'FSEA CFO',                  band: 'Above € 500,000',       name: 'Matteo Bassi' }
+      { rung: 'Head of Category',          band: '€ 10,000 – € 50,000',   name: 'Laura Monti' },
+      { rung: 'Sr. Procurement Director',  band: '€ 50,000 – € 500,000',  name: 'Roberto Galli' },
+      { rung: 'CFO',                       band: 'Above € 500,000',       name: 'Matteo Bassi' }
     ],
-    curApprover() { return this.approvers.find(a => a.name === this.authApprover) || this.approvers[3]; },
-    isOutcomeCell(c) { return this.viewId === 'auth' && c.id === 'outcome'; },
-    // The rule set checks the named approver sits at the rung the line's value needs.
-    canRecord(r) { return !this.readOnly && this.rungOf(r) === this.curApprover().rung; },
-    setOutcome(r, o) { if (!this.canRecord(r)) return; r.outcome = (r.outcome === o ? '' : o); },
+    curApprover() { return this.approvers.find(a => a.name === this.authApprover) || this.approvers[2]; },
+    isOutcomeCell(c) { return this.viewId === 'auth' && c.id === 'nastat'; },
+    // P38: recording under a different tier warns; it does not block.
+    canRecord(r) { return !this.readOnly && !this.bizRole(); },
+    noteMismatch(r) {
+      const m = /^Approved by (.*)$/.exec(r.nastat || '');
+      const tier = m ? m[1].replace('Senior', 'Sr.') : '';
+      r.tierWarn = !!tier && tier !== this.rungOf(r);
+    },
+    setOutcome(r, o) { if (!this.canRecord(r)) return; r.nastat = o; this.noteMismatch(r); },
     authRows() { return this.applyFilter('needsAuth', this.rowsAll); },
-    authRecorded() { return this.authRows().filter(r => r.outcome).length; },
+    authRecorded() { return this.authRows().filter(r => r.nastat && r.nastat !== 'Pending approval').length; },
     authMismatch() {
-      const other = this.authRows().filter(r => this.rungOf(r) !== this.curApprover().rung).length;
-      return other ? other + ' lines on this view sit at another rung. Their outcomes can be recorded only under that rung\'s approver.' : '';
+      const w = this.authRows().filter(r => r.tierWarn).length;
+      return w ? w + (w === 1 ? ' line is' : ' lines are') + ' recorded under a different tier than its value suggests. It is saved, and the reason goes in the stream.' : '';
     },
     authPack() {
       const order = this.ladder.map(l => l.rung).reverse();
@@ -3335,6 +4014,13 @@ function planApp() {
       { id: 'cfo', k: 'CFO pack', sub: 'Plan presentation', kind: 'table', by: 'cat', ver: 2,
         prompt: 'For the plan presentation to the CFO: year-to-date expenditure by category, function and project, the main planned negotiations, and the derogations that need authorization with their value bands.',
         spec: ['scope    cycle = current', 'measure  sum(yearly value), count(derogations)', 'group    Product Category', 'show     tiles, table'] },
+      // 2026-10-11, RU 4.10.2: the counts the campaign closure needs.
+      { id: 'campaign', k: 'Campaign counts', sub: 'RU 4.10.2 · at closure', kind: 'table', by: 'pg', ver: 1,
+        prompt: 'For the campaign closure: by Purchasing Group, the initiatives entered, submitted, approved by the Requestor, returned, rejected, accepted by Procurement, and still drafts at submission close.',
+        spec: ['scope    cycle = current', 'measure  count by Submission and Initiative Status', 'group    Purchasing Group', 'show     tiles, table'] },
+      { id: 'progresspg', k: 'Progress by Purchasing Group', sub: 'Who has submitted', kind: 'table', by: 'pg', ver: 1,
+        prompt: 'Progress of this campaign by Purchasing Group: lines entered, submitted, approved by the Requestor and accepted by Procurement.',
+        spec: ['scope    cycle = current, requested', 'measure  count by Submission', 'group    Purchasing Group', 'show     tiles, table'] },
       { id: 'progress', k: 'Progress by business unit', sub: 'Who has answered', kind: 'table', by: 'bu', ver: 1,
         prompt: 'Progress of this cycle by business unit: lines requested, answered, waiting and escalated, with the channel each answer arrived through.',
         spec: ['scope    cycle = current, requested', 'measure  count by response state', 'group    Business Unit', 'show     tiles, table'] },
@@ -3349,7 +4035,7 @@ function planApp() {
         spec: ['scope    cycle = current, scope = viewer', 'bars     Contract Start Date to Contract End Date', 'marker   RFE Deadline', 'group    Business Unit', 'show     timeline'] },
       { id: 'authpack', k: 'Authorization pack', sub: 'For each rung\'s meeting', kind: 'authpack', ver: 2,
         prompt: 'The pack for the authorization meeting: every derogation that needs authorization, grouped by the rung that decides it, with supplier, method, the reason given and the value. Add year-to-date volumes by category and the main planned negotiations.',
-        spec: ['scope    cycle = current, Authorization Rung not empty', 'group    Authorization Rung, CFO first', 'show     tables per rung'] },
+        spec: ['scope    cycle = current, Suggested approval level not empty', 'group    Suggested approval level, CFO first', 'show     tables per level'] },
       { id: 'alignpack', k: 'Alignment pack', sub: 'For one business unit', kind: 'alignpack', ver: 1,
         prompt: 'The pack for an alignment with one business unit: its negotiations in progress, its expiring contracts without an answer, and the lines it added since the last alignment.',
         spec: ['scope    cycle = current, Business Unit = chosen unit', 'sections 3 filters', 'show     lists'] }

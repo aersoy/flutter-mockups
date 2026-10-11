@@ -9,6 +9,8 @@
   `Tiered Solution/Demo Script.md` and the worklogs, not on a page in the mockup set.
   E2 was renamed from "No Login Response Page" to "Response Page" when answering moved
   behind a one-click sign-in.
+  2026-10-11: descriptions updated for IA Change Brief D22 to D35 (Flutter's RU V4 process as
+  configuration: roles, phases, approval steps, Contract_Data).
 -->
 <html lang="en">
 <head>
@@ -72,19 +74,19 @@ function index() {
         title: 'Procurement',
         sub: 'in the platform',
         screens: [
-          { code: 'P0',  file: 'P0 Purchasing Plans.html',          title: 'Cycles',                    desc: 'Every cycle, one open at a time, and the next one ready to review.' },
-          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Start-of-cycle review',     desc: 'The next cycle\u2019s lines, its rule set and its dates, reviewed before it starts.' },
-          { code: '\u2605', file: 'Plan.html',                      title: 'The cycle',                 desc: 'Lines and Rules. Views in Grid, Kanban, List and Report; each line\u2019s contract and stream.' },
-          { code: 'O2',  file: 'O2 Rules Configuration.html',       title: 'Procurement rules',         desc: 'One rule set per cycle; only the next cycle\u2019s draft can be edited.' }
+          { code: 'P0',  file: 'P0 Purchasing Plans.html',          title: 'Cycles',                    desc: 'Every cycle and its phase, one open at a time. The next campaign is launched by hand, by an authorized role.' },
+          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Start-of-cycle review',     desc: 'The next cycle\u2019s lines, the Contract_Data upload, the group rule set with entity overrides, and its phase dates.' },
+          { code: '\u2605', file: 'Plan.html',                      title: 'The cycle',                 desc: 'Lines, Rules and People, seen as any role: Starters submit, Requestors approve, Procurement accepts. Each line\u2019s linked contracts, stream and chat.' },
+          { code: 'O2',  file: 'O2 Rules Configuration.html',       title: 'Procurement rules',         desc: 'A group rule set with entity overrides; each ladder sets its Approval Required options. Only the next cycle\u2019s draft can be edited.' }
         ]
       },
       {
-        title: 'Business owners',
+        title: 'Business side',
         sub: 'email, and the page an email link opens',
         screens: [
-          { code: 'E1',  file: 'E1 Request Email.html',          title: 'The request email and workbook', desc: 'An owner\u2019s lines with a link for each answer; for large sets, the attached workbook and Ellie\u2019s reply when it comes back.' },
-          { code: 'E2',  file: 'E2 Response Page.html',          title: 'The response page',        desc: 'Sign in with Microsoft or an email code, then the owner\u2019s whole set, answered in place.' },
-          { code: 'E3',  file: 'E3 Consequence Reminder.html',   title: 'The consequence reminder', desc: 'The same line at three distances from its decision date.' },
+          { code: 'E1',  file: 'E1 Request Email.html',          title: 'The request emails and workbook', desc: 'The launch email to a Purchasing Group\u2019s Starters, and an owner\u2019s lines with a link for each answer; the workbook for large sets and Ellie\u2019s reply when it comes back.' },
+          { code: 'E2',  file: 'E2 Response Page.html',          title: 'The response page',        desc: 'Sign in with Microsoft or an email code, then the owner\u2019s whole set, answered in place and submitted for approval.' },
+          { code: 'E3',  file: 'E3 Consequence Reminder.html',   title: 'The consequence reminder', desc: 'The same line at three distances from its decision date, and the reminder to a Requestor with lines waiting.' },
           // B2 retired by the IA change brief (D17): owners never see a line's stream.
           // { code: '\u2192', file: 'Email Journey Walkthrough.html', title: 'The email journey',     desc: 'One cycle, one owner, one thread, step by step.' }
         ]
