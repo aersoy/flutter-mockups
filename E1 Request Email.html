@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-12 (D29 revised: RU 4.2.1 Option 1 as written)
+    The launch email's attachment lists every contract of the Purchasing Group ending in the
+    window, including ones already in the plan. No matching, so no 'not yet in the plan'.
+
   IA CHANGE BRIEF, 2026-10-11 (D2 deferred, D25, D28, D29, Q29)
     A second variant beside the owner email: the launch email RU 4.2 describes, one per
     Purchasing Group, to its Starters and copying its Requestor, with a link to the group's
-    lines and the Contract_Data extract of unmatched expiring contracts attached (D29). The
+    lines and the Contract_Data extract of expiring contracts attached (D29). The
     owner email stays, since D2 is deferred until Flutter confirms the email path (Q28).
     Owner answers now go to the Requestor for approval once they pass validation (D25, Q29),
     and a confirmed cancel goes for approval too (D8). "Freeze" reads "submissions close" (D28).
@@ -148,10 +152,10 @@
           <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
           <div class="min-w-0">
             <div class="text-[12.5px] font-semibold text-slate-800">Expiring contracts · M01 Technology · Jan&ndash;Sep 2027.xlsx</div>
-            <div class="text-[11px] text-slate-500">17 contracts expiring in the next nine months that are not yet in the plan · from Contract_Data, 18 Sep 2026</div>
+            <div class="text-[11px] text-slate-500">62 contracts expiring in the next nine months · from Contract_Data, 18 Sep 2026</div>
           </div>
         </div>
-        <p class="mt-3 text-[12.5px] text-slate-600">The attachment is for information. If any of these will be renewed, renegotiated or replaced, enter it as an initiative in Purchase Planning. The 45 contracts already in the plan are there for you to review.</p>
+        <p class="mt-3 text-[12.5px] text-slate-600">The attachment is for information. It lists every M01 Technology contract ending in the next nine months, including those already in the plan. If one of them will be renewed, renegotiated or replaced and is not yet an initiative, enter it in Purchase Planning.</p>
         <div class="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[12px]">
           <template x-for="c in expiring" :key="c.n">
             <div class="flex items-center gap-3 px-3.5 py-1.5 border-b border-slate-100 last:border-0">
@@ -161,7 +165,7 @@
               <span class="shrink-0 font-medium text-slate-700" x-text="'ends ' + c.ends"></span>
             </div>
           </template>
-          <div class="px-3.5 py-1.5 text-[11px] text-slate-400 bg-slate-50">... 13 more in the attachment</div>
+          <div class="px-3.5 py-1.5 text-[11px] text-slate-400 bg-slate-50">... 56 more in the attachment</div>
         </div>
         <p class="mt-4">Questions about an initiative can go in its chat in Purchase Planning, where the Procurement contacts for it will see them.</p>
         <p class="mt-4 text-slate-600">Grazie,<br>Ellie · Purchase Planning Agent<br><span class="text-[12px] text-slate-500">on behalf of Procurement Italia · Flutter Southern Europe &amp; Africa</span></p>
@@ -621,8 +625,11 @@ function requestEmail() {
     size: 'small',
     view: 'Request',
     kind: 'To an owner',
-    // The Contract_Data extract for M01, contracts not matched to a plan line (D29).
+    // The Contract_Data extract for M01: every contract ending in the window (D29, RU 4.2.1).
+    // Not compared with the plan, so it includes contracts that already have a line (the first two here).
     expiring: [
+      { n: 'C-116790', what: 'Cloud hosting, production estate',     sup: 'Amazon Web Services', ends: '31 Mar 2027' },
+      { n: 'C-117530', what: 'Application monitoring licences',      sup: 'Datadog',   ends: '30 Jun 2027' },
       { n: 'C-118204', what: 'Network security appliances, support', sup: 'Fortinet', ends: '31 Jan 2027' },
       { n: 'C-119377', what: 'Service desk outsourcing',             sup: 'Almaviva',  ends: '28 Feb 2027' },
       { n: 'C-120015', what: 'Backup software licences',             sup: 'Veeam',     ends: '31 Mar 2027' },

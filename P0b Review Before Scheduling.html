@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <!--
+  IA CHANGE BRIEF, 2026-10-12 (column header dot)
+    As in Plan.html: the dot marks fields the rule set checks (Sourcing Strategy, Strategy Rationals,
+        RFE Deadline, Approval Required), with a tooltip naming the rule. Removed from the data-check columns.
+
+  IA CHANGE BRIEF, 2026-10-12 (D29 revised: RU 4.2.1 Option 1 as written)
+    Contracts step: no matching against the plan. The platform keeps each Purchasing Group's
+        contracts ending in the window, applies Flutter's extraction rules and attaches one
+        Excel per group to the launch email. Every expiring contract is listed, including
+        ones already in the plan. The matched and unmatched counts are gone.
+
   IA CHANGE BRIEF, 2026-10-11 (D21, D28, D29, D34, D35, Q34)
     Four steps now: Lines, Contracts, Rules, Dates.
     D29 Contracts: Procurement uploads Flutter's Contract_Data file. Contracts in the window
-        (a setting; nine months for Flutter, RU 4.2.1) are matched to lines. Unmatched ones go
-        to each Purchasing Group's Starters as a list with the launch email; the Starters
-        create the lines. Nothing is added to the plan here.
+        (a setting; nine months for Flutter, RU 4.2.1) go to each Purchasing Group's Starters
+        as an Excel with the launch email; the Starters create the lines. Nothing is added
+        to the plan here. (Matching to lines removed 2026-10-12, see above.)
     D21 Rules: one group rule set, which must be confirmed, and overrides per legal entity
         where an entity differs. An entity without an override uses the group set; one whose
         procedure we have not seen is flagged unconfirmed, with its consequence sentence off.
@@ -281,8 +291,8 @@
                   <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Expiring contracts</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      Upload the latest Contract_Data extract. I match each contract ending in the window to a line already in the plan.
-                      The ones that match nothing go to the Starters of their Purchasing Group as a list, attached to the launch email; the Starters decide whether to enter them. Nothing is added to the plan here.
+                      Upload the latest Contract_Data extract. I pick each Purchasing Group's contracts ending in the window and attach them as an Excel to that group's launch email.
+                      The list is for information: the Starters decide what to enter as initiatives. Nothing is added to the plan here.
                     </p>
                   </div>
                 </template>
@@ -728,7 +738,7 @@
                                   style="background: linear-gradient(135deg,#818cf8,#4f46e5)">E</span>
                             <span x-show="!c.plat" class="text-gray-400 text-[10px] shrink-0" x-text="typeIcon(c.t)"></span>
                             <span class="hn" x-text="c.k"></span>
-                            <span x-show="c.rule" class="text-[9px] text-indigo-500 shrink-0">&#9679;</span>
+                            <span x-show="c.rule" :title="c.rule" class="text-[9px] text-indigo-500 shrink-0 cursor-help">&#9679;</span>
                           </div>
                         </th>
                       </template>
@@ -923,10 +933,11 @@
 
             <template x-if="cd.uploaded">
               <div class="space-y-4">
+                <!-- RU 4.2.1: filter and attach only. No comparison with the plan, so no matched or unmatched counts. -->
                 <div class="grid grid-cols-3 gap-4">
                   <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900" x-text="cdInWindow().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500" x-text="'contracts end within ' + cd.months + ' months of launch'"></div></div>
-                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900" x-text="cdMatched().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500">matched to a line already in the plan</div></div>
-                  <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><div class="text-xl font-semibold text-amber-900" x-text="cdUnmatched().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-amber-800">match no line, listed to the Starters</div></div>
+                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900">58</div><div class="text-[11.5px] text-gray-500">Purchasing Groups receive a list</div></div>
+                  <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><div class="text-xl font-semibold text-amber-900">11</div><div class="text-[11.5px] text-amber-800">have no Purchasing Group, listed to Procurement</div></div>
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                   <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
@@ -936,7 +947,7 @@
                   <table class="w-full text-[12px]">
                     <thead><tr class="text-left text-gray-500 border-b border-gray-100">
                       <th class="px-4 py-2 font-medium">Purchasing Group</th><th class="px-4 py-2 font-medium">Requestor</th>
-                      <th class="px-4 py-2 font-medium text-right">Starters</th><th class="px-4 py-2 font-medium text-right">Matched</th><th class="px-4 py-2 font-medium text-right">Unmatched, in the list</th>
+                      <th class="px-4 py-2 font-medium text-right">Starters</th><th class="px-4 py-2 font-medium text-right">Contracts in the list</th>
                     </tr></thead>
                     <tbody>
                       <template x-for="g in cd.groups" :key="g.pg">
@@ -944,13 +955,12 @@
                           <td class="px-4 py-2 text-gray-800 font-medium" x-text="g.pg"></td>
                           <td class="px-4 py-2 text-gray-600" x-text="g.req"></td>
                           <td class="px-4 py-2 text-right text-gray-600" x-text="g.starters"></td>
-                          <td class="px-4 py-2 text-right text-gray-600" x-text="g.matched"></td>
-                          <td class="px-4 py-2 text-right font-medium" :class="g.unmatched ? 'text-amber-700' : 'text-gray-400'" x-text="g.unmatched"></td>
+                          <td class="px-4 py-2 text-right font-medium text-gray-800" x-text="g.contracts"></td>
                         </tr>
                       </template>
                     </tbody>
                   </table>
-                  <div class="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-100">Showing 6 of 58 Purchasing Groups. 11 contracts have no Purchasing Group in Contract_Data and are listed to Procurement instead.</div>
+                  <div class="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-100">Showing 6 of 58 Purchasing Groups. Each list holds every contract ending in the window, including those already in the plan. Filters and columns follow Flutter's Rules for Extracting Expiring Contracts (to come).</div>
                 </div>
               </div>
             </template>
@@ -1177,7 +1187,7 @@
               <span x-text="noReasonText() || 'Nothing is scheduled and nobody is emailed until you confirm on the next step.'"></span>
             </template>
             <template x-if="step === 2">
-              <span x-text="cd.uploaded ? 'Unmatched contracts are listed to each Purchasing Group\'s Starters at launch. Nothing joins the plan here.' : 'Upload Contract_Data, or continue without it and the launch email goes out with no list.'"></span>
+              <span x-text="cd.uploaded ? 'Each Purchasing Group\'s Starters get their expiring contracts as an Excel with the launch email. Nothing joins the plan here.' : 'Upload Contract_Data, or continue without it and the launch email goes out with no list.'"></span>
             </template>
             <template x-if="step === 3">
               <span x-text="rulesOk ? 'The group set is confirmed for Cycle 3. ' + unconfirmedText() : 'Confirm the group rule set to continue. ' + unconfirmedText()"></span>
@@ -1333,19 +1343,17 @@ function review() {
           floor: v.floor, prevFloor: v.floor, pct: v.pct, prevPct: v.pct, abs: v.abs, prevAbs: v.abs };
       });
     },
-    // D29: the Contract_Data step. Illustrative counts.
+    // D29: the Contract_Data step (RU 4.2.1, Option 1: filter and attach, no matching). Illustrative counts.
     cd: { uploaded: false, months: 9,
       groups: [
-        { pg: 'M01 Technology',             req: 'Barbara Neri',     starters: 9,  matched: 45, unmatched: 17 },
-        { pg: 'M02 Tech Infrastructure & Ops', req: 'Marco Bellini', starters: 6,  matched: 38, unmatched: 9 },
-        { pg: 'M05 Digital Operations',     req: 'Silvia Marchetti', starters: 4,  matched: 21, unmatched: 3 },
-        { pg: 'K01 Retail Operations',      req: 'Paola Ferraro',    starters: 7,  matched: 33, unmatched: 6 },
-        { pg: 'I02 Regional Finance',       req: 'Francesca Bassi',  starters: 4,  matched: 12, unmatched: 2 },
-        { pg: 'A60 HUB Turchia Technology', req: 'Emre Kaya',        starters: 17, matched: 19, unmatched: 4 }
+        { pg: 'M01 Technology',             req: 'Barbara Neri',     starters: 9,  contracts: 62 },
+        { pg: 'M02 Tech Infrastructure & Ops', req: 'Marco Bellini', starters: 6,  contracts: 47 },
+        { pg: 'M05 Digital Operations',     req: 'Silvia Marchetti', starters: 4,  contracts: 24 },
+        { pg: 'K01 Retail Operations',      req: 'Paola Ferraro',    starters: 7,  contracts: 39 },
+        { pg: 'I02 Regional Finance',       req: 'Francesca Bassi',  starters: 4,  contracts: 14 },
+        { pg: 'A60 HUB Turchia Technology', req: 'Emre Kaya',        starters: 17, contracts: 23 }
       ] },
     cdInWindow()  { return Math.round(1388 * this.cd.months / 9); },
-    cdUnmatched() { return Math.round(214 * this.cd.months / 9); },
-    cdMatched()   { return this.cdInWindow() - this.cdUnmatched(); },
     addOpen: false,
     addMode: 'existing',
     q: '',
@@ -1488,23 +1496,26 @@ function review() {
       { id: 'snai',  k: 'Snaitech',                         t: 'chk', w: 92,  g: 'Entity and brand' },
       { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Entity and brand' },
       // Ownership
-      { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Ownership', rule: true },
+      { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Ownership' },
       { id: 'bu',    k: 'Business Unit',                    t: 'txt', w: 160, g: 'Ownership' },
       // Spend
-      { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Spend', rule: true },
+      { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Spend' },
       { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Spend' },
       // Supplier
       { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Supplier' },
       { id: 'inc',   k: 'Incumbent Supplier (if applicable)', t: 'txt', w: 200, g: 'Supplier' },
       { id: 'fopp',  k: 'Flutter Opportunity',        t: 'chk', w: 120, g: 'Supplier' },
       // Sourcing
-      { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Sourcing', rule: true },
-      { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Sourcing' },
-      { id: 'rfe',   k: 'RFE Deadline',                     t: 'dat', w: 110, g: 'Sourcing', rule: true },
+      { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Sourcing',
+        rule: 'Checked by the rules: the sourcing method must fit the value band for the line\'s legal entity.' },
+      { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Sourcing',
+        rule: 'Checked by the rules: a direct negotiation above the derogation floor needs a justification here.' },
+      { id: 'rfe',   k: 'RFE Deadline',                     t: 'dat', w: 110, g: 'Sourcing',
+        rule: 'Checked by the rules: the minimum notice before the contract start, by sourcing method.' },
       { id: 'rdi',   k: 'RDI Deadline',                     t: 'dat', w: 110, g: 'Sourcing' },
       // Term
-      { id: 'start', k: 'Contract Start Date',              t: 'dat', w: 120, g: 'Term', rule: true },
-      { id: 'end',   k: 'Contract End Date',                t: 'dat', w: 120, g: 'Term', rule: true },
+      { id: 'start', k: 'Contract Start Date',              t: 'dat', w: 120, g: 'Term' },
+      { id: 'end',   k: 'Contract End Date',                t: 'dat', w: 120, g: 'Term' },
       { id: 'dur',   k: 'Duration (years)',                 t: 'cmp', w: 100, g: 'Term', al: 'r',
         hint: 'Formula field. Calculated from the contract start and end dates.' },
       // Value and budget
@@ -1512,7 +1523,7 @@ function review() {
       { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Value and budget', al: 'r',
         hint: 'Formula field. Total contract value divided by duration.' },
       { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Value and budget' },
-      { id: 'tsav',  k: 'Target Saving %',                  t: 'pct', w: 100, g: 'Value and budget', rule: true },
+      { id: 'tsav',  k: 'Target Saving %',                  t: 'pct', w: 100, g: 'Value and budget' },
       { id: 'ramt',  k: 'Rational Amount',                  t: 'txt', w: 240, g: 'Value and budget' },
       { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Value and budget' },
       // Procurement
@@ -1526,7 +1537,8 @@ function review() {
       { id: 'buyer', k: 'Procurement Buyer',                t: 'per', w: 160, g: 'Procurement' },
       { id: 'award', k: 'Awarding Value (K€)',              t: 'num', w: 120, g: 'Procurement' },
       // Approvals
-      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 150, g: 'Approvals', rule: true },
+      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 150, g: 'Approvals',
+        rule: 'Checked by the rules: the approval ladder sets the level from value and sourcing method. For Flutter a suggestion only; Procurement records the value (D27).' },
       { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Approvals' },
       { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Approvals' },
       { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Approvals' },
