@@ -11,6 +11,8 @@
   behind a one-click sign-in.
   2026-10-11: descriptions updated for IA Change Brief D22 to D35 (Flutter's RU V4 process as
   configuration: roles, phases, approval steps, Contract_Data).
+  2026-10-15: no plan import (Contract_Data is the only import), the RU V4 template fields with
+  Flutter's 13 Oct changes, and approval thresholds per legal entity.
 -->
 <html lang="en">
 <head>
@@ -75,9 +77,9 @@ function index() {
         sub: 'in the platform',
         screens: [
           { code: 'P0',  file: 'P0 Purchasing Plans.html',          title: 'Cycles',                    desc: 'Every cycle and its phase, one open at a time. The next campaign is launched by hand, by an authorized role.' },
-          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Start-of-cycle review',     desc: 'The next cycle\u2019s lines, the Contract_Data upload, the group rule set with entity overrides, and its phase dates.' },
-          { code: '\u2605', file: 'Plan.html',                      title: 'The cycle',                 desc: 'Lines, Rules and People, seen as any role: Starters submit, Requestors approve, Procurement accepts. Each line\u2019s linked contracts, stream and chat.' },
-          { code: 'O2',  file: 'O2 Rules Configuration.html',       title: 'Procurement rules',         desc: 'A group rule set with entity overrides; each ladder sets its Approval Required options. Only the next cycle\u2019s draft can be edited.' }
+          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Start-of-cycle review',     desc: 'What carries forward, the Contract_Data upload with Flutter\u2019s extraction rules, the rule set with approval thresholds per entity, and the phase dates.' },
+          { code: '\u2605', file: 'Plan.html',                      title: 'The cycle',                 desc: 'Initiatives on the RU V4 template, seen as any role: Starters submit, Requestors approve, Procurement accepts and confirms the suggested approval. Each line\u2019s linked contracts, stream and chat.' },
+          { code: 'O2',  file: 'O2 Rules Configuration.html',       title: 'Procurement rules',         desc: 'Approval thresholds per legal entity, including Turkey\u2019s own tiers, and the multi-entity rule. The suggestion they produce is confirmed by hand. Only the next cycle\u2019s draft can be edited.' }
         ]
       },
       {

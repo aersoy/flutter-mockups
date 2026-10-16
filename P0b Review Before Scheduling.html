@@ -1,5 +1,20 @@
 <!DOCTYPE html>
 <!--
+  2026-10-15, CONTRACT_DATA ONLY AND THE RU V4 TEMPLATE
+    Lines step: what carries forward from Cycle 3, every open initiative, not lines picked by
+        contract end date. The "Both plans" overlap mark and its reason are gone. Add lines is
+        gone (existing contracts, new need, Appian or SAP import with matching): RU V4 imports
+        nothing but Contract_Data, and Starters enter initiatives during collection.
+    Contracts step: Flutter's Rules for Extracting Expiring Contracts (received 13 Oct), step by
+        step with the rows each removes, counted on the 13 Oct Contracts.xlsx extract; the data
+        fixes applied on the fly (to agree with Flutter); the attachment's columns, proposed
+        because the rules file lists filters only.
+    Rules step: the ladder is the approval threshold matrix. Its tiers are the entity's Approval
+        Required options and Turkey keeps its own. The platform suggests a tier; Procurement
+        confirms or overrides it. Several entities: amounts are added up; with an Italian entity
+        Italy's thresholds apply, otherwise the highest among the entities (Flutter, 13 Oct).
+    Grid fields follow the RU V4 template with Flutter's 13 Oct changes (see Plan.html).
+
   IA CHANGE BRIEF, 2026-10-12 (column header dot)
     As in Plan.html: the dot marks fields the rule set checks (Sourcing Strategy, Strategy Rationals,
         RFE Deadline, Approval Required), with a tooltip naming the rule. Removed from the data-check columns.
@@ -38,7 +53,7 @@
         the first send, so owners are not challenged over Procurement's data errors.
     D11 Unfinished work moves forward with its lines; starting the cycle closes the open one.
     D19 "Authorization session" is now "authorization meeting": the product has no session mode.
-  Not mocked here: the Cycle 0 import review (column mapping, renewal pairing, P16). It is the
+  Not mocked here: the Cycle 1 import review (column mapping, renewal pairing, P16). It is the
   same review with the import in front of it.
   The rest of this comment describes the build before the brief.
 
@@ -219,16 +234,16 @@
         </a>
         <div class="min-w-0">
           <div class="flex items-center gap-2.5">
-            <h1 class="text-[16px] font-semibold text-gray-900">Cycle 3 &middot; Q2 2027</h1>
+            <h1 class="text-[16px] font-semibold text-gray-900">Cycle 4 &middot; Q2 2027</h1>
             <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white text-indigo-600 border border-dashed border-indigo-300">NEXT</span>
           </div>
-          <div class="text-[11.5px] text-gray-500">Start-of-cycle review &middot; copied from Cycle 2 &middot; plan Q2&ndash;Q3 2027 &middot; contracts expiring 1 Apr &ndash; 30 Sep 2027</div>
+          <div class="text-[11.5px] text-gray-500">Start-of-cycle review &middot; copied from Cycle 3 &middot; plan Q2&ndash;Q3 2027 &middot; expiring contracts sent: 14 Dec 2026 &ndash; 13 Sep 2027</div>
         </div>
       </div>
 
       <!-- steps -->
       <div class="flex items-center gap-2 shrink-0">
-        <template x-for="(s, i) in ['Lines', 'Contracts', 'Rules', 'Dates']" :key="s">
+        <template x-for="(s, i) in ['Carry forward', 'Contracts', 'Rules', 'Dates']" :key="s">
           <div class="flex items-center gap-2">
             <button @click="step = i + 1"
                     class="flex items-center gap-2 text-[12px] px-2.5 py-1 rounded-lg"
@@ -264,19 +279,18 @@
                   <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Nothing is scheduled yet</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      Cycle 3 starts as a copy of Cycle 2's live lines. From them I picked the contracts that end between <span class="font-semibold">1 Apr and 30 Sep 2027</span>:
-                      <span class="font-semibold">1,146 lines</span> in nine product categories. Three needs raised in earlier alignments are already in.
-                      Take out what does not belong, add what is missing, then upload Contract_Data, confirm the rules and set the dates.
-                      If the contracts are kept in Appian or SAP, you can import an export from there instead of adding them one by one.
+                      Cycle 4 starts as a copy of Cycle 3's open initiatives: <span class="font-semibold">4,215</span> in nine product categories, three of them needs raised in earlier alignments.
+                      Take out anything that should not carry forward, then upload Contract_Data, confirm the rules and set the dates.
+                      New initiatives are not added here: the Starters enter them during collection, with their group's expiring contracts in hand.
                     </p>
                     <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
-                      Contracts that end in April to June were also in Cycle 2's window. I marked them and left them in.
-                      Lines still waiting on a Requestor or an approval, and any unfinished work, move forward with their lines. Rejected and Cancelled lines, and Completed lines whose contract has ended, stay in Cycle 2.
+                      Initiatives still waiting on a Requestor or an approval, and any unfinished work, move forward with them. Rejected and Cancelled initiatives, and Completed ones whose contract has ended, stay in Cycle 3.
+                      Each copied initiative has its Procurement team recalculated from the current mappings.
                     </p>
                     <!-- P17, P19: the start-of-cycle check on the copy, and holding flagged lines back. -->
                     <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 flex items-start gap-3">
                       <div class="text-[12.5px] text-amber-900 leading-relaxed flex-1">
-                        <strong>Start-of-cycle check:</strong> 212 of these lines fail the rule set.
+                        <strong>Start-of-cycle check:</strong> 212 of these initiatives fail the rule set.
                         97 direct negotiations with no justification, 74 with no sourcing strategy, 41 with no owner.
                         <span x-show="holdBack">They are held back from the first send until Procurement fixes them, so owners are not asked about data errors that are ours to fix.</span>
                         <span x-show="!holdBack">They will be sent as they are, and owners will be challenged on them.</span>
@@ -291,16 +305,16 @@
                   <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Expiring contracts</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      Upload the latest Contract_Data extract. I pick each Purchasing Group's contracts ending in the window and attach them as an Excel to that group's launch email.
-                      The list is for information: the Starters decide what to enter as initiatives. Nothing is added to the plan here.
+                      Upload the latest Contract_Data extract. I apply Flutter's extraction rules, keep each Purchasing Group's contracts expiring in the nine months after launch, and attach them as an Excel to that group's launch email.
+                      The list is for information: the Starters decide what to enter as initiatives. Nothing is added to the plan here. At launch I read the file again against the launch date.
                     </p>
                   </div>
                 </template>
                 <template x-if="step === 3">
                   <div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">The rule set for Cycle 3</div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">The rule set for Cycle 4</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      Cycle 2's group rule set and entity overrides, copied. Once Cycle 3 starts they are fixed until Cycle 4 starts. Every entity uses the group set unless it has an override.
+                      Cycle 3's group rule set and entity overrides, copied. Once Cycle 4 starts they are fixed until Cycle 5 starts. Every entity uses the group set unless it has an override.
                       Confirm the group set to continue; overrides are confirmed as each entity's procedure arrives.
                     </p>
                   </div>
@@ -309,7 +323,7 @@
                   <div>
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Last step</div>
                     <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                      The dates below are what I proposed. The campaign starts when someone allowed to launch it does, on or after the planned date; they are reminded 7 days and 2 days before, and on the day. At launch each Purchasing Group's Starters are emailed and Cycle 2 closes.
+                      The dates below are what I proposed. The campaign starts when someone allowed to launch it does, on or after the planned date; they are reminded 7 days and 2 days before, and on the day. At launch each Purchasing Group's Starters are emailed and Cycle 3 closes.
                     </p>
                   </div>
                 </template>
@@ -363,328 +377,6 @@
                   </div>
                 </div>
                 <button @click="toggleAll()" class="text-[11.5px] text-gray-500 hover:text-gray-800" x-show="false"></button>
-                <button @click="addOpen = !addOpen"
-                        class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg border"
-                        :class="addOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'">
-                  <span class="text-[13px] leading-none">&#43;</span> Add lines
-                </button>
-              </div>
-            </div>
-
-            <!-- add panel -->
-            <div x-show="addOpen" x-transition.opacity class="rounded-xl border border-indigo-100 bg-white p-4 mb-4 shrink-0 max-h-[55%] overflow-y-auto scroll">
-              <div class="flex items-center gap-1 mb-3">
-                <button @click="addMode = 'existing'" class="text-[12px] px-3 py-1 rounded-md"
-                        :class="addMode === 'existing' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">From existing contracts</button>
-                <button @click="addMode = 'need'" class="text-[12px] px-3 py-1 rounded-md"
-                        :class="addMode === 'need' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">A new need</button>
-                <button @click="addMode = 'import'" class="text-[12px] px-3 py-1 rounded-md"
-                        :class="addMode === 'import' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-100'">Import a file</button>
-              </div>
-
-              <div x-show="addMode === 'existing'">
-                <p class="text-[11.5px] text-gray-500 mb-2">Contracts that end after 30 Sep 2027. Adding one brings its renewal forward into this plan.</p>
-                <input type="text" x-model="q" placeholder="Search contract, supplier or owner" class="fld mb-2">
-                <div class="border border-gray-100 rounded-lg divide-y divide-gray-100">
-                  <template x-for="c in candidates()" :key="c.id">
-                    <div class="flex items-center gap-3 px-3 py-2">
-                      <div class="min-w-0 flex-1">
-                        <div class="text-[12.5px] font-medium text-gray-900 truncate" x-text="c.contract"></div>
-                        <div class="text-[11px] text-gray-500 truncate" x-text="c.supplier + ' · ' + c.owner + ' · ' + c.cat"></div>
-                      </div>
-                      <div class="text-[11.5px] text-gray-600 shrink-0">ends <span x-text="fmt(c.ends)"></span></div>
-                      <div class="text-[11.5px] mono text-gray-700 w-16 text-right shrink-0" x-text="kfmt(c.value)"></div>
-                      <button @click="addExisting(c)" :disabled="isAdded(c.id)"
-                              class="text-[11.5px] font-semibold px-3 py-1 rounded-md shrink-0"
-                              :class="isAdded(c.id) ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'"
-                              x-text="isAdded(c.id) ? 'Added' : 'Add'"></button>
-                    </div>
-                  </template>
-                  <div x-show="candidates().length === 0" class="px-3 py-4 text-center text-[12px] text-gray-400">No contract matches.</div>
-                </div>
-              </div>
-
-              <div x-show="addMode === 'need'">
-                <p class="text-[11.5px] text-gray-500 mb-3">Something the business will buy that has no contract behind it yet.</p>
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">What</div>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
-                  <label class="block col-span-2">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Subject Contract</span>
-                    <input type="text" x-model="nd.subject" placeholder="What is needed" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Product Category</span>
-                    <select x-model="nd.cat" class="fld mt-1">
-                      <option value="">Choose</option>
-                      <template x-for="g in groups" :key="g.k"><option :value="g.k" x-text="g.k"></option></template>
-                    </select>
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Sub-category (if applicable)</span>
-                    <input type="text" x-model="nd.sub" placeholder="Optional" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Project</span>
-                    <input type="text" x-model="nd.proj" placeholder="If it belongs to one" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Status</span>
-                    <select x-model="nd.status" class="fld mt-1">
-                      <template x-for="o in statusOpts" :key="o"><option :value="o" x-text="o"></option></template>
-                    </select>
-                  </label>
-                  <label class="block col-span-3">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Detailed Activities</span>
-                    <textarea x-model="nd.act" rows="2" placeholder="What this initiative actually covers" class="fld mt-1"></textarea>
-                  </label>
-                </div>
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-4 mb-1.5">Entity, ownership and spend</div>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal Entity</span>
-                    <select multiple size="3" x-model="nd.ent" class="fld mt-1">
-                      <template x-for="o in entities" :key="o"><option :value="o" x-text="o"></option></template>
-                    </select>
-                    <span class="block text-[10px] text-gray-400 mt-0.5">One or more. Several entities stay one line.</span>
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Owner</span>
-                    <select x-model="nd.owner" class="fld mt-1">
-                      <option value="">Choose</option>
-                      <template x-for="o in owners" :key="o"><option :value="o" x-text="o"></option></template>
-                    </select>
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Business Unit</span>
-                    <select x-model="nd.bu" class="fld mt-1">
-                      <option value="">Choose</option>
-                      <template x-for="o in businessUnits" :key="o"><option :value="o" x-text="o"></option></template>
-                    </select>
-                  </label>
-                  <div class="col-span-2 flex items-center gap-4 pt-1">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 shrink-0">Applies to</span>
-                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.sisal"> Sisal</label>
-                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.pkr"> PokerStars Italy</label>
-                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.snai"> Snaitech</label>
-                    <label class="flex items-center gap-1.5 text-[12px] text-gray-700"><input type="checkbox" x-model="nd.seu"> SEU</label>
-                  </div>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Opex / Capex</span>
-                    <select x-model="nd.opx" class="fld mt-1">
-                      <option value="">Choose</option>
-                      <template x-for="o in opxOpts" :key="o"><option :value="o" x-text="o"></option></template>
-                    </select>
-                  </label>
-                  <label class="flex items-center gap-1.5 text-[12px] text-gray-700 pt-4"><input type="checkbox" x-model="nd.fopp"> Flutter Opportunity</label>
-                </div>
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-4 mb-1.5">Supplier and sourcing</div>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Potential Supplier</span>
-                    <input type="text" x-model="nd.sup" placeholder="If known" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Incumbent Supplier (if applicable)</span>
-                    <input type="text" x-model="nd.inc" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Sourcing Strategy</span>
-                    <select x-model="nd.strat" class="fld mt-1">
-                      <option value="">Choose</option>
-                      <template x-for="o in stratOpts" :key="o"><option :value="o" x-text="o"></option></template>
-                    </select>
-                  </label>
-                  <label class="block col-span-3">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">
-                      Strategy Rationals
-                      <span x-show="nd.strat === 'Direct Nego'" class="text-amber-600 normal-case font-normal">&middot; required for direct negotiation</span>
-                    </span>
-                    <textarea x-model="nd.ratio" rows="2" placeholder="Why this sourcing approach" class="fld mt-1"
-                              :class="nd.strat === 'Direct Nego' && !nd.ratio.trim() ? '!border-amber-300' : ''"></textarea>
-                  </label>
-                </div>
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-4 mb-1.5">Term and value</div>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-3">
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Start Date</span>
-                    <input type="date" x-model="nd.by" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">End Date</span>
-                    <input type="date" x-model="nd.end" class="fld mt-1">
-                  </label>
-                  <label class="block">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Total Contract Value (€)</span>
-                    <input type="number" min="0" x-model="nd.value" placeholder="120000" class="fld mt-1">
-                  </label>
-                  <label class="block col-span-3">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Rational Amount</span>
-                    <input type="text" x-model="nd.ramt" placeholder="Justification of the amount" class="fld mt-1">
-                  </label>
-                  <label class="block col-span-3">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Additional Notes</span>
-                    <textarea x-model="nd.notes" rows="2" class="fld mt-1"></textarea>
-                  </label>
-                </div>
-
-                <div x-show="nd.value && nd.by" class="mt-3 text-[12px] rounded-lg border px-3 py-2"
-                     :class="short(nd) ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'">
-                  <span x-text="noticeText(nd)"></span>
-                  <span x-show="short(nd)" class="block mt-1 text-[11px] opacity-80">It can still be added. Procurement declares the delivery time.</span>
-                </div>
-                <div class="mt-3 flex justify-end">
-                  <button @click="addNeed()" :disabled="!canAdd()"
-                          class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg"
-                          :class="canAdd() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Add to plan</button>
-                </div>
-              </div>
-
-              <!-- ══════════ Import a file ══════════ -->
-              <div x-show="addMode === 'import'" id="import-panel">
-
-                <!-- 1 · choose the source and the file -->
-                <div x-show="imp.stage === 'choose'">
-                  <p class="text-[11.5px] text-gray-500 mb-3">
-                    Bring in an export of the contracts instead of adding them one by one. Nothing is added until you have seen what was read,
-                    and rows that match a line already in the plan are recognized, so nothing is listed twice.
-                  </p>
-                  <div class="flex items-center gap-2 mb-3">
-                    <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 mr-1">Exported from</span>
-                    <template x-for="k in ['appian', 'sap']" :key="k">
-                      <button @click="imp.source = k" class="text-[12px] px-3 py-1 rounded-md border"
-                              :class="imp.source === k ? 'bg-indigo-50 text-indigo-700 border-indigo-200 font-semibold' : 'text-gray-600 border-gray-200 hover:bg-gray-50'"
-                              x-text="sources[k].label"></button>
-                    </template>
-                  </div>
-                  <label for="imp-file" class="block rounded-lg border border-dashed border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50/60 cursor-pointer px-4 py-6 text-center">
-                    <span class="block text-[13px] font-medium text-gray-800">Drop the export here, or choose a file</span>
-                    <span class="block text-[11.5px] text-gray-500 mt-1" x-text="'CSV or Excel. ' + srcDef().hint"></span>
-                  </label>
-                  <input id="imp-file" type="file" accept=".csv,.xlsx,.xls" class="hidden" @change="pickFile($event)">
-                  <div class="mt-3 text-[11.5px] text-gray-500">
-                    No file to hand?
-                    <button @click="useSample()" class="font-medium text-indigo-600 hover:text-indigo-800">Try it with a sample export</button>
-                  </div>
-                </div>
-
-                <!-- 2 · what was read -->
-                <div x-show="imp.stage === 'preview'">
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="min-w-0">
-                      <div class="text-[13px] font-semibold text-gray-900 truncate" x-text="imp.file"></div>
-                      <div class="text-[11.5px] text-gray-500" x-text="'Exported from ' + srcDef().label + ' · ' + imp.rows.length + ' rows read'"></div>
-                    </div>
-                    <button @click="resetImport()" class="text-[11.5px] font-medium text-gray-500 hover:text-gray-800 shrink-0">Choose another file</button>
-                  </div>
-
-                  <div class="mt-3 flex flex-wrap gap-2 text-[11.5px]" id="imp-summary">
-                    <span class="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100" x-text="impCount('new') + ' new'"></span>
-                    <span class="px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 border border-gray-200" x-text="impCount('dup') + ' already in the plan'"></span>
-                    <span class="px-2.5 py-1 rounded-md bg-sky-50 text-sky-800 border border-sky-100" x-text="impCount('out') + ' outside the window'"></span>
-                    <span class="px-2.5 py-1 rounded-md border" :class="impCount('fix') ? 'bg-amber-50 text-amber-900 border-amber-200' : 'bg-gray-50 text-gray-400 border-gray-100'" x-text="impCount('fix') + ' need a fix'"></span>
-                  </div>
-
-                  <!-- how the columns and the values were read -->
-                  <div class="mt-3 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2.5">
-                    <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Columns read</div>
-                    <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-gray-700">
-                      <template x-for="c in srcDef().cols" :key="c[0]">
-                        <span><span class="text-gray-500" x-text="c[0]"></span> <span class="text-gray-300">&rarr;</span> <span class="font-medium" x-text="c[1]"></span></span>
-                      </template>
-                    </div>
-
-                    <div class="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500" x-text="srcDef().catLabel"></div>
-                    <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] items-center" id="cat-lookup">
-                      <template x-for="m in imp.catMap" :key="m.from">
-                        <span class="flex items-center gap-1.5">
-                          <span class="mono text-gray-600" x-text="m.from"></span> <span class="text-gray-300">&rarr;</span>
-                          <template x-if="m.to"><span class="font-medium text-gray-800" x-text="m.to"></span></template>
-                          <template x-if="!m.to">
-                            <select x-model="m.to" class="fld !w-[170px] !py-0.5 !text-[11.5px] !border-amber-300 !bg-amber-50">
-                              <option value="">Choose a category</option>
-                              <template x-for="g in groups" :key="g.k"><option :value="g.k" x-text="g.k"></option></template>
-                            </select>
-                          </template>
-                        </span>
-                      </template>
-                    </div>
-
-                    <template x-if="imp.ownerMap.length">
-                      <div>
-                        <div class="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Purchasing Group column, with the Business Owner from the people mapping</div>
-                        <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] items-center" id="owner-lookup">
-                          <template x-for="m in imp.ownerMap" :key="m.from">
-                            <span class="flex items-center gap-1.5">
-                              <span class="mono text-gray-600" x-text="m.from"></span> <span class="text-gray-300">&rarr;</span>
-                              <template x-if="m.to"><span class="font-medium text-gray-800" x-text="m.to"></span></template>
-                              <template x-if="!m.to">
-                                <select x-model="m.to" class="fld !w-[170px] !py-0.5 !text-[11.5px] !border-amber-300 !bg-amber-50">
-                                  <option value="">Choose an owner</option>
-                                  <template x-for="o in owners" :key="o"><option :value="o" x-text="o"></option></template>
-                                </select>
-                              </template>
-                            </span>
-                          </template>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-
-                  <!-- the rows -->
-                  <div class="mt-3 border border-gray-100 rounded-lg overflow-hidden">
-                    <div class="irow px-3 py-1.5 bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                      <div></div><div>Line</div><div>Business Owner</div><div>Category</div><div>Ends</div><div class="text-right">Value</div><div>Result</div>
-                    </div>
-                    <template x-for="r in imp.rows" :key="r.id">
-                      <div class="irow px-3 py-2 border-t border-gray-100" :class="canPick(r) ? '' : 'bg-gray-50/60'" data-imp-row>
-                        <div>
-                          <input type="checkbox" class="w-3.5 h-3.5 accent-indigo-600" :checked="pickOf(r)" :disabled="!canPick(r)" @change="r.pick = $event.target.checked">
-                        </div>
-                        <div class="min-w-0">
-                          <div class="text-[12px] font-medium truncate" :class="canPick(r) ? 'text-gray-900' : 'text-gray-500'" x-text="r.title"></div>
-                          <div class="text-[10.5px] text-gray-500 truncate"><span class="mono" x-text="r.ref"></span> · <span x-text="r.sup"></span></div>
-                        </div>
-                        <div class="min-w-0 text-[11.5px]">
-                          <template x-if="ownerOf(r)"><span class="text-gray-700 truncate block" x-text="ownerOf(r)"></span></template>
-                          <template x-if="!ownerOf(r) && srcDef().ownerMode === 'name'">
-                            <select x-model="r.ownerFix" class="fld !py-0.5 !text-[11.5px] !border-amber-300 !bg-amber-50">
-                              <option value="">Choose an owner</option>
-                              <template x-for="o in owners" :key="o"><option :value="o" x-text="o"></option></template>
-                            </select>
-                          </template>
-                          <template x-if="!ownerOf(r) && srcDef().ownerMode !== 'name'"><span class="text-amber-700">Owner not matched</span></template>
-                        </div>
-                        <div class="text-[11.5px] min-w-0">
-                          <span x-show="catOf(r)" class="text-gray-700 truncate block" x-text="catOf(r)"></span>
-                          <span x-show="!catOf(r)" class="text-amber-700">Category not matched</span>
-                        </div>
-                        <div class="text-[11.5px] text-gray-700" x-text="fmt(r.ends).replace(/ 20(\d\d)$/, ' ’$1')"></div>
-                        <div class="text-[11.5px] mono text-right text-gray-800" x-text="kfmt(r.value)"></div>
-                        <div class="text-[10.5px] font-medium">
-                          <span x-show="statusOf(r) === 'new'" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">New</span>
-                          <span x-show="statusOf(r) === 'dup'" class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200" :title="'Same contract as ' + r.match">In the plan</span>
-                          <span x-show="statusOf(r) === 'out'" class="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-100" x-text="r.ends > dates.to ? 'Ends after' : 'Ends before'"></span>
-                          <span x-show="statusOf(r) === 'fix'" class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">Needs a fix</span>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-                  <p class="mt-2 text-[11px] text-gray-500 leading-relaxed">
-                    A line ending after the window brings its renewal forward, and one ending before it belongs to the previous plan, so both start unticked.
-                  </p>
-
-                  <div class="mt-3 flex items-center justify-between gap-3">
-                    <div class="text-[11.5px] text-gray-500" x-text="impCount('fix') ? pl(impCount('fix'), 'row') + ' cannot be added until the choice above is made.' : ''"></div>
-                    <button @click="addImported()" :disabled="pickedImport().length === 0"
-                            class="text-[12px] font-semibold px-3.5 py-1.5 rounded-lg shrink-0"
-                            :class="pickedImport().length ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'"
-                            x-text="pickedImport().length ? 'Add ' + pl(pickedImport().length, 'line') + ' to the plan' : 'Nothing ticked'"></button>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -891,7 +583,7 @@
               <div x-show="shownGroups().length === 0" class="px-4 py-8 text-center text-[12px] text-gray-400">Nothing in this view.</div>
 
               <div class="border-t border-gray-200 px-4 py-1.5 flex items-center gap-5 text-[11.5px] text-gray-500 bg-white shrink-0">
-                <span><strong class="text-gray-800" x-text="totalLines().toLocaleString('en-GB')"></strong> lines in the draft plan</span>
+                <span><strong class="text-gray-800" x-text="totalLines().toLocaleString('en-GB')"></strong> initiatives carried forward</span>
                 <span>Contract value <strong class="text-gray-800" x-text="mfmt(totalValue())"></strong></span>
                 <div class="flex-1"></div>
                 <span x-show="flaggedRows()" class="text-amber-600" x-text="pl(flaggedRows(), 'line') + ' with a flagged cell'"></span>
@@ -916,8 +608,8 @@
                     <div class="mt-2 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5">
                       <span class="w-8 h-8 rounded bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">XLSX</span>
                       <div class="min-w-0 flex-1">
-                        <div class="text-[12px] font-medium text-gray-800">Contract_Data_18092026.xlsx</div>
-                        <div class="text-[11px] text-gray-500">3,912 contracts read · uploaded by Sara Lombardi, Mon 12 Oct 2026</div>
+                        <div class="text-[12px] font-medium text-gray-800">Contracts.xlsx</div>
+                        <div class="text-[11px] text-gray-500">45,028 contracts read, 48 columns · uploaded by Sara Lombardi, Tue 13 Oct 2026</div>
                       </div>
                       <button @click="cd.uploaded = false" class="text-[11.5px] font-medium text-indigo-600">Choose another file</button>
                     </div>
@@ -935,10 +627,56 @@
               <div class="space-y-4">
                 <!-- RU 4.2.1: filter and attach only. No comparison with the plan, so no matched or unmatched counts. -->
                 <div class="grid grid-cols-3 gap-4">
-                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900" x-text="cdInWindow().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500" x-text="'contracts end within ' + cd.months + ' months of launch'"></div></div>
-                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900">58</div><div class="text-[11.5px] text-gray-500">Purchasing Groups receive a list</div></div>
-                  <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><div class="text-xl font-semibold text-amber-900">11</div><div class="text-[11.5px] text-amber-800">have no Purchasing Group, listed to Procurement</div></div>
+                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900" x-text="cdInWindow().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500" x-text="'contracts expire within ' + cd.months + ' months of launch'"></div></div>
+                  <div class="rounded-xl border border-gray-200 bg-white px-4 py-3"><div class="text-xl font-semibold text-gray-900">123</div><div class="text-[11.5px] text-gray-500">Purchasing Groups receive a list</div></div>
+                  <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><div class="text-xl font-semibold text-amber-900">12</div><div class="text-[11.5px] text-amber-800">belong to a group missing from the mapping (M28, J00), listed to Procurement</div></div>
                 </div>
+
+                <!-- Flutter's Rules for Extracting Expiring Contracts, in their order. Counts are
+                     from the 13 Oct Contracts.xlsx, previewed against today's date. -->
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                    <span class="text-[12px] font-semibold text-gray-800">Flutter's extraction rules</span>
+                    <span class="text-[11px] text-gray-400">Rules for Extracting Expiring Contracts &middot; editable by Procurement Excellence</span>
+                  </div>
+                  <table class="w-full text-[12px]">
+                    <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                      <th class="px-4 py-2 font-medium w-10">Step</th><th class="px-4 py-2 font-medium">Column</th><th class="px-4 py-2 font-medium">Rule</th>
+                      <th class="px-4 py-2 font-medium text-right">Removed</th><th class="px-4 py-2 font-medium text-right">Left</th>
+                    </tr></thead>
+                    <tbody>
+                      <template x-for="r in cd.steps" :key="r.n">
+                        <tr class="border-b border-gray-50 last:border-0">
+                          <td class="px-4 py-1.5 mono text-gray-500" x-text="r.n"></td>
+                          <td class="px-4 py-1.5 mono text-[11.5px] text-gray-700" x-text="r.col"></td>
+                          <td class="px-4 py-1.5 text-gray-700" x-text="r.rule"></td>
+                          <td class="px-4 py-1.5 text-right mono text-gray-500" x-text="r.rem"></td>
+                          <td class="px-4 py-1.5 text-right mono font-medium text-gray-800" x-text="r.left"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- The fixes we propose to agree with Flutter, applied on the fly at upload and logged per row. -->
+                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                    <span class="text-[12px] font-semibold text-gray-800">Fixes applied while reading</span>
+                    <span class="text-[11px] text-gray-400">to agree with Flutter &middot; each fix is logged on the row</span>
+                  </div>
+                  <div class="divide-y divide-gray-50">
+                    <template x-for="x in cd.fixes" :key="x.k">
+                      <div class="px-4 py-2 flex items-start gap-3 text-[12px]">
+                        <span class="mono text-[11.5px] font-semibold shrink-0 w-16 text-right" :class="x.warn ? 'text-amber-700' : 'text-gray-700'" x-text="x.n"></span>
+                        <div class="min-w-0">
+                          <div class="font-medium text-gray-800" x-text="x.k"></div>
+                          <div class="text-[11.5px] text-gray-500" x-text="x.d"></div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                   <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
                     <span class="text-[12px] font-semibold text-gray-800">What each Purchasing Group receives at launch</span>
@@ -960,7 +698,14 @@
                       </template>
                     </tbody>
                   </table>
-                  <div class="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-100">Showing 6 of 58 Purchasing Groups. Each list holds every contract ending in the window, including those already in the plan. Filters and columns follow Flutter's Rules for Extracting Expiring Contracts (to come).</div>
+                  <div class="px-4 py-2.5 bg-gray-50 border-t border-gray-100">
+                    <div class="text-[11px] text-gray-500">Showing 6 of 123 Purchasing Groups. Each list holds every contract expiring in the window, including any already in the plan. Starters and Requestors come from the Purchasing Group mapping (V2.0).</div>
+                    <div class="text-[11px] text-gray-500 mt-1.5 flex flex-wrap items-center gap-1">
+                      <span class="font-medium text-gray-600 mr-1">Columns in the attachment, proposed:</span>
+                      <template x-for="c in cd.cols" :key="c"><span class="mono text-[10.5px] px-1.5 py-0.5 rounded bg-white border border-gray-200 text-gray-600" x-text="c"></span></template>
+                      <span class="text-amber-700 ml-1">To confirm with Flutter: the rules file lists filters, not columns.</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -969,7 +714,7 @@
           <!-- ══════════ STEP 2 · RULES (IA brief D6, D21) ══════════
                The only point at which a rule set can change. Each legal entity has its own
                rule set, configured independently (D21): value bands, minimum notice, the
-               derogation ladder and the validity tolerances. Values that differ from Cycle 2
+               derogation ladder and the validity tolerances. Values that differ from Cycle 3
                are marked with the lines they affect. Every entity must be confirmed before
                the cycle can be scheduled; editing a confirmed entity unconfirms it.
                Values: Italian entities from the FSEA user guide and their own RFE deadline
@@ -1002,7 +747,7 @@
               <div class="flex items-center gap-3">
                 <div class="min-w-0 flex-1">
                   <h2 class="text-[15px] font-semibold text-gray-900" x-text="ent().k"></h2>
-                  <p class="text-[11.5px] text-gray-500" x-text="ent().lines + ' lines in Cycle 3 · ' + ent().src"></p>
+                  <p class="text-[11.5px] text-gray-500" x-text="ent().lines + ' lines in Cycle 4 · ' + ent().src"></p>
                 </div>
                 <label class="text-[11.5px] text-gray-500 flex items-center gap-1.5 shrink-0">Copy values from
                   <select @change="copyFrom($event.target.value); $event.target.value = ''" class="text-[11.5px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-700">
@@ -1026,7 +771,7 @@
                 <table class="w-full text-[12px]">
                   <thead><tr class="text-left text-gray-500 border-b border-gray-100">
                     <th class="px-4 py-2 font-medium">Up to (&euro;)</th><th class="px-4 py-2 font-medium">Required method</th>
-                    <th class="px-4 py-2 font-medium text-right">Cycle 2</th><th class="px-4 py-2 font-medium"></th>
+                    <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium"></th>
                   </tr></thead>
                   <tbody>
                     <template x-for="(bd, i) in ent().bands" :key="i">
@@ -1052,7 +797,7 @@
                 <table class="w-full text-[12px]">
                   <thead><tr class="text-left text-gray-500 border-b border-gray-100">
                     <th class="px-4 py-2 font-medium">Sourcing strategy</th><th class="px-4 py-2 font-medium">Amount</th>
-                    <th class="px-4 py-2 font-medium text-right">Cycle 2</th><th class="px-4 py-2 font-medium text-right w-28">Cycle 3</th><th class="px-4 py-2 font-medium"></th>
+                    <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium text-right w-28">Cycle 4</th><th class="px-4 py-2 font-medium"></th>
                   </tr></thead>
                   <tbody>
                     <template x-for="n in ent().notice" :key="n.strat + n.amt">
@@ -1071,8 +816,8 @@
               <div class="grid grid-cols-2 gap-4">
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                   <div class="px-4 py-2.5 border-b border-gray-100">
-                    <div class="text-[12px] font-semibold text-gray-800">Who authorizes a derogation</div>
-                    <div class="text-[10.5px] text-gray-400 mt-0.5">These tiers are this entity's Approval Required options.</div>
+                    <div class="text-[12px] font-semibold text-gray-800">Approval thresholds</div>
+                    <div class="text-[10.5px] text-gray-400 mt-0.5">The tiers are this entity's Approval Required options. The platform suggests one per line; Procurement confirms it or chooses another.</div>
                   </div>
                   <table class="w-full text-[12px]">
                     <tbody>
@@ -1111,13 +856,13 @@
                      :class="ent().confirmed ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-200 bg-white'">
                 <input type="checkbox" x-model="ent().confirmed" class="accent-indigo-600 w-4 h-4 mt-0.5">
                 <span class="text-[12.5px] text-gray-800 leading-relaxed">
-                  <strong x-text="ent().kind === 'group' ? 'I confirm the group rule set for Cycle 3.' : 'I confirm ' + ent().k + '\'s override for Cycle 3.'"></strong>
-                  <span class="text-gray-600" x-text="entChanges(ent()) ? entChanges(ent()) + (entChanges(ent()) === 1 ? ' value differs' : ' values differ') + ' from Cycle 2, and the change is audited.' : 'No value differs from Cycle 2.'"></span>
-                  It cannot change again until Cycle 4 starts.
+                  <strong x-text="ent().kind === 'group' ? 'I confirm the group rule set for Cycle 4.' : 'I confirm ' + ent().k + '\'s override for Cycle 4.'"></strong>
+                  <span class="text-gray-600" x-text="entChanges(ent()) ? entChanges(ent()) + (entChanges(ent()) === 1 ? ' value differs' : ' values differ') + ' from Cycle 3, and the change is audited.' : 'No value differs from Cycle 3.'"></span>
+                  It cannot change again until Cycle 5 starts.
                 </span>
               </label>
               </div>
-              <p class="text-[11.5px] text-gray-500 leading-relaxed">Lines naming several entities use the strictest value among them, rule by rule. Procurement team mappings are not part of this rule set: they stay live until a line is submitted, and are edited in the cycle's People tab.</p>
+              <p class="text-[11.5px] text-gray-500 leading-relaxed">An initiative naming several entities adds their amounts together. If one of them is Italian, Italy's thresholds apply; otherwise the highest thresholds among them. Other rules use the strictest value among the entities. Procurement team mappings are not part of this rule set: they stay live until an initiative is submitted, and are edited in the cycle's People tab.</p>
             </div>
           </div>
 
@@ -1127,7 +872,7 @@
               <div class="grid grid-cols-3 gap-x-5 gap-y-4">
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Plan</span>
-                  <input type="text" readonly value="Cycle 3 · plan Q2–Q3 2027" class="fld mt-1 !bg-gray-50 !text-gray-600">
+                  <input type="text" readonly value="Cycle 4 · plan Q2–Q3 2027" class="fld mt-1 !bg-gray-50 !text-gray-600">
                 </label>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Covers contracts expiring from</span>
@@ -1165,13 +910,13 @@
             <div class="rounded-xl border border-gray-200 bg-white p-4 mt-4">
               <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">What you are scheduling</div>
               <div class="mt-2 grid grid-cols-4 gap-4">
-                <div><div class="text-xl font-semibold text-gray-900" x-text="totalLines().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500">lines</div></div>
+                <div><div class="text-xl font-semibold text-gray-900" x-text="totalLines().toLocaleString('en-GB')"></div><div class="text-[11.5px] text-gray-500">initiatives carried forward</div></div>
                 <div><div class="text-xl font-semibold text-gray-900" x-text="mfmt(totalValue())"></div><div class="text-[11.5px] text-gray-500">contract value</div></div>
                 <div><div class="text-xl font-semibold text-gray-900" x-text="includedGroups().length + ' of 9'"></div><div class="text-[11.5px] text-gray-500">product categories</div></div>
                 <div><div class="text-xl font-semibold text-gray-900" x-text="removedCount() + ' out, ' + (addedCount() + importedCount()) + ' in'"></div><div class="text-[11.5px] text-gray-500">changed by you</div></div>
               </div>
               <p class="text-[12px] text-gray-500 mt-3 leading-relaxed">
-                Lines Starters add later join the cycle, as in every cycle, until the review window ends. After closure, changes go to the Sr. Procurement Director as requests.
+                Initiatives Starters enter during collection join the cycle, until the review window ends. After closure, changes go to the Sr. Procurement Director as requests.
               </p>
               <p x-show="noReasonText()" class="text-[12px] text-gray-500 mt-1.5 leading-relaxed" x-text="noReasonText()"></p>
               <button @click="step = 1" class="mt-2 text-[12px] font-medium text-indigo-600 hover:text-indigo-800">&larr; Back to the lines</button>
@@ -1190,10 +935,10 @@
               <span x-text="cd.uploaded ? 'Each Purchasing Group\'s Starters get their expiring contracts as an Excel with the launch email. Nothing joins the plan here.' : 'Upload Contract_Data, or continue without it and the launch email goes out with no list.'"></span>
             </template>
             <template x-if="step === 3">
-              <span x-text="rulesOk ? 'The group set is confirmed for Cycle 3. ' + unconfirmedText() : 'Confirm the group rule set to continue. ' + unconfirmedText()"></span>
+              <span x-text="rulesOk ? 'The group set is confirmed for Cycle 4. ' + unconfirmedText() : 'Confirm the group rule set to continue. ' + unconfirmedText()"></span>
             </template>
             <template x-if="step === 4">
-              <span x-text="blockReason() || 'Scheduling sets the plan. Nothing is sent until an authorized person launches the campaign; at launch the Starters are emailed and Cycle 2 closes, which cannot be undone.'"
+              <span x-text="blockReason() || 'Scheduling sets the plan. Nothing is sent until an authorized person launches the campaign; at launch the Starters are emailed and Cycle 3 closes, which cannot be undone.'"
                     :class="blockReason() ? 'text-amber-700 font-medium' : ''"></span>
             </template>
           </div>
@@ -1201,7 +946,7 @@
             <a x-show="step === 1" href="P0%20Purchasing%20Plans.html" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Cancel</a>
             <button x-show="step > 1" @click="step = step - 1" class="text-[12px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Back</button>
             <button x-show="step === 1" @click="step = 2; document.getElementById('main').scrollTop = 0"
-                    class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to contracts</button>
+                    class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to Contract_Data</button>
             <button x-show="step === 2" @click="step = 3; document.getElementById('main').scrollTop = 0"
                     class="text-[12px] font-semibold px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Continue to rules</button>
             <button x-show="step === 3" @click="toDates()" :disabled="!rulesOk"
@@ -1209,7 +954,7 @@
                     :class="rulesOk ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-default'">Continue to dates</button>
             <button x-show="step === 4" @click="confirm()" :disabled="!!blockReason()"
                     class="text-[12px] font-semibold px-4 py-2 rounded-lg"
-                    :class="blockReason() ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Confirm and schedule Cycle 3</button>
+                    :class="blockReason() ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-indigo-600 text-white hover:bg-indigo-700'">Confirm and schedule Cycle 4</button>
           </div>
         </div>
       </div>
@@ -1218,7 +963,7 @@
       <aside class="w-[264px] shrink-0 bg-white border-l border-gray-200 px-4 py-4 overflow-y-auto scroll">
         <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Scope</div>
         <div class="mt-2 text-[26px] leading-none font-semibold text-gray-900" id="total" x-text="totalLines().toLocaleString('en-GB')"></div>
-        <div class="text-[11.5px] text-gray-500 mt-1">lines, <span x-text="mfmt(totalValue())"></span> of contract value</div>
+        <div class="text-[11.5px] text-gray-500 mt-1">initiatives carried forward, <span x-text="mfmt(totalValue())"></span> of contract value</div>
 
         <div class="mt-4 space-y-1.5">
           <template x-for="g in groups" :key="g.k">
@@ -1232,9 +977,7 @@
         <div class="mt-5 pt-4 border-t border-gray-100">
           <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Your changes</div>
           <div class="mt-2 space-y-1 text-[12px] text-gray-700">
-            <div class="flex justify-between"><span>Lines removed</span><span class="mono" x-text="removedCount()"></span></div>
-            <div class="flex justify-between"><span>Lines added</span><span class="mono" x-text="addedCount()"></span></div>
-            <div class="flex justify-between"><span>Lines imported</span><span class="mono" x-text="importedCount()"></span></div>
+            <div class="flex justify-between"><span>Initiatives removed</span><span class="mono" x-text="removedCount()"></span></div>
             <div class="flex justify-between"><span>Categories left out</span><span class="mono" x-text="groups.filter(g => g.excluded).length"></span></div>
             <div class="flex justify-between"><span>Held back, flagged</span><span class="mono" x-text="holdBack ? 212 : 0"></span></div>
             <div class="flex justify-between"><span>Rule values changed</span><span class="mono" x-text="ruleChanges()"></span></div>
@@ -1262,7 +1005,7 @@ function review() {
     step: 1,
     filter: 'all',
     holdBack: true,     // P17
-    // D6, D21: one rule set per legal entity, copied from Cycle 2, configured independently.
+    // D6, D21: one rule set per legal entity, copied from Cycle 3, configured independently.
     entSel: 'Sisal Italia',
     ruleEnts: [],
     get rulesOk() { const g = this.ruleEnts.find(e => e.kind === 'group'); return !!(g && g.confirmed); },
@@ -1307,8 +1050,8 @@ function review() {
       const it = () => ({
         bands: [ { to: 10000, method: 'A quote from a single supplier' }, { to: 50000, method: 'At least two quotes' },
                  { to: 100000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender, three suppliers' } ],
-        notice: [ { strat: 'Direct Nego', amt: 'Below € 100,000', days: 30, lines: 214 }, { strat: 'Direct Nego', amt: '€ 100,000 – € 1,000,000', days: 40, lines: 131 },
-                  { strat: 'Direct Nego', amt: 'Above € 1,000,000', days: 60, lines: 22 }, { strat: 'Light Tender', amt: 'Any', days: 40, lines: 188 },
+        notice: [ { strat: 'Direct Negotiation', amt: 'Below € 100,000', days: 30, lines: 214 }, { strat: 'Direct Negotiation', amt: '€ 100,000 – € 1,000,000', days: 40, lines: 131 },
+                  { strat: 'Direct Negotiation', amt: 'Above € 1,000,000', days: 60, lines: 22 }, { strat: 'Light Tender', amt: 'Any', days: 40, lines: 188 },
                   { strat: 'Full Tender', amt: 'Any', days: 60, lines: 96 } ],
         ladder: [ { rung: 'No Approval Required', to: 10000 }, { rung: 'Head of Category', to: 50000 },
                   { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
@@ -1316,8 +1059,8 @@ function review() {
       const tr = () => ({
         bands: [ { to: 1000, method: 'A quote from a single supplier' }, { to: 10000, method: 'At least three quotes' },
                  { to: 50000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender' } ],
-        notice: [ { strat: 'Direct Nego', amt: 'Up to € 50,000', days: 25, lines: 18 }, { strat: 'Direct Nego', amt: '€ 50,000 – € 1,000,000', days: 40, lines: 9 },
-                  { strat: 'Direct Nego', amt: 'Above € 1,000,000', days: 60, lines: 1 }, { strat: 'Quote comparison', amt: '€ 1,000 – € 10,000', days: 30, lines: 7 },
+        notice: [ { strat: 'Direct Negotiation', amt: 'Up to € 50,000', days: 25, lines: 18 }, { strat: 'Direct Negotiation', amt: '€ 50,000 – € 1,000,000', days: 40, lines: 9 },
+                  { strat: 'Direct Negotiation', amt: 'Above € 1,000,000', days: 60, lines: 1 }, { strat: 'Quote comparison', amt: '€ 1,000 – € 10,000', days: 30, lines: 7 },
                   { strat: 'Structured comparison', amt: '€ 10,000 – € 50,000', days: 40, lines: 6 }, { strat: 'Tender', amt: 'Above € 50,000', days: 60, lines: 4 } ],
         ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Category', to: 50000 },
                   { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
@@ -1325,14 +1068,14 @@ function review() {
       // D21: the group set, then entities. kind: group, override, inherit (no override).
       // known: we have seen the entity's procedure, so inheriting is a confirmed choice.
       const list = [
-        { k: 'Group set',               kind: 'group',    known: true,  lines: 1146, src: 'RU 4.9, the FSEA user guide and the plan\'s RFE deadline formula', f: it },
-        { k: 'Sisal Italia',            kind: 'inherit',  known: true,  lines: 612, src: 'Group set', f: it },
-        { k: 'Snaitech',                kind: 'inherit',  known: true,  lines: 148, src: 'Group set', f: it },
-        { k: 'Sisal Gaming',            kind: 'inherit',  known: true,  lines: 96,  src: 'Group set', f: it },
-        { k: 'TSG Italy',               kind: 'inherit',  known: true,  lines: 41,  src: 'Group set', f: it },
-        { k: 'Sisal Technology Turkey', kind: 'override', known: true,  lines: 38,  src: 'Override from the STH procurement procedure', f: tr },
-        { k: 'Sisal Albania',           kind: 'inherit',  known: false, lines: 52,  src: 'Group set, procedure not seen', f: it },
-        { k: 'Sisal Jeux Maroc',        kind: 'inherit',  known: false, lines: 46,  src: 'Group set, procedure not seen', f: it }
+        { k: 'Group set',               kind: 'group',    known: true,  lines: 4215, src: 'RU 4.9, the FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'Sisal Italia',            kind: 'inherit',  known: true,  lines: 2249, src: 'Group set', f: it },
+        { k: 'Snaitech',                kind: 'inherit',  known: true,  lines: 544, src: 'Group set', f: it },
+        { k: 'Sisal Gaming',            kind: 'inherit',  known: true,  lines: 353, src: 'Group set', f: it },
+        { k: 'TSG Italy',               kind: 'inherit',  known: true,  lines: 151, src: 'Group set', f: it },
+        { k: 'Sisal Technology Turkey', kind: 'override', known: true,  lines: 140, src: 'Override from the STH procurement procedure', f: tr },
+        { k: 'Sisal Albania',           kind: 'inherit',  known: false, lines: 191, src: 'Group set, procedure not seen', f: it },
+        { k: 'Sisal Jeux Maroc',        kind: 'inherit',  known: false, lines: 169, src: 'Group set, procedure not seen', f: it }
       ];
       this.ruleEnts = list.map(x => {
         const v = x.f();
@@ -1344,16 +1087,41 @@ function review() {
       });
     },
     // D29: the Contract_Data step (RU 4.2.1, Option 1: filter and attach, no matching). Illustrative counts.
+    // 2026-10-15: counts from the 13 Oct Contracts.xlsx and Flutter's 11 extraction steps.
+    // Group names and counts are real; Requestor names stay illustrative.
     cd: { uploaded: false, months: 9,
+      steps: [
+        { n: 1,  col: 'E · Societa',             rule: 'Keep only the companies in RU 1.3',                                     rem: '14,343', left: '30,685' },
+        { n: 2,  col: 'AC · Intercompany',       rule: 'Remove intercompany contracts (Si)',                                    rem: '141',    left: '30,544' },
+        { n: 3,  col: 'B · Nome_fornitore',      rule: 'Remove group companies, street addresses and three banks as supplier', rem: '168',    left: '30,376' },
+        { n: 4,  col: 'Z · Stato_avanzamento',   rule: 'Remove rescinded and cancelled contracts',                              rem: '3,268',  left: '27,108' },
+        { n: 5,  col: 'C · Oggetto_contratto',   rule: 'Remove MOU, LOI and NDA',                                               rem: '97',     left: '27,011' },
+        { n: 6,  col: 'F · Iniziatore',          rule: 'Remove initiators Fabbri and Ehrlich',                                  rem: '908',    left: '26,103' },
+        { n: 7,  col: 'R · Importo_totale',      rule: 'Remove contracts with no amount',                                       rem: '63',     left: '26,040' },
+        { n: 8,  col: 'S · Importo_totale_in_Euro', rule: 'Remove contracts with no amount in euro',                            rem: '10',     left: '26,030' },
+        { n: 9,  col: 'Y · Gruppo_Merci',        rule: 'Remove 415001-02, Affiliazione Online CPA',                             rem: '312',    left: '25,718' },
+        { n: 10, col: 'D · Gruppo_acquisti',     rule: 'Split by Purchasing Group',                                             rem: '',       left: '123 groups' },
+        { n: 11, col: 'O · Data_scadenza',       rule: 'Keep contracts expiring in the nine months after launch',               rem: '23,203', left: '2,515' }
+      ],
+      fixes: [
+        { k: 'Company names mapped to RU 1.3',       n: '27 → 14', d: 'Appian spells every company differently (Sisal Italia S.p.A. with a trailing space, TSG  Italy  S.r.l.). 13 Appian companies are outside RU 1.3, among them SisalPay and Sisal Lottery Italia.' },
+        { k: 'Supplier exclusions as a list',         n: '3', warn: true, d: 'Kept, pending Flutter\'s list: STREET WEB SRL, CORSO GENOVA 11 SRL and VIA GOITO SRL look like addresses but are companies.' },
+        { k: 'Vendor code removed from supplier',     n: '2,515', d: '0001102175 - IBM ITALIA SPA reads IBM ITALIA SPA. Turkish suppliers carry an M code.' },
+        { k: 'Amendments shown under their contract', n: '142', d: 'An amendment whose base contract also expires is listed once, under the base contract.' },
+        { k: 'Amount in euro',                        n: '330', d: 'Turkey, Morocco and Albania hold local currency in Importo_totale; the euro column is used.' },
+        { k: 'Implausible expiry dates',              n: '101', warn: true, d: 'Expiring in 2050, 2099 or 5028. Not in any window, so listed to Procurement to correct in Appian.' },
+        { k: 'Membership fees',                       n: '18', d: 'Quote Associative have no product category in the team mapping. Listed, without a category.' }
+      ],
+      cols: ['ID_contratto', 'Fornitore', 'Oggetto_contratto', 'Societa', 'Richiedente', 'Tipo_contratto', 'Gruppo_Merci', 'Data_inizio', 'Data_scadenza', 'Importo (EUR)', 'Opex / Capex'],
       groups: [
-        { pg: 'M01 Technology',             req: 'Barbara Neri',     starters: 9,  contracts: 62 },
-        { pg: 'M02 Tech Infrastructure & Ops', req: 'Marco Bellini', starters: 6,  contracts: 47 },
-        { pg: 'M05 Digital Operations',     req: 'Silvia Marchetti', starters: 4,  contracts: 24 },
-        { pg: 'K01 Retail Operations',      req: 'Paola Ferraro',    starters: 7,  contracts: 39 },
-        { pg: 'I02 Regional Finance',       req: 'Francesca Bassi',  starters: 4,  contracts: 14 },
-        { pg: 'A60 HUB Turchia Technology', req: 'Emre Kaya',        starters: 17, contracts: 23 }
+        { pg: 'K37 - Retail Operations',                 req: 'Paola Ferraro',    starters: 7,  contracts: 322 },
+        { pg: 'S38 - Racetracks',                        req: 'Luca Benedetti',   starters: 3,  contracts: 245 },
+        { pg: 'T32 - Operations - Supply Chain',         req: 'Emre Kaya',        starters: 12, contracts: 158 },
+        { pg: 'M02 - IT Infrastructure & Operations',    req: 'Marco Bellini',    starters: 6,  contracts: 98 },
+        { pg: 'S39 - EPIQA',                             req: 'Francesca Bassi',  starters: 4,  contracts: 77 },
+        { pg: 'M01 - Technology',                        req: 'Barbara Neri',     starters: 9,  contracts: 75 }
       ] },
-    cdInWindow()  { return Math.round(1388 * this.cd.months / 9); },
+    cdInWindow()  { return Math.round(2515 * this.cd.months / 9); },
     addOpen: false,
     addMode: 'existing',
     q: '',
@@ -1361,15 +1129,13 @@ function review() {
     toastT: null,
 
     filters: [
-      { k: 'all',     label: 'All lines' },
-      { k: 'exp',     label: 'Expiring contracts' },
+      { k: 'all',     label: 'Carrying forward' },
+      { k: 'exp',     label: 'With a contract' },
       { k: 'need',    label: 'Needs from alignments' },
-      { k: 'added',   label: 'Added by you' },
-      { k: 'import',  label: 'Imported' },
       { k: 'removed', label: 'Removed' }
     ],
 
-    reasons: ['Contract already renewed', 'Being ended, no replacement', 'Handled outside the plan', 'Already in the Q1 to Q2 2027 plan', 'Other'],
+    reasons: ['Contract already renewed', 'Being ended, no replacement', 'Handled outside the plan', 'Other'],
     groupReasons: ['Contracts already renewed', 'Being ended, no replacement', 'Handled outside the plan', 'Not part of this cycle', 'Other'],
 
     owners: ['Alessandro Conti', 'Giulia Ferri', 'Paolo Riva', 'Davide Sala', 'Elena Marchetti', 'Chiara Monti', 'Luca Greco',
@@ -1382,15 +1148,15 @@ function review() {
     // Product categories are the ones in their Purchasing Plan spreadsheet.
     // count = contract lines the agent picked; valueM = their value in € M. Both illustrative.
     groups: [
-      { k: 'Technology',            count: 298, valueM: 22.4, open: true,  excluded: false, reason: '' },
-      { k: 'Marketing',             count: 204, valueM: 14.8, open: true,  excluded: false, reason: '' },
-      { k: 'Professional Services', count: 176, valueM: 9.6,  open: false, excluded: false, reason: '' },
-      { k: 'Facility Management',   count: 128, valueM: 6.1,  open: false, excluded: false, reason: '' },
-      { k: 'Retail',                count: 112, valueM: 5.2,  open: false, excluded: false, reason: '' },
-      { k: 'Human Resources',       count: 86,  valueM: 3.1,  open: false, excluded: false, reason: '' },
-      { k: 'Content Feeds',         count: 72,  valueM: 4.9,  open: false, excluded: false, reason: '' },
-      { k: 'Customer Operations',   count: 44,  valueM: 1.2,  open: false, excluded: false, reason: '' },
-      { k: 'Affiliation',           count: 26,  valueM: 0.9,  open: false, excluded: false, reason: '' }
+      { k: 'Technology',            count: 1094, valueM: 82.3, open: true,  excluded: false, reason: '' },
+      { k: 'Marketing',             count: 750,  valueM: 54.4, open: true,  excluded: false, reason: '' },
+      { k: 'Professional Services', count: 647,  valueM: 35.3, open: false, excluded: false, reason: '' },
+      { k: 'Facility Management',   count: 470,  valueM: 22.4, open: false, excluded: false, reason: '' },
+      { k: 'Retail',                count: 412,  valueM: 19.1, open: false, excluded: false, reason: '' },
+      { k: 'Human Resources',       count: 316,  valueM: 11.4, open: false, excluded: false, reason: '' },
+      { k: 'Content Feeds',         count: 265,  valueM: 18.0, open: false, excluded: false, reason: '' },
+      { k: 'Customer Operations',   count: 162,  valueM: 4.4,  open: false, excluded: false, reason: '' },
+      { k: 'Affiliation',           count: 96,   valueM: 3.3,  open: false, excluded: false, reason: '' }
     ],
 
     // Vocab for the new-need panel. Static lists here, unlike Plan.html's businessUnits,
@@ -1407,7 +1173,7 @@ function review() {
                      'Retail Network IT', 'Payments & Risk'],
     statusOpts: ['To start', 'In progress', 'On hold', 'Closed', 'Canceled'],
     opxOpts: ['Opex', 'Capex'],
-    stratOpts: ['Direct Nego', 'Light Tender', 'Full Tender'],
+    stratOpts: ['Direct Negotiation', 'Light Tender', 'Full Tender'],
 
     // [category, contract, supplier, owner, ends, value in k€]
     seed: [
@@ -1482,83 +1248,83 @@ function review() {
     fieldSet: ['inplan', 'reason', 'owner', 'strat', 'rfe', 'end', 'tot', 'start', 'ent', 'bu', 'sup', 'opx'],
 
     cols: [
-      // What
-      { id: 'cat',   k: 'Product Category',                 t: 'sel', w: 160, g: 'What' },
-      { id: 'sub',   k: 'Sub-category (if applicable)',     t: 'txt', w: 150, g: 'What' },
-      { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'What' },
-      { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'What' },
-      // Status. Theirs, then ours.
-      { id: 'status',k: 'Status',                           t: 'sel', w: 110, g: 'Status' },
-      // Entity and brand
-      { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Entity and brand' },
-      { id: 'sisal', k: 'Sisal',                            t: 'chk', w: 70,  g: 'Entity and brand' },
-      { id: 'pkr',   k: 'PokerStars Italy',                 t: 'chk', w: 120, g: 'Entity and brand' },
-      { id: 'snai',  k: 'Snaitech',                         t: 'chk', w: 92,  g: 'Entity and brand' },
-      { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Entity and brand' },
-      // Ownership
-      { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Ownership' },
-      { id: 'bu',    k: 'Business Unit',                    t: 'txt', w: 160, g: 'Ownership' },
-      // Spend
-      { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Spend' },
-      { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Spend' },
-      // Supplier
-      { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Supplier' },
-      { id: 'inc',   k: 'Incumbent Supplier (if applicable)', t: 'txt', w: 200, g: 'Supplier' },
-      { id: 'fopp',  k: 'Flutter Opportunity',        t: 'chk', w: 120, g: 'Supplier' },
-      // Sourcing
-      { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Sourcing',
+      // ── 2026-10-15: the RU V4 template (4.3.1, 4.3.2) in its column order, with Flutter's
+      // 13 Oct email: field 29 is Activity Status, field 34 Back-Dated Approval Quarter, an
+      // Approval Quarter between 31 and 32, and the seven contribution fields kept (item 6).
+      // The 28 Sep export's other columns are gone: nothing is imported from it.
+      // Fields Starters and Requestors complete (4.3.1)
+      { id: 'cat',   k: 'Product Category',                 t: 'sel', w: 160, g: 'Requesting function',
+        hint: 'RU 4.3.1, field 2. Dropdown from the Italian team mapping; it decides the line\'s Procurement team.' },
+      { id: 'sub',   k: 'Sub-category, if applicable',      t: 'sel', w: 150, g: 'Requesting function' },
+      { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'Requesting function' },
+      { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'Requesting function' },
+      { id: 'istat', k: 'Initiative Status',                t: 'sel', w: 140, g: 'Requesting function',
+        hint: 'RU 4.3.1, field 7: Proposal, Entered, Pending approval, To be reviewed, Rejected, Approved. Set by the workflow up to Entered, then selected by authorized Procurement users.' },
+      { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Requesting function',
+        hint: 'Multi-select. RU 1.3\'s companies.' },
+      { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Requesting function',
+        hint: 'Multi-select: Sisal, Snaitech, PokerStars Italy, SEU.' },
+      { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Requesting function' },
+      { id: 'bu',    k: 'Business Unit',                    t: 'sel', w: 160, g: 'Requesting function',
+        hint: 'Dropdown. The list RU V4 refers to has not been received yet.' },
+      { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Requesting function' },
+      { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Requesting function' },
+      { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Requesting function' },
+      { id: 'inc',   k: 'Incumbent Supplier',               t: 'txt', w: 200, g: 'Requesting function' },
+      { id: 'fopp',  k: 'Flutter Opportunity',              t: 'chk', w: 120, g: 'Requesting function',
+        hint: 'Completed by Procurement only. Starters and Requestors see it read-only (Flutter, 13 Oct).' },
+      { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Requesting function',
         rule: 'Checked by the rules: the sourcing method must fit the value band for the line\'s legal entity.' },
-      { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Sourcing',
+      { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Requesting function',
         rule: 'Checked by the rules: a direct negotiation above the derogation floor needs a justification here.' },
-      { id: 'rfe',   k: 'RFE Deadline',                     t: 'dat', w: 110, g: 'Sourcing',
-        rule: 'Checked by the rules: the minimum notice before the contract start, by sourcing method.' },
-      { id: 'rdi',   k: 'RDI Deadline',                     t: 'dat', w: 110, g: 'Sourcing' },
-      // Term
-      { id: 'start', k: 'Contract Start Date',              t: 'dat', w: 120, g: 'Term' },
-      { id: 'end',   k: 'Contract End Date',                t: 'dat', w: 120, g: 'Term' },
-      { id: 'dur',   k: 'Duration (years)',                 t: 'cmp', w: 100, g: 'Term', al: 'r',
-        hint: 'Formula field. Calculated from the contract start and end dates.' },
-      // Value and budget
-      { id: 'tot',   k: 'Total Contract Value (K€)',        t: 'num', w: 130, g: 'Value and budget' },
-      { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Value and budget', al: 'r',
-        hint: 'Formula field. Total contract value divided by duration.' },
-      { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Value and budget' },
-      { id: 'tsav',  k: 'Target Saving %',                  t: 'pct', w: 100, g: 'Value and budget' },
-      { id: 'ramt',  k: 'Rational Amount',                  t: 'txt', w: 240, g: 'Value and budget' },
-      { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Value and budget' },
-      // Procurement
-      { id: 'rfeid', k: 'RFE ID',                           t: 'txt', w: 100, g: 'Procurement' },
-      { id: 'qtr',   k: 'Quarter',                          t: 'cmp', w: 90,  g: 'Procurement', al: 'l',
-        hint: 'Formula field. Quarter of the contract start date.' },
-      { id: 'tf',    k: 'Time Frame',                       t: 'cmp', w: 90,  g: 'Procurement', al: 'l',
-        hint: 'Formula field. Year of the contract start date.' },
-      { id: 'dgg',   k: 'Def Goods Group',                  t: 'txt', w: 170, g: 'Procurement' },
-      { id: 'head',  k: 'Head of / Manager',                 t: 'per', w: 160, g: 'Procurement' },
-      { id: 'buyer', k: 'Procurement Buyer',                t: 'per', w: 160, g: 'Procurement' },
-      { id: 'award', k: 'Awarding Value (K€)',              t: 'num', w: 120, g: 'Procurement' },
-      // Approvals
-      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 150, g: 'Approvals',
-        rule: 'Checked by the rules: the approval ladder sets the level from value and sourcing method. For Flutter a suggestion only; Procurement records the value (D27).' },
-      { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Approvals' },
-      { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Approvals' },
-      { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Approvals' },
-      { id: 'qtr2',  k: 'Quarter (approval)',               t: 'txt', w: 130, g: 'Approvals',
-        hint: 'The second column called Quarter in your sheet. Typed by hand, in two formats. Name to confirm.' },
-      { id: 'rdn',   k: 'Reasons for DN / LT',              t: 'txt', w: 220, g: 'Approvals' },
-      { id: 'rlate', k: 'Reasons for Late / Back-dated Contract', t: 'txt', w: 260, g: 'Approvals' },
-      { id: 'det',   k: 'Additional Details',               t: 'txt', w: 210, g: 'Approvals' },
-      // Savings
-      { id: 'area',  k: 'Area',                             t: 'txt', w: 140, g: 'Savings' },
-      { id: 'key',   k: 'Key Initiative',             t: 'chk', w: 145, g: 'Savings' },
-      { id: 'sav',   k: 'Saving',                           t: 'sel', w: 100, g: 'Savings' },
-      { id: 'itype', k: 'Initiative Type (new vs. renew)',  t: 'sel', w: 140, g: 'Savings' },
-      { id: 'spct',  k: 'Saving %',                         t: 'pct', w: 90,  g: 'Savings' },
-      { id: 'base',  k: 'Baseline (12M Opex, full Capex)',  t: 'cmp', w: 150, g: 'Savings', al: 'r',
-        hint: 'Formula field. Twelve months of value for Opex, the full value for Capex.' },
-      { id: 'sfc',   k: 'Saving Forecast 12M (con floor 10%)', t: 'cmp', w: 170, g: 'Savings', al: 'r',
-        hint: 'A formula in your sheet. Shown read-only. The exact formula is still to be confirmed with Flutter.' },
-      { id: 's12',   k: 'Saving 12M (senza floor 10%)',     t: 'cmp', w: 170, g: 'Savings', al: 'r',
-        hint: 'A formula in your sheet. Shown read-only. The exact formula is still to be confirmed with Flutter.' }
+      { id: 'rfe',   k: 'RFE Deadline',                     t: 'dat', w: 110, g: 'Requesting function',
+        rule: 'Calculated by the platform: the minimum notice before the contract start, by sourcing method.' },
+      { id: 'start', k: 'Contract Start Date',              t: 'dat', w: 120, g: 'Requesting function' },
+      { id: 'end',   k: 'Contract End Date',                t: 'dat', w: 120, g: 'Requesting function' },
+      { id: 'dur',   k: 'Duration',                         t: 'cmp', w: 100, g: 'Requesting function', al: 'r',
+        hint: 'Calculated from the contract start and end dates.' },
+      { id: 'tot',   k: 'Total Contract Value (K€)',        t: 'num', w: 130, g: 'Requesting function',
+        hint: 'Who completes it is still to be confirmed in RU V4.' },
+      { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Requesting function', al: 'r',
+        hint: 'Proposed as total contract value divided by duration.' },
+      { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Requesting function' },
+      { id: 'rfeid', k: 'RFE ID',                           t: 'txt', w: 100, g: 'Requesting function',
+        hint: 'Completed by Procurement only. Starters and Requestors see it read-only (Flutter, 13 Oct).' },
+      // Fields Procurement completes (4.3.2)
+      { id: 'assignee', k: 'Procurement Assignee',          t: 'per', w: 170, g: 'Procurement',
+        hint: 'RU 4.7. Defaults to the line\'s Buyer, or its Head of Category where there is no Buyer (Flutter, 13 Oct). Changeable within the line\'s team.' },
+      { id: 'nastat',k: 'Approval Process',                 t: 'sel', w: 280, g: 'Procurement',
+        hint: 'RU 4.3.2, field 28 (Negotiation Approval Status in RU 4.9). Recorded by Procurement.' },
+      { id: 'ppstat',k: 'Activity Status',                  t: 'sel', w: 150, g: 'Procurement',
+        hint: 'Field 29, renamed from Purchasing Plan Status (Flutter, 13 Oct): To start, In progress, On hold, Completed, Cancelled.' },
+      { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 250, g: 'Procurement',
+        rule: 'Suggested by the rules from the entity\'s approval thresholds. Procurement accepts the suggestion or chooses another tier.' },
+      { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Procurement' },
+      { id: 'aqtr',  k: 'Approval Quarter',                 t: 'txt', w: 130, g: 'Procurement',
+        hint: 'New (Flutter, 13 Oct). Quarter and year, e.g. Q4 2026. Completed by Procurement.' },
+      { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Procurement' },
+      { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Procurement' },
+      { id: 'qtr2',  k: 'Back-Dated Approval Quarter',      t: 'txt', w: 170, g: 'Procurement',
+        hint: 'Field 34, renamed from Quarter (Flutter, 13 Oct). Quarter and year, e.g. Q4 2026.' },
+      { id: 'rdn',   k: 'Reasons for DN / LT',              t: 'sel', w: 220, g: 'Procurement' },
+      { id: 'rlate', k: 'Reasons for Late / Back-dated Contract', t: 'sel', w: 260, g: 'Procurement' },
+      { id: 'det',   k: 'Additional Details',               t: 'txt', w: 210, g: 'Procurement' },
+      { id: 'area',  k: 'Area',                             t: 'txt', w: 140, g: 'Procurement' },
+      { id: 'key',   k: 'Key Initiative',                   t: 'chk', w: 120, g: 'Procurement' },
+      // Procurement contribution, kept by Flutter on 13 Oct (item 6). Edited by the
+      // Sr. Procurement Director, the Head of Category and the Category Manager.
+      { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Contribution' },
+      { id: 'pctype',k: 'Procurement Contribution Type',    t: 'sel', w: 260, g: 'Contribution',
+        hint: 'Seventeen methods from Flutter\'s list (13 Oct), editable by the Sr. Procurement Director and Procurement Excellence.' },
+      { id: 'base',  k: 'Reference Baseline (K€)',          t: 'num', w: 150, g: 'Contribution' },
+      { id: 'cv12',  k: 'Contract Value (12m Opex, Full Capex)', t: 'cmp', w: 220, g: 'Contribution', al: 'r',
+        hint: 'Calculated: twelve months of value for Opex, the full value for Capex.' },
+      { id: 'sfc',   k: 'Procurement Contribution 12m (with 10% Floor Deduction)', t: 'cmp', w: 230, g: 'Contribution', al: 'r',
+        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' },
+      { id: 's12',   k: 'Procurement Contribution 12m (excluding 10% Floor Deduction)', t: 'cmp', w: 240, g: 'Contribution', al: 'r',
+        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' },
+      { id: 'spct',  k: 'Procurement Contribution %',       t: 'cmp', w: 150, g: 'Contribution', al: 'r',
+        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' }
     ,
       // ── Ours. A draft plan carries different fields of ours than a live one: there is no
       // Response, Stage or Authorization Outcome until the cycle runs, and there is an
@@ -1646,7 +1412,7 @@ function review() {
     // The defects. Every one is a shape that exists in their master file, put on a named
     // line here so the review shows what the old list could not.
     defects: {
-      'Cloud hosting, EU regions':      { strat: 'Direct Nego' },
+      'Cloud hosting, EU regions':      { strat: 'Direct Negotiation' },
       'Programmatic media buying':      { strat: 'direct nego' },
       'Endpoint security':              { owner: '' },
       'Service desk platform':          { strat: '' },
@@ -1702,7 +1468,7 @@ function review() {
       if (eur > 100000) return 'Full Tender';
       if (eur > 50000)  return 'Light Tender';
       if (eur > 10000)  return 'Quote comparison';
-      return 'Direct Nego';
+      return 'Direct Negotiation';
     },
     noticeFor(eur, strat) {
       const st = String(strat || '').toLowerCase();
@@ -1719,7 +1485,7 @@ function review() {
       if (!r.owner) f.owner = 'No business owner recorded. Nobody can be asked about this line, so it cannot carry a question in the collection cycle.';
       if (!r.strat) f.strat = 'No sourcing strategy recorded. The sheet formula produces no deadline and no error for a line in this state, and there are 359 of them in the master file.';
       else if (r.strat !== r.strat.trim() || (/^direct nego$/.test(r.strat)))
-        f.strat = 'Lower case variant of Direct Nego. The sheet matches the method by exact string, so this line falls through and receives no deadline and no error.'
+        f.strat = 'Lower case variant of Direct Negotiation. The sheet matches the method by exact string, so this line falls through and receives no deadline and no error.'
                 + (eur > 10000 ? ' At ' + this.mfmt(eur / 1000) + ' a year it is also a derogation that needs authorization.' : '');
       else if (/^direct/i.test(r.strat) && eur > 10000)
         f.strat = 'Direct negotiation at ' + this.mfmt(eur / 1000) + ' a year is a derogation. It needs authorization before it can proceed.';
@@ -1830,7 +1596,8 @@ function review() {
     shownContracts(g) { return this.rows.filter(r => r.cat === g.k && r.src === 'contract').length; },
 
     endsText(r) { return r.src === 'contract' || r.kind === 'contract' ? this.fmt(r.ends).replace(/ 20(\d\d)$/, ' ’$1') : 'by ' + this.fmt(r.by || r.ends).replace(/ 20(\d\d)$/, ' ’$1'); },
-    overlap(r) { return r.kind === 'contract' && (r.src === 'contract' || r.src === 'import') && r.ends >= '2027-04-01' && r.ends <= '2027-06-30'; },
+    // 2026-10-15: no overlap mark. A cycle is not scoped by contract end dates any more.
+    overlap(r) { return false; },
 
     // ── removing and restoring ──
     remove(r)  { r.removed = true; r.reason = this.proposeReason(r); r.proposed = !!r.reason; },
@@ -1868,7 +1635,7 @@ function review() {
     },
     canAdd() {
       const n = this.nd;
-      const stratOk = !!n.strat && (n.strat !== 'Direct Nego' || !!n.ratio.trim());
+      const stratOk = !!n.strat && (n.strat !== 'Direct Negotiation' || !!n.ratio.trim());
       return !!(n.subject.trim() && n.owner && n.cat && n.ent.length && n.bu && n.opx && stratOk && n.value && n.by);
     },
     addNeed() {

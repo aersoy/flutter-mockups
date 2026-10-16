@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <!--
+  2026-10-15, CONTRACT_DATA ONLY (RU V4 has no other import; strict 4.2.1 Option 1)
+    No import of Flutter's Purchasing Plan export. The first campaign, now Cycle 1, started
+        with an empty plan: Starters entered every initiative. Cycles are renumbered (the old
+        Cycle 0 is Cycle 1) and carry-forward (D12) applies from Cycle 2 on.
+    A cycle is no longer scoped by contract end dates. At launch the platform reads the
+        Contract_Data extract and sends each Purchasing Group its contracts expiring in the
+        nine months after the launch date (RU 4.2.1). The row and the dates panel show that
+        window instead of "covers contracts ending".
+
   IA CHANGE BRIEF, 2026-10-11 (D22 to D35, Flutter's RU V4 as configuration)
     D28 Phases replace the freeze and the authorization meeting. Flutter's: launch (by hand),
         collection, submission close, review window, closure (RU 4.1 to 4.10). The stage strip
@@ -21,7 +30,7 @@
     D5  One cycle open at a time. The old list had several ACTIVE plans at once, because a
         plan stayed active through its tracking. Now tracking continues on the lines in the
         open cycle, so every earlier cycle is CLOSED.
-    D14 Cycle 0 is the import of Flutter's file, and otherwise a normal cycle.
+    D14 (superseded 2026-10-15) Cycle 1 started empty; nothing is imported but Contract_Data.
     D6, D11 Starting the next cycle goes through P0b, where Procurement reviews the lines
         going out and the rule set. Unfinished work is copied forward with the lines.
   The rest of this comment describes the build before the brief.
@@ -93,7 +102,7 @@
   .scroll::-webkit-scrollbar { width: 9px; height: 9px; }
   .scroll::-webkit-scrollbar-thumb { background: #d7d7de; border-radius: 8px; }
   /* one column template for the header row and every plan row, so they cannot drift apart */
-  .planrow { display: grid; grid-template-columns: minmax(250px, 1.5fr) 96px minmax(270px, 1.7fr) 104px minmax(190px, 1.2fr) 96px; column-gap: 16px; align-items: center; }
+  .planrow { display: grid; grid-template-columns: minmax(250px, 1.5fr) 96px minmax(270px, 1.7fr) 132px minmax(190px, 1.2fr) 96px; column-gap: 16px; align-items: center; }
 </style>
 </head>
 
@@ -127,7 +136,6 @@
           <p class="text-[11.5px] text-gray-500 mt-0.5">One cycle open at a time. Each starts as a copy of the one before, and the one before becomes read-only.</p>
         </div>
         <div class="flex items-center gap-3 shrink-0">
-        <span class="text-[11px] text-gray-500 text-right leading-tight">Viewing as <span class="font-medium text-gray-700">Sara Lombardi</span><br><span class="text-gray-400">Head of Category &middot; can launch and close campaigns</span></span>
         <a href="P0b%20Review%20Before%20Scheduling.html"
            class="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1.5 shrink-0">
           <span class="text-[14px] leading-none">&#43;</span> Start next cycle
@@ -161,26 +169,27 @@
               <div>
                 <div class="text-[10px] font-semibold uppercase tracking-wide text-indigo-600">Next cycle, waiting for you</div>
                 <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                  <span class="font-semibold">Cycle 3</span>, for the <span class="font-semibold">Q2&ndash;Q3 2027</span> plan, is due to start on
-                  <span class="font-semibold">Mon 14 Dec 2026</span>. Launching it copies Cycle 2's live lines, rules and people, and closes Cycle 2.
-                  It covers contracts expiring <span class="font-semibold">1 Apr &ndash; 30 Sep 2027</span>:
-                  <span class="font-semibold">1,146 lines</span> across
-                  <span class="font-semibold">58 Purchasing Groups</span>, 214 Starters and 5 legal entities.
+                  <span class="font-semibold">Cycle 4</span>, for the <span class="font-semibold">Q2&ndash;Q3 2027</span> plan, is due to start on
+                  <span class="font-semibold">Mon 14 Dec 2026</span>. Launching it copies Cycle 3's open initiatives, rules and people, and closes Cycle 3:
+                  <span class="font-semibold">4,215 initiatives</span> across
+                  <span class="font-semibold">118 Purchasing Groups</span>, 214 Starters and 14 legal entities.
+                  At launch I read the latest Contract_Data and send each group its contracts expiring in the nine months after launch,
+                  <span class="font-semibold">14 Dec 2026 &ndash; 13 Sep 2027</span>: about <span class="font-semibold">2,500 contracts</span> for 123 groups in today's extract.
                 </p>
                 <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
                   Unfinished work moves with its lines: 14 approvals still to record, 23 lines waiting on a Requestor, 37 open challenges and 9 delegations waiting for the owner.
-                  Rejected and Cancelled lines, and Completed lines whose contract has ended, stay in Cycle 2. Every copied line has its Procurement team recalculated from the current mappings.
+                  Rejected and Cancelled lines, and Completed lines whose contract has ended, stay in Cycle 3. Every copied line has its Procurement team recalculated from the current mappings.
                 </p>
                 <p class="text-sm text-slate-700 leading-relaxed mt-1.5">
                   I propose submissions close on <span class="font-medium">Fri 15 Jan 2027</span>, a week later than usual
                   because the holiday break falls inside collection, then a 10 working day review window and closure on <span class="font-medium">Fri 29 Jan 2027</span>.
                 </p>
                 <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
-                  Nothing is scheduled yet. Review the lines going out, the Contract_Data upload and the rule set, then set the dates.
+                  Nothing is scheduled yet. Review what carries forward, upload Contract_Data and confirm the rule set, then set the dates.
                   The campaign starts only when someone allowed to launch it does; you will be reminded 7 days and 2 days before, and on the day.
                 </p>
                 <div class="flex flex-wrap gap-2 mt-3">
-                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Review lines and rules</a>
+                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Review carry-forward, contracts and rules</a>
                 </div>
               </div>
             </template>
@@ -188,11 +197,11 @@
               <div>
                 <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Scheduled</div>
                 <p class="text-sm text-slate-800 leading-relaxed mt-1">
-                  <span class="font-semibold">Cycle 3</span> is planned to launch on <span class="font-semibold" x-text="draft.launch"></span>, with
-                  <span class="font-semibold" x-text="lines.toLocaleString('en-GB') + ' lines'"></span> in scope.
-                  When it is launched, each Purchasing Group's Starters are emailed, copying their Requestor. Submissions close on
+                  <span class="font-semibold">Cycle 4</span> is planned to launch on <span class="font-semibold" x-text="draft.launch"></span>, with
+                  <span class="font-semibold" x-text="lines.toLocaleString('en-GB') + ' initiatives'"></span> carried forward.
+                  When it is launched, each Purchasing Group's Starters are emailed, copying their Requestor, with the group's expiring contracts attached. Submissions close on
                   <span class="font-semibold" x-text="draft.subclose"></span>, and the campaign closes on <span class="font-semibold" x-text="draft.closure"></span>
-                  after the review window. Cycle 2 closes at launch.
+                  after the review window. Cycle 3 closes at launch.
                 </p>
                 <div class="flex flex-wrap gap-2 mt-2.5" x-show="!panel">
                   <button @click="openPanel()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Change dates</button>
@@ -206,16 +215,17 @@
               <div class="grid grid-cols-3 gap-x-5 gap-y-4">
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Plan</span>
-                  <input type="text" readonly value="Cycle 3 &middot; plan Q2&ndash;Q3 2027"
+                  <input type="text" readonly value="Cycle 4 &middot; plan Q2&ndash;Q3 2027"
                          class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Covers contracts expiring from</span>
-                  <input type="text" x-model="draft.from" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Reference period</span>
+                  <input type="text" x-model="draft.period" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Until</span>
-                  <input type="text" x-model="draft.to" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Expiring contracts sent</span>
+                  <input type="text" readonly :value="'Expiring ' + draft.launch.replace(/^\w+ /, '') + ' + 9 months'" class="mt-1 w-full text-[12.5px] px-2.5 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
+                  <span class="block text-[10.5px] text-gray-400 mt-1">Counted from the launch date. Nine months is a setting.</span>
                 </label>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Planned launch</span>
@@ -235,9 +245,9 @@
               </div>
               <div class="mt-4 pt-3.5 border-t border-gray-100 flex items-center justify-between gap-4">
                 <div class="text-[11.5px] text-gray-500">
-                  Scope: <span class="font-medium text-gray-700" x-text="lines.toLocaleString('en-GB') + ' lines'"></span>.
-                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-indigo-600 hover:text-indigo-800 font-medium">Review the lines again</a>.
-                  Lines Starters add later join the cycle, as in every cycle.
+                  Carried forward: <span class="font-medium text-gray-700" x-text="lines.toLocaleString('en-GB') + ' initiatives'"></span>.
+                  <a href="P0b%20Review%20Before%20Scheduling.html" class="text-indigo-600 hover:text-indigo-800 font-medium">Review again</a>.
+                  Initiatives Starters enter during collection join the cycle, as in every cycle.
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   <button @click="cancelDates()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">Cancel</button>
@@ -264,7 +274,7 @@
       <!-- ══════════ The plans, newest first ══════════ -->
       <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div class="planrow px-4 py-2 border-b border-gray-200 bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-          <div>Cycle</div><div>Status</div><div>Where it is</div><div class="text-right">Lines</div><div>Next</div><div></div>
+          <div>Cycle</div><div>Status</div><div>Where it is</div><div class="text-right">Initiatives</div><div>Next</div><div></div>
         </div>
 
         <template x-for="p in visible()" :key="p.k">
@@ -276,7 +286,7 @@
                 <span class="text-[13.5px] font-semibold text-gray-900" x-text="p.name"></span>
                 <span class="text-[11.5px] text-gray-400" x-text="'plan ' + p.plan"></span>
               </div>
-              <div class="text-[11.5px] text-gray-500 mt-0.5" x-text="openedOf(p) + ' · covers ' + coversOf(p)"></div>
+              <div class="text-[11.5px] text-gray-500 mt-0.5" x-text="openedOf(p) + ' · ' + coversOf(p)"></div>
             </div>
 
             <div>
@@ -297,7 +307,7 @@
 
             <div class="text-right">
               <div class="text-[13px] font-medium text-gray-900" x-text="p.lines ? p.lines.toLocaleString('en-GB') : (isScheduled(p) ? 'Scope set' : 'Not yet built')"></div>
-              <div class="text-[11px] text-gray-500" x-text="dueOf(p).toLocaleString('en-GB') + ' fall due'"></div>
+              <div class="text-[11px] text-gray-500" x-text="p.sent ? p.sent.toLocaleString('en-GB') + ' contracts sent' : '~2,500 to send'"></div>
             </div>
 
             <div class="min-w-0">
@@ -334,64 +344,63 @@ function plans() {
 
     // RU 4.1: the facts the campaign section must show.
     facts: [
-      { k: 'Next launch',     v: 'in 64 days',     s: 'Cycle 3, planned Mon 14 Dec 2026' },
-      { k: 'Current closes',  v: 'in 19 days',     s: 'Cycle 2, Fri 30 Oct 2026' },
-      { k: 'Launched',        v: 'Mon 21 Sep 2026', s: 'Cycle 2' },
-      { k: 'Reference period', v: 'Q1–Q2 2027',    s: 'contracts ending 1 Jan – 30 Jun 2027' },
+      { k: 'Next launch',     v: 'in 64 days',     s: 'Cycle 4, planned Mon 14 Dec 2026' },
+      { k: 'Current closes',  v: 'in 19 days',     s: 'Cycle 3, Fri 30 Oct 2026' },
+      { k: 'Launched',        v: 'Mon 21 Sep 2026', s: 'Cycle 3' },
+      { k: 'Reference period', v: 'Q1–Q2 2027',    s: 'contracts sent: to 20 Jun 2027' },
       { k: 'Launched by',     v: 'Sara Lombardi',  s: 'Head of Category' },
-      { k: 'Last closure',    v: 'Mon 21 Sep 2026', s: 'Cycle 1' }
+      { k: 'Last closure',    v: 'Mon 21 Sep 2026', s: 'Cycle 2' }
     ],
 
     filters: ['All cycles', 'Open', 'Next', 'Closed'],
     filter: 'All cycles',
     panel: false,
     confirmed: false,
-    lines: 1146,          // the scope the agent proposed. P0b passes the reviewed count back.
+    lines: 4215,          // initiatives carried forward. P0b passes the reviewed count back.
     snap: null,
 
     // What the agent proposes for the next quarter. Editable before confirming.
     draft: {
-      from: '1 Apr 2027', to: '30 Sep 2027',
+      period: 'Q2–Q3 2027',
       launch: 'Mon 14 Dec 2026', subclose: 'Fri 15 Jan 2027', closure: 'Fri 29 Jan 2027'
     },
 
     // stage: -1 not started, 0..3 the stage it is in, 4 everything done.
     plans: [
-      { k: 'c3', name: 'Cycle 3 · Q2 2027', plan: 'Q2–Q3 2027', status: 'PROPOSED', stage: -1,
-        opened: 'Starts Mon 14 Dec 2026, as a copy of Cycle 2', covers: 'contracts ending 1 Apr – 30 Sep 2027',
-        lines: 0, due: 1146, progress: 'Waiting for your review of lines and rules',
+      { k: 'c3', name: 'Cycle 4 · Q2 2027', plan: 'Q2–Q3 2027', status: 'PROPOSED', stage: -1,
+        opened: 'Starts Mon 14 Dec 2026, as a copy of Cycle 3', covers: 'expiring contracts 14 Dec 2026 – 13 Sep 2027',
+        lines: 0, sent: 0, progress: 'Waiting for your review of carry-forward, Contract_Data and rules',
         next: 'Submissions close Fri 15 Jan 2027', sub: 'Proposed by the agent', tone: 'text-indigo-700', subTone: 'text-gray-500', link: '' },
 
-      { k: 'c2', name: 'Cycle 2 · Q1 2027', plan: 'Q1–Q2 2027', status: 'OPEN', stage: 0,
-        opened: 'Started Mon 21 Sep 2026, copied from Cycle 1', covers: 'contracts ending 1 Jan – 30 Jun 2027',
-        lines: 5182, due: 1284, progress: '742 of 1,284 submitted · 611 approved by Requestors',
+      { k: 'c2', name: 'Cycle 3 · Q1 2027', plan: 'Q1–Q2 2027', status: 'OPEN', stage: 0,
+        opened: 'Started Mon 21 Sep 2026, copied from Cycle 2', covers: 'expiring contracts 21 Sep 2026 – 20 Jun 2027',
+        lines: 5182, sent: 2441, progress: '742 of 1,284 submitted · 611 approved by Requestors',
         next: 'Submissions close Fri 16 Oct 2026', sub: '4 working days left · closes Fri 30 Oct', tone: 'text-gray-800', subTone: 'text-amber-600 font-medium', link: 'Plan.html' },
 
-      { k: 'c1', name: 'Cycle 1 · Q4 2026', plan: 'Q4 2026–Q1 2027', status: 'CLOSED', stage: 4,
-        opened: 'Started Mon 15 Jun 2026, copied from Cycle 0', covers: 'contracts ending 1 Oct 2026 – 31 Mar 2027',
-        lines: 5031, due: 1206, progress: 'Campaign closed Fri 17 Jul 2026',
-        next: 'Closed Mon 21 Sep 2026', sub: 'Its live lines continue in Cycle 2', tone: 'text-gray-500', subTone: 'text-gray-400', link: 'Plan.html?cycle=c1' },
+      { k: 'c1', name: 'Cycle 2 · Q4 2026', plan: 'Q4 2026–Q1 2027', status: 'CLOSED', stage: 4,
+        opened: 'Started Mon 15 Jun 2026, copied from Cycle 1', covers: 'expiring contracts 15 Jun 2026 – 14 Mar 2027',
+        lines: 3870, sent: 2387, progress: 'Campaign closed Fri 17 Jul 2026',
+        next: 'Closed Mon 21 Sep 2026', sub: 'Its live lines continue in Cycle 3', tone: 'text-gray-500', subTone: 'text-gray-400', link: 'Plan.html?cycle=c1' },
 
-      { k: 'c0', name: 'Cycle 0 · Q3 2026', plan: 'Q3–Q4 2026', status: 'CLOSED', stage: 4,
-        opened: 'Imported Mon 16 Mar 2026 from Flutter\'s Purchasing Plan export', covers: 'contracts ending 1 Jul – 31 Dec 2026',
-        lines: 5465, due: 1118, progress: 'Campaign closed Fri 17 Apr 2026',
-        next: 'Closed Mon 15 Jun 2026', sub: 'Day-one check: 1,042 lines flagged', tone: 'text-gray-500', subTone: 'text-gray-400', link: 'Plan.html?cycle=c0' }
+      { k: 'c0', name: 'Cycle 1 · Q3 2026', plan: 'Q3–Q4 2026', status: 'CLOSED', stage: 4,
+        opened: 'First campaign, launched Mon 16 Mar 2026 with an empty plan', covers: 'expiring contracts 16 Mar – 15 Dec 2026',
+        lines: 2214, sent: 2302, progress: 'Campaign closed Fri 17 Apr 2026',
+        next: 'Closed Mon 15 Jun 2026', sub: 'Every initiative entered by Starters', tone: 'text-gray-500', subTone: 'text-gray-400', link: 'Plan.html?cycle=c0' }
     ],
 
-    // Coming back from P0b with ?scheduled=1&lines=..&from=..&to=..&launch=..&subclose=..&closure=..
+    // Coming back from P0b with ?scheduled=1&lines=..&period=..&launch=..&subclose=..&closure=..
     init() {
       const q = new URLSearchParams(window.location.search);
       if (q.get('scheduled') !== '1') return;
       this.confirmed = true;
       const n = parseInt(q.get('lines'), 10);
       if (n > 0) this.lines = n;
-      ['from', 'to', 'launch', 'subclose', 'closure'].forEach(k => { if (q.get(k)) this.draft[k] = q.get(k); });
+      ['period', 'launch', 'subclose', 'closure'].forEach(k => { if (q.get(k)) this.draft[k] = q.get(k); });
     },
     openedOf(p) { return this.isScheduled(p) ? 'Launch planned ' + this.draft.launch : p.opened; },
-    coversOf(p) { return this.isScheduled(p) ? this.draft.from.replace(/ 20\d\d$/, '') + ' – ' + this.draft.to : p.covers; },
+    coversOf(p) { return p.covers; },
     subOf(p)    { return this.isScheduled(p) ? 'Confirmed by Procurement' : p.sub; },
     isScheduled(p) { return p.status === 'PROPOSED' && this.confirmed; },
-    dueOf(p) { return this.isScheduled(p) ? this.lines : p.due; },
 
     statusOf(p) { return p.status === 'PROPOSED' ? (this.confirmed ? 'SCHEDULED' : 'NEXT') : p.status; },
     statusClass(p) {
@@ -436,5 +445,11 @@ function plans() {
   };
 }
 </script>
+
+<!-- 2026-10-16: mockup controls float outside the page, so they are not read as part of the product. -->
+<div class="fixed right-4 bottom-4 z-[70] rounded-xl bg-slate-900 text-white shadow-2xl ring-1 ring-black/20 px-3 py-2 flex items-center gap-2.5 text-[11px]">
+  <span class="text-[9px] font-semibold tracking-widest uppercase text-slate-400 border border-slate-600 rounded px-1 py-px">Mockup</span>
+  <span class="text-slate-300">Viewing as <span class="font-medium text-white">Sara Lombardi</span> · Head of Category, can launch and close campaigns</span>
+</div>
 </body>
 </html>

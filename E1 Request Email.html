@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <!--
+  2026-10-15, CONTRACT_DATA AS RECEIVED
+    The launch attachment follows the 13 Oct Contracts.xlsx: Appian contract IDs, M01's 75
+    contracts expiring in the nine months after launch, and the proposed attachment columns
+    (to confirm with Flutter: their rules file lists filters only). The extract is read at
+    launch, so its date is the launch date.
+
   IA CHANGE BRIEF, 2026-10-12 (D29 revised: RU 4.2.1 Option 1 as written)
     The launch email's attachment lists every contract of the Purchasing Group ending in the
     window, including ones already in the plan. No matching, so no 'not yet in the plan'.
@@ -151,21 +157,26 @@
         <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-3">
           <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
           <div class="min-w-0">
-            <div class="text-[12.5px] font-semibold text-slate-800">Expiring contracts · M01 Technology · Jan&ndash;Sep 2027.xlsx</div>
-            <div class="text-[11px] text-slate-500">62 contracts expiring in the next nine months · from Contract_Data, 18 Sep 2026</div>
+            <div class="text-[12.5px] font-semibold text-slate-800">Expiring contracts · M01 Technology · to 20 Jun 2027.xlsx</div>
+            <div class="text-[11px] text-slate-500">75 contracts expiring in the nine months after launch · from Contract_Data, read at launch on 21 Sep 2026</div>
           </div>
         </div>
         <p class="mt-3 text-[12.5px] text-slate-600">The attachment is for information. It lists every M01 Technology contract ending in the next nine months, including those already in the plan. If one of them will be renewed, renegotiated or replaced and is not yet an initiative, enter it in Purchase Planning.</p>
         <div class="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[12px]">
+          <div class="flex items-center gap-3 px-3.5 py-1.5 border-b border-slate-200 bg-slate-50 text-[10.5px] font-semibold text-slate-500 uppercase tracking-wide">
+            <span class="w-[58px] shrink-0">ID</span><span class="flex-1 min-w-0">Oggetto</span><span class="w-[118px] shrink-0">Fornitore</span><span class="w-[86px] shrink-0">Societa</span><span class="w-[76px] shrink-0 text-right">EUR</span><span class="w-[78px] shrink-0 text-right">Scadenza</span>
+          </div>
           <template x-for="c in expiring" :key="c.n">
             <div class="flex items-center gap-3 px-3.5 py-1.5 border-b border-slate-100 last:border-0">
-              <span class="mono text-[11px] text-slate-500 w-[70px] shrink-0" x-text="c.n"></span>
+              <span class="mono text-[11px] text-slate-500 w-[58px] shrink-0" x-text="c.n"></span>
               <span class="flex-1 min-w-0 truncate" x-text="c.what"></span>
-              <span class="text-slate-500 shrink-0" x-text="c.sup"></span>
-              <span class="shrink-0 font-medium text-slate-700" x-text="'ends ' + c.ends"></span>
+              <span class="text-slate-500 w-[118px] shrink-0 truncate" x-text="c.sup"></span>
+              <span class="text-slate-500 w-[86px] shrink-0 truncate" x-text="c.co"></span>
+              <span class="mono text-[11px] text-slate-600 w-[76px] shrink-0 text-right" x-text="c.eur"></span>
+              <span class="w-[78px] shrink-0 text-right font-medium text-slate-700" x-text="c.ends"></span>
             </div>
           </template>
-          <div class="px-3.5 py-1.5 text-[11px] text-slate-400 bg-slate-50">... 56 more in the attachment</div>
+          <div class="px-3.5 py-1.5 text-[11px] text-slate-400 bg-slate-50">... 69 more in the attachment, with the contract type, goods group, requester, start date and Opex / Capex</div>
         </div>
         <p class="mt-4">Questions about an initiative can go in its chat in Purchase Planning, where the Procurement contacts for it will see them.</p>
         <p class="mt-4 text-slate-600">Grazie,<br>Ellie · Purchase Planning Agent<br><span class="text-[12px] text-slate-500">on behalf of Procurement Italia · Flutter Southern Europe &amp; Africa</span></p>
@@ -628,12 +639,12 @@ function requestEmail() {
     // The Contract_Data extract for M01: every contract ending in the window (D29, RU 4.2.1).
     // Not compared with the plan, so it includes contracts that already have a line (the first two here).
     expiring: [
-      { n: 'C-116790', what: 'Cloud hosting, production estate',     sup: 'Amazon Web Services', ends: '31 Mar 2027' },
-      { n: 'C-117530', what: 'Application monitoring licences',      sup: 'Datadog',   ends: '30 Jun 2027' },
-      { n: 'C-118204', what: 'Network security appliances, support', sup: 'Fortinet', ends: '31 Jan 2027' },
-      { n: 'C-119377', what: 'Service desk outsourcing',             sup: 'Almaviva',  ends: '28 Feb 2027' },
-      { n: 'C-120015', what: 'Backup software licences',             sup: 'Veeam',     ends: '31 Mar 2027' },
-      { n: 'C-121442', what: 'Mobile device management',             sup: 'Jamf',      ends: '30 Jun 2027' }
+      { n: '118734', what: 'Cloud hosting, production estate',     sup: 'AMAZON WEB SERVICES EMEA', co: 'Sisal Italia', eur: '2,480,000', ends: '31 Mar 2027' },
+      { n: '117530', what: 'Application monitoring licences',      sup: 'DATADOG FRANCE SAS', co: 'Sisal Italia', eur: '372,000',   ends: '30 Jun 2027' },
+      { n: '118204', what: 'Network security appliances, support', sup: 'FORTINET',           co: 'Snaitech',     eur: '96,400',    ends: '31 Jan 2027' },
+      { n: '119377', what: 'Service desk outsourcing',             sup: 'ALMAVIVA SPA',       co: 'Sisal Italia', eur: '640,000',   ends: '28 Feb 2027' },
+      { n: '120015', what: 'Backup software licences',             sup: 'VEEAM SOFTWARE',     co: 'Sisal Gaming', eur: '48,500',    ends: '31 Mar 2027' },
+      { n: '121442', what: 'Mobile device management',             sup: 'JAMF LTD',           co: 'Sisal Italia', eur: '22,800',    ends: '30 Jun 2027' }
     ],
 
     lines: [

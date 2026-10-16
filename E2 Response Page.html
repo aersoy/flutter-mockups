@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <!--
+  2026-10-15, THE RU V4 TEMPLATE WITH FLUTTER'S 13 OCT CHANGES
+    Add a line: Legal Entity and Brand / Multi-brand are multi-select dropdowns, as in the
+    template (not the export's per-brand columns). Legal Entity and Business Unit are prefilled
+    from the owner's Purchasing Group and stay editable; the Business Owner is the signed-in owner.
+    No Status picker (a new initiative starts as Proposal), no Flutter Opportunity
+    (Procurement-only) and no Rational Amount (not in the template). Brand / Multi-brand is
+    the field's own name.
+
   IA CHANGE BRIEF, 2026-10-11 (D8, D25, D28, D34, Q29)
     An answer is submitted when it passes validation and enters the first approval step, the
     Requestor's (Q29, D25). The confirmation and each answered line say so. A line with
@@ -543,25 +551,26 @@
                 </label>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Product Category</span>
-                  <select x-model="e2Nd.cat" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                  <select x-model="e2Nd.cat" @change="e2Nd.sub = ''" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
                     <option value="">Choose</option>
                     <template x-for="o in e2Cats" :key="o"><option :value="o" x-text="o"></option></template>
                   </select>
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Sub-category (if applicable)</span>
-                  <input type="text" x-model="e2Nd.sub" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Sub-category, if applicable</span>
+<select x-model="e2Nd.sub" :disabled="!e2Nd.cat" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg disabled:bg-slate-50 disabled:text-slate-400">
+                  <option value="" x-text="e2Nd.cat ? 'Choose' : 'Choose a category first'"></option>
+                  <template x-for="o in (subCats[e2Nd.cat] || [])" :key="o"><option :value="o" x-text="o"></option></template>
+                </select>
                 </label>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Project</span>
                   <input type="text" x-model="e2Nd.proj" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
                 </label>
-                <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Status</span>
-                  <select x-model="e2Nd.status" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
-                    <template x-for="o in e2StatusOpts" :key="o"><option :value="o" x-text="o"></option></template>
-                  </select>
-                </label>
+                <div class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Initiative Status</span>
+                  <div class="mt-1 text-[12px] px-2.5 py-1.5 text-slate-500">Proposal, until you submit it</div>
+                </div>
                 <label class="block col-span-3">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Detailed Activities</span>
                   <textarea x-model="e2Nd.act" rows="2" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg"></textarea>
@@ -570,15 +579,27 @@
             </div>
 
             <div>
-              <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Entity, ownership and spend</div>
+              <div class="flex items-baseline justify-between mb-1.5">
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Entity, ownership and spend</div>
+                <div class="text-[10.5px] text-slate-400">Prefilled from your Purchasing Group. Change them if they do not fit.</div>
+              </div>
               <div class="grid grid-cols-3 gap-3">
-                <label class="block">
+                <div class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Legal Entity</span>
-                  <select multiple x-model="e2Nd.ent" size="4" class="w-full mt-1 text-[12px] px-2 py-1 border border-slate-300 rounded-lg">
-                    <template x-for="o in e2Entities" :key="o"><option :value="o" x-text="o"></option></template>
-                  </select>
+                  <div class="relative mt-1" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                    <button type="button" @click="open = !open" class="w-full min-h-[32px] text-left text-[12px] px-2 py-1 border border-slate-300 rounded-lg bg-white flex flex-wrap items-center gap-1">
+                      <template x-for="v in e2Nd.ent" :key="v"><span class="text-[11px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100" x-text="v"></span></template>
+                      <span x-show="!e2Nd.ent.length" class="text-slate-400 px-0.5">Choose one or more</span>
+                      <span class="ml-auto text-slate-400 text-[10px] pl-1">&#9662;</span>
+                    </button>
+                    <div x-show="open" x-cloak class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto">
+                      <template x-for="o in e2Entities" :key="o">
+                        <label class="flex items-center gap-2 px-2.5 py-1 text-[12px] text-slate-700 hover:bg-slate-50 cursor-pointer"><input type="checkbox" :value="o" x-model="e2Nd.ent" class="accent-indigo-600 w-3.5 h-3.5"><span x-text="o"></span></label>
+                      </template>
+                    </div>
+                  </div>
                   <span class="block text-[10px] text-slate-400 mt-0.5">One or more. Several entities stay one line.</span>
-                </label>
+                </div>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Purchasing Group</span>
                   <input type="text" readonly :value="e2Pg[owner()] || ''" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500">
@@ -594,12 +615,20 @@
                     <template x-for="o in e2BUs" :key="o"><option :value="o" x-text="o"></option></template>
                   </select>
                 </label>
-                <div class="col-span-2 flex items-center gap-4">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500 shrink-0">Applies to</span>
-                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.sisal"> Sisal</label>
-                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.pkr"> PokerStars Italy</label>
-                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.snai"> Snaitech</label>
-                  <label class="flex items-center gap-1.5 text-[12px] text-slate-700"><input type="checkbox" x-model="e2Nd.seu"> SEU</label>
+                <div class="block">
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Brand / Multi-brand</span>
+                  <div class="relative mt-1" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                    <button type="button" @click="open = !open" class="w-full min-h-[32px] text-left text-[12px] px-2 py-1 border border-slate-300 rounded-lg bg-white flex flex-wrap items-center gap-1">
+                      <template x-for="v in e2Nd.brand" :key="v"><span class="text-[11px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100" x-text="v"></span></template>
+                      <span x-show="!e2Nd.brand.length" class="text-slate-400 px-0.5">Choose one or more</span>
+                      <span class="ml-auto text-slate-400 text-[10px] pl-1">&#9662;</span>
+                    </button>
+                    <div x-show="open" x-cloak class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto">
+                      <template x-for="o in e2Brands" :key="o">
+                        <label class="flex items-center gap-2 px-2.5 py-1 text-[12px] text-slate-700 hover:bg-slate-50 cursor-pointer"><input type="checkbox" :value="o" x-model="e2Nd.brand" class="accent-indigo-600 w-3.5 h-3.5"><span x-text="o"></span></label>
+                      </template>
+                    </div>
+                  </div>
                 </div>
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Opex / Capex</span>
@@ -608,7 +637,6 @@
                     <template x-for="o in e2OpxOpts" :key="o"><option :value="o" x-text="o"></option></template>
                   </select>
                 </label>
-                <label class="flex items-center gap-1.5 text-[12px] text-slate-700 self-end pb-2"><input type="checkbox" x-model="e2Nd.fopp"> Flutter Opportunity</label>
               </div>
             </div>
 
@@ -620,7 +648,7 @@
                   <input type="text" x-model="e2Nd.sup" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
                 </label>
                 <label class="block">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Incumbent Supplier (if applicable)</span>
+                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Incumbent Supplier</span>
                   <input type="text" x-model="e2Nd.inc" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
                 </label>
                 <label class="block">
@@ -655,10 +683,6 @@
                 <label class="block">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Total Contract Value (€)</span>
                   <input type="number" min="0" x-model="e2Nd.value" placeholder="120000" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
-                </label>
-                <label class="block col-span-3">
-                  <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Rational Amount</span>
-                  <input type="text" x-model="e2Nd.ramt" placeholder="Justification of the amount" class="w-full mt-1 text-[12px] px-2.5 py-1.5 border border-slate-300 rounded-lg">
                 </label>
                 <label class="block col-span-3">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Additional Notes</span>
@@ -725,6 +749,8 @@ function responsePage() {
     // whoever is signed in; pushed straight into this.lines, unanswered, so it gets
     // the same open/confirm/change/cancel treatment as every other line here.
     addLineOpen: false,
+    // 2026-10-16: RU 4.3.1 field 3 is a dropdown. Second level of Flutter's Italian team mapping, per category.
+    subCats: {"Content Feeds": ["Gaming & Lottery", "Sportsbook & Virtual Race"], "Customer Operations": ["Customer Service", "Payments"], "Facility Management": ["Cleaning services", "Facility Maintenance", "Facility Material", "Furnishings", "Hardware", "Other FM Services", "Printer", "Real estate lease", "Retail Operations", "Sanifications and pest control", "Stationery", "Surveillance, reception and concierge", "Utilities", "Waste disposal"], "Human Resources": ["Employee Benefits", "Health security", "Payroll Services", "Rappresentative Costs", "Recruiting & headhunting", "Temporary labor", "Training"], "Marketing": ["Advertising Media", "Affiliates", "Agency", "Communication materials", "Contests", "Events", "Gifts"], "Professional Services": ["Certifications & Patents", "Consulting", "Credit Recovery", "Info providing", "Market research", "Outsourcing Services", "Press Review", "Professional IT Services", "Translations", "Visual merchandising"], "Retail": ["Hardware", "Retail Content", "Retail Operations", "Retail Technology", "TLC & Network"], "Technology": ["Data Center", "Gaming & Lottery", "Hardware", "Licences", "Software Development", "TLC & Network"]},
     e2Cats: ['Technology', 'Marketing', 'Professional Services', 'Facility Management',
              'Retail', 'Human Resources', 'Content Feeds', 'Customer Operations', 'Affiliation'],
     // RU 1.3's companies.
@@ -739,9 +765,10 @@ function responsePage() {
             'Facilities Italia', 'Platform Engineering', 'Legal & Compliance',
             'Retail Network IT', 'Payments & Risk'],
     e2StatusOpts: ['To start', 'In progress', 'On hold', 'Closed', 'Canceled'],
-    e2OpxOpts: ['Opex', 'Capex'],
+    e2OpxOpts: ['Opex', 'Capex', 'Opex/Capex'],
+    e2Brands: ['Sisal', 'Snaitech', 'PokerStars Italy', 'SEU'],
     // Spelled out, matching this file's own method vocabulary (l.method), not
-    // Plan.html's abbreviated 'Direct Nego'.
+    // Plan.html's abbreviated 'Direct Negotiation'.
     e2StratOpts: ['Direct Negotiation', 'Light Tender', 'Full Tender'],
     // Not on file anywhere in this mockup, since no owner-to-unit list exists here.
     // A small local guess, only used to prefill a field the respondent can still change.
@@ -749,12 +776,12 @@ function responsePage() {
     emptyE2Nd() {
       return { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start',
                ent: [(this.lines[0] && this.lines[0].entity) || 'Sisal Italia'],
-               sisal: false, pkr: false, snai: false, seu: false, bu: this.e2BuGuess[this.owner()] || '',
+               brand: ['Sisal'], bu: this.e2BuGuess[this.owner()] || '',
                opx: '', sup: '', inc: '', fopp: false, strat: '', ratio: '',
                value: '', start: '', end: '', ramt: '', notes: '' };
     },
     e2Nd: { kind: 'new', subject: '', cat: '', sub: '', proj: '', act: '', status: 'To start', ent: [],
-            sisal: false, pkr: false, snai: false, seu: false, bu: '', opx: '', sup: '', inc: '',
+            brand: [], bu: '', opx: '', sup: '', inc: '',
             fopp: false, strat: '', ratio: '', value: '', start: '', end: '', ramt: '', notes: '' },
     openE2AddLine() { this.e2Nd = this.emptyE2Nd(); this.addLineOpen = true; },
     canAddE2Need() {
@@ -774,7 +801,6 @@ function responsePage() {
     addE2Need() {
       if (!this.canAddE2Need()) return;
       const n = this.e2Nd;
-      const brandFlags = [n.sisal && 'Sisal', n.pkr && 'PokerStars Italy', n.snai && 'Snaitech', n.seu && 'SEU'].filter(Boolean);
       const nums = this.lines.map(l => Number((l.ref || '').split('-').pop())).filter(x => !isNaN(x));
       const nextNum = (nums.length ? Math.max(...nums) : 999) + 1;
       const rawValue = Math.round(Number(n.value));
@@ -786,12 +812,11 @@ function responsePage() {
         answer: null, route: null, poValue: null, owner: this.owner(),
         // Rest of Required Information, kept even though this screen's own list only
         // renders the columns above; matches what P0b and Plan.html store for the same form.
-        cat: n.cat, sub: n.sub.trim(), proj: n.proj.trim(), act: n.act.trim(), status: n.status,
-        sisal: n.sisal ? 'Y' : '', pkr: n.pkr ? 'Y' : '', snai: n.snai ? 'Y' : '',
-        brand: brandFlags.length > 1 ? 'Multi-brand' : (brandFlags[0] || ''),
-        bu: n.bu, opx: n.opx, inc: n.inc.trim(), fopp: n.fopp ? 'Y' : 'N', ratio: n.ratio.trim(),
+        cat: n.cat, sub: n.sub.trim(), proj: n.proj.trim(), act: n.act.trim(), istat: 'Proposal',
+        brand: n.brand.join(', '),
+        bu: n.bu, opx: n.opx, inc: n.inc.trim(), ratio: n.ratio.trim(),
         start: this.e2Dmy(n.start), end: this.e2Dmy(n.end), tot: Math.round(rawValue / 1000 * 100) / 100,
-        ramt: n.ramt.trim(), notes: n.notes.trim(), itype: n.kind === 'running' ? 'RENEW' : 'NEW'
+        notes: n.notes.trim()
       });
       this.addLineOpen = false;
     },
