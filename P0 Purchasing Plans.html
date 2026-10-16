@@ -4,6 +4,10 @@
     No import of Flutter's Purchasing Plan export. The first campaign, now Cycle 1, started
         with an empty plan: Starters entered every initiative. Cycles are renumbered (the old
         Cycle 0 is Cycle 1) and carry-forward (D12) applies from Cycle 2 on.
+    2026-10-16, Ivan Vitiello (Flutter) confirmed carry-forward: To start, In progress and On hold
+        initiatives carry over with the same status and approvals; anything still awaiting approval
+        carries too. Rejected, Cancelled and Completed-with-ended-contract stay behind. Drafts never
+        submitted are deleted when the new campaign launches (not carried, not kept in history).
     A cycle is no longer scoped by contract end dates. At launch the platform reads the
         Contract_Data extract and sends each Purchasing Group its contracts expiring in the
         nine months after the launch date (RU 4.2.1). The row and the dates panel show that
@@ -178,7 +182,7 @@
                 </p>
                 <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
                   Unfinished work moves with its lines: 14 approvals still to record, 23 lines waiting on a Requestor, 37 open challenges and 9 delegations waiting for the owner.
-                  Rejected and Cancelled lines, and Completed lines whose contract has ended, stay in Cycle 3. Every copied line has its Procurement team recalculated from the current mappings.
+                  Rejected and Cancelled lines, and Completed lines whose contract has ended, stay in Cycle 3. Drafts never submitted in Cycle 3 are deleted at launch. Copied lines keep their status and approvals, and every copied line has its Procurement team recalculated from the current mappings.
                 </p>
                 <p class="text-sm text-slate-700 leading-relaxed mt-1.5">
                   I propose submissions close on <span class="font-medium">Fri 15 Jan 2027</span>, a week later than usual

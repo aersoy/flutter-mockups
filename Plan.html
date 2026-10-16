@@ -118,7 +118,7 @@
   THE RULE SET (Sessions 22 and 23)
   Rules drive the flags, the Authorization Rung and the deadlines. No label, flag or message
   names a procedure or a section number. The rule set a plan was judged against is saved
-  with the plan and opens, as values only, from the Review strip. O2 administers the rules.
+  with the plan and opens, as values only, from the Review strip. The rules are edited in the start-of-cycle review (P0b, Rules); O2 was retired on 2026-10-16.
   The values and their sources are listed where the rule set is declared in the script.
 
   BUILD NOTES
@@ -400,7 +400,7 @@
               </template>
             </tbody>
           </table>
-          <div class="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-100">Columns proposed, to confirm with Flutter: their rules file lists filters, not columns. Read-only; it changes only when the next campaign reads a new extract.</div>
+          <div class="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-100">Read-only; it changes only when the next campaign reads a new extract.</div>
         </div>
       </div>
     </div>
@@ -644,7 +644,7 @@
          judged against. The rule set is saved with the plan at the freeze, so a plan read
          later is judged against its own rules, not today's. Collapsed, because it is evidence
          rather than working material. Session 23: restored after Session 22 removed it. It
-         names no procedure or section, only the values; O2 administers them. -->
+         names no procedure or section, only the values; they are edited in P0b's Rules step. -->
     <div x-show="viewId === 'review'"
          class="bg-white border-b border-gray-200 px-5 py-2 shrink-0 z-20">
       <div class="flex items-center gap-6">
@@ -664,7 +664,7 @@
       </div>
       <div x-show="rulesOpen" x-cloak class="mt-2.5 rounded-lg border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-3 py-1.5 text-[10.5px] text-gray-500 border-b border-gray-200">
-          Fixed for this cycle when it opened, Mon 21 Sep 2026 (D6). The group set. Entity overrides are on the Rules tab.
+          Fixed for this cycle when it opened, Mon 21 Sep 2026. The group set. Entity overrides are on the Rules tab.
         </div>
         <div class="grid grid-cols-2 divide-x divide-gray-200">
           <table class="w-full text-[11.5px]">
@@ -766,7 +766,7 @@
                 class="text-[11.5px] px-2.5 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 shrink-0">Open the authorization pack</button>
       </div>
       <p x-show="authMismatch()" class="text-[11px] text-amber-700 mt-1.5" x-text="authMismatch()"></p>
-      <p class="text-[11px] text-gray-400 mt-1">The rules suggest Approval Required from the entity's thresholds. Procurement accepts the suggestion or chooses another tier, and records the Approval Process (RU 4.9).</p>
+      <p class="text-[11px] text-gray-400 mt-1">The rules suggest Approval Required from the entity's thresholds. Procurement accepts the suggestion or chooses another tier, and records the Approval Process.</p>
     </div>
 
     <!-- Alignment: a view and a pack, not a meeting mode (D19). The focused business unit is
@@ -1393,7 +1393,8 @@
                       These lines were still drafts when submissions closed. Reminders went to the Starters, and the
                       Requestor was copied. Starters can still submit them during the review window, until 30 Oct;
                       after closure they go to the Sr. Procurement Director as change requests. They keep their plan
-                      data and are still monitored against their notice dates.
+                      data and are still monitored against their notice dates. Any still drafts when the next campaign
+                      launches are deleted.
                     </div>
                     <table class="w-full text-[12px]">
                       <thead class="bg-gray-50 text-gray-500">
@@ -1646,7 +1647,7 @@
          IA brief D6, D9, D21: the rule sets fixed for this cycle when it opened, one per legal
          entity, configured independently in the start-of-cycle review. Procurement only.
          Read-only for the whole cycle; it changes at the start of the next cycle, in the
-         start-of-cycle review (P0b, then O2). Same values as the Review strip and O2. -->
+         start-of-cycle review (P0b, Rules step). Same values as the Review strip. -->
     <div x-show="area === 'rules'" x-cloak class="scroll flex-1 min-h-0 overflow-y-auto bg-gray-50 px-5 py-5">
       <div class="max-w-5xl mx-auto space-y-4">
         <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 flex items-start gap-3">
@@ -1656,7 +1657,7 @@
             <span x-text="cyc().name"></span> is judged against the group set, with its entity's override where there is one.
             Changes are made at the start of the next cycle. Team mappings are not part of this: they stay live until a line is submitted (People tab).
           </div>
-          <a href="O2%20Rules%20Configuration.html" class="text-[11.5px] font-medium text-indigo-700 hover:underline shrink-0">Rules for the next cycle</a>
+          <a href="P0b%20Review%20Before%20Scheduling.html?step=3" class="text-[11.5px] font-medium text-indigo-700 hover:underline shrink-0">Rules for the next cycle</a>
         </div>
         <div class="flex items-center gap-2">
           <span class="text-[11px] text-gray-500">Legal entity</span>
@@ -1726,14 +1727,13 @@
       <div class="max-w-6xl mx-auto space-y-4">
         <div class="rounded-xl border px-4 py-3 text-[12px] leading-relaxed"
              :class="as === 'excellence' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-gray-200 bg-white text-gray-600'">
-          <span x-show="as === 'excellence'">You can edit roles, Purchasing Groups, team mappings and permissions (RU 2.1, 2.2). Mapping changes reach lines not yet submitted; submitted lines keep the team they were submitted with (D6).</span>
-          <span x-show="as !== 'excellence'">Read-only. Procurement Excellence and the Sr. Procurement Director edit these (RU 2.1, 2.2).</span>
+          <span x-show="as === 'excellence'">You can edit roles, Purchasing Groups, team mappings and permissions. Mapping changes reach lines not yet submitted; submitted lines keep the team they were submitted with.</span>
+          <span x-show="as !== 'excellence'">Read-only. Procurement Excellence and the Sr. Procurement Director edit these.</span>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
             <span class="text-[12px] font-semibold text-gray-800">Roles</span>
-            <span class="text-[11px] text-gray-400">· Flutter's, from RU 3.1. Another customer defines its own.</span>
             <div class="flex-1"></div>
             <button x-show="as === 'excellence'" class="text-[11.5px] font-medium text-indigo-600">&plus; Add a role</button>
           </div>
@@ -1784,7 +1784,7 @@
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-4 py-2.5 border-b border-gray-100">
               <div class="text-[12px] font-semibold text-gray-800">Procurement teams, Italian companies</div>
-              <div class="text-[11px] text-gray-400">By Product Category (RU 2.2). The Head of Category also applies abroad.</div>
+              <div class="text-[11px] text-gray-400">By Product Category. The Head of Category also applies abroad.</div>
             </div>
             <table class="w-full text-[12px]">
               <thead><tr class="text-left text-gray-500 border-b border-gray-100"><th class="px-4 py-1.5 font-medium">Category</th><th class="px-4 py-1.5 font-medium">Head of Category</th><th class="px-4 py-1.5 font-medium">Category Manager</th><th class="px-4 py-1.5 font-medium">Buyers</th></tr></thead>
@@ -1801,7 +1801,7 @@
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-4 py-2.5 border-b border-gray-100">
               <div class="text-[12px] font-semibold text-gray-800">Procurement teams, foreign companies</div>
-              <div class="text-[11px] text-gray-400">By Purchasing Group (RU 2.2). Flutter's file has no Local Buyer for any group, so the assignee falls to the Local Procurement Manager until it does.</div>
+              <div class="text-[11px] text-gray-400">By Purchasing Group. No group has a Local Buyer yet, so the assignee falls to the Local Procurement Manager.</div>
             </div>
             <table class="w-full text-[12px]">
               <thead><tr class="text-left text-gray-500 border-b border-gray-100"><th class="px-4 py-1.5 font-medium">Purchasing Group</th><th class="px-4 py-1.5 font-medium">Local Procurement Manager</th><th class="px-4 py-1.5 font-medium">Local Buyer</th></tr></thead>
@@ -1820,7 +1820,6 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
             <span class="text-[12px] font-semibold text-gray-800">Permissions on the status, assignment and Procurement fields</span>
-            <span class="text-[11px] text-gray-400">· RU 3.2 and Flutter's 13 Oct email; the full field table is RU 4.3.1 and 4.3.2</span>
           </div>
           <table class="w-full text-[12px]">
             <thead><tr class="text-left text-gray-500 border-b border-gray-100">
@@ -2001,7 +2000,7 @@
                     <template x-for="m in assignOpts(row())" :key="m.name"><option :value="m.name" :selected="row().assignee === m.name" x-text="m.name + ' · ' + m.role"></option></template>
                   </select>
                 </div>
-                <p class="text-[10.5px] text-gray-400 leading-relaxed">Options are the line's Head of Category, Category Manager and Buyers (RU 4.3.2). The Buyer is the default, or the Head of Category without one (Flutter, 13 Oct).</p>
+                <p class="text-[10.5px] text-gray-400 leading-relaxed">Options are the line's Head of Category, Category Manager and Buyers. The Buyer is the default, or the Head of Category without one.</p>
               </div>
             </div>
 
@@ -2087,7 +2086,6 @@
              history of a contract reads as a chain. -->
         <template x-if="pane === 'Linked contracts'">
           <div class="scroll flex-1 overflow-y-auto px-5 py-4 space-y-2">
-            <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic">Mockup: the chain of line 412 is shown for every line.</p>
             <template x-for="(l, li) in linkedChain" :key="l.ref">
               <div>
                 <div x-show="li > 0" class="flex items-center gap-2 pl-4 py-1 text-[10.5px] text-gray-400">
@@ -2127,7 +2125,6 @@
               <span class="text-gray-400">&middot; not part of the stream</span>
             </div>
             <div class="scroll flex-1 overflow-y-auto px-5 py-3 space-y-3">
-              <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic">Mockup: the chat of line 412 is shown for every line.</p>
               <template x-for="m in chatMsgs" :key="m.i">
                 <div class="flex gap-2.5">
                   <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-bold text-white" :class="m.side === 'proc' ? 'bg-slate-600' : 'bg-emerald-600'" x-text="m.init"></div>
@@ -2164,7 +2161,6 @@
               </select>
             </div>
             <div class="scroll flex-1 overflow-y-auto px-5 py-3">
-              <p x-show="row().ref !== 'PP-2027-0412'" class="text-[10.5px] text-gray-400 italic pb-1">Mockup: the stream of line 412 is shown for every line.</p>
               <template x-for="(grp, gi) in streamGroups()" :key="grp.cycle">
                 <div class="mb-3">
                   <div class="flex items-center gap-2 py-1.5">
@@ -2893,7 +2889,7 @@ function planApp() {
       { k: 'Activity Status',              v: ['View', 'View', 'Edit', 'Edit', 'Edit', 'Edit'] },
       { k: 'Procurement Assignee',         v: ['View', 'View', 'Edit', 'Edit', 'Edit', 'Edit'] },
       { k: 'Approval Required (accept or override the suggestion)', v: ['', '', 'Edit', 'Edit', 'Edit', 'View'] },
-      { k: 'Starter fields (RU 4.3.1)',    v: ['Edit', 'View', 'Edit', 'Edit', 'View', 'View'] },
+      { k: 'Starter fields',    v: ['Edit', 'View', 'Edit', 'Edit', 'View', 'View'] },
       { k: 'Flutter Opportunity, RFE ID',  v: ['View', 'View', 'Edit', 'Edit', 'Edit', 'Edit'] },
       { k: 'Contribution fields (Budget to Contribution %)', v: ['', '', 'Edit', 'Edit', 'Edit', 'View'] }
     ],
@@ -3220,27 +3216,27 @@ function planApp() {
       // The 28 Sep export's other columns are gone: nothing is imported from it.
       // Fields Starters and Requestors complete (4.3.1)
       { id: 'cat',   k: 'Product Category',                 t: 'sel', w: 160, g: 'Requesting function',
-        hint: 'RU 4.3.1, field 2. Dropdown from the Italian team mapping; it decides the line\'s Procurement team.' },
+        hint: 'Dropdown. It decides the line\'s Procurement team.' },
       { id: 'sub',   k: 'Sub-category, if applicable',      t: 'sel', w: 150, g: 'Requesting function' },
       { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'Requesting function' },
       { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'Requesting function' },
       { id: 'istat', k: 'Initiative Status',                t: 'sel', w: 140, g: 'Requesting function',
-        hint: 'RU 4.3.1, field 7: Proposal, Entered, Pending approval, To be reviewed, Rejected, Approved. Set by the workflow up to Entered, then selected by authorized Procurement users.' },
+        hint: 'Proposal, Entered, Pending approval, To be reviewed, Rejected, Approved. Set by the workflow up to Entered, then selected by authorized Procurement users.' },
       { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Requesting function',
-        hint: 'Multi-select. RU 1.3\'s companies.' },
+        hint: 'Multi-select. The group\'s legal entities.' },
       { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Requesting function',
         hint: 'Multi-select: Sisal, Snaitech, PokerStars Italy, SEU.' },
       { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Requesting function' },
       { id: 'pg',    k: 'Purchasing Group',                 t: 'sel', w: 200, g: 'Requesting function',
-        hint: 'RU 2.1. Decides the Starters and the Requestor who see the line. A system association, shown as a field.' },
+        hint: 'Decides the Starters and the Requestor who see the line.' },
       { id: 'bu',    k: 'Business Unit',                    t: 'sel', w: 160, g: 'Requesting function',
-        hint: 'Dropdown. The list RU V4 refers to has not been received yet.' },
+        hint: 'Dropdown.' },
       { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Requesting function' },
       { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Requesting function' },
       { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Requesting function' },
       { id: 'inc',   k: 'Incumbent Supplier',               t: 'txt', w: 200, g: 'Requesting function' },
       { id: 'fopp',  k: 'Flutter Opportunity',              t: 'chk', w: 120, g: 'Requesting function',
-        hint: 'Completed by Procurement only. Starters and Requestors see it read-only (Flutter, 13 Oct).' },
+        hint: 'Completed by Procurement only. Starters and Requestors see it read-only.' },
       { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Requesting function',
         rule: 'Checked by the rules: the sourcing method must fit the value band for the line\'s legal entity.' },
       { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Requesting function',
@@ -3252,37 +3248,37 @@ function planApp() {
       { id: 'dur',   k: 'Duration',                         t: 'cmp', w: 100, g: 'Requesting function', al: 'r',
         hint: 'Calculated from the contract start and end dates.' },
       { id: 'tot',   k: 'Total Contract Value (K€)',        t: 'num', w: 130, g: 'Requesting function',
-        hint: 'Who completes it is still to be confirmed in RU V4.' },
+        hint: '' },
       { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Requesting function', al: 'r',
         hint: 'Proposed as total contract value divided by duration.' },
       { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Requesting function' },
       { id: 'rfeid', k: 'RFE ID',                           t: 'txt', w: 100, g: 'Requesting function',
-        hint: 'Completed by Procurement only. Starters and Requestors see it read-only (Flutter, 13 Oct).' },
+        hint: 'Completed by Procurement only. Starters and Requestors see it read-only.' },
       // The workflow trace RU 4.2 keeps outside Initiative Status, and our email path's answer.
       { id: 'bstat', k: 'Submission',                       t: 'sel', w: 165, g: 'Workflow', plat: true,
-        hint: 'The workflow trace RU 4.2 keeps outside Initiative Status: submitted, returned, approved or rejected by the Requestor.' },
+        hint: 'Submitted, returned, approved or rejected by the Requestor.' },
       { id: 'batch', k: 'Batch',                            t: 'txt', w: 90,  g: 'Workflow',
-        hint: 'RU 4.4.2: the Batch the initiative was submitted in. Empty until it is submitted.' },
+        hint: 'The Batch the initiative was submitted in. Empty until it is submitted.' },
       { id: 'resp',  k: 'Response',                         t: 'sel', w: 135, g: 'Workflow', plat: true, off: true,
-        hint: 'Added by Eluvium. The email path\'s answer. Hidden in Flutter\'s configuration; switch it on in Fields.' },
+        hint: 'The answer given by email. Hidden by default; switch it on in Fields.' },
       // Fields Procurement completes (4.3.2)
       { id: 'accept',k: 'Acceptance',                       t: 'cmp', w: 200, g: 'Procurement',
-        hint: 'RU 4.7. Who accepted the line for Procurement, and when.' },
+        hint: 'Who accepted the line for Procurement, and when.' },
       { id: 'assignee', k: 'Procurement Assignee',          t: 'per', w: 170, g: 'Procurement',
-        hint: 'RU 4.7. Defaults to the line\'s Buyer, or its Head of Category where there is no Buyer (Flutter, 13 Oct). Changeable within the line\'s team.' },
+        hint: 'Defaults to the line\'s Buyer, or its Head of Category where there is no Buyer. Changeable within the line\'s team.' },
       { id: 'nastat',k: 'Approval Process',                 t: 'sel', w: 280, g: 'Procurement',
-        hint: 'RU 4.3.2, field 28 (Negotiation Approval Status in RU 4.9). Recorded by Procurement.' },
+        hint: 'Recorded by Procurement.' },
       { id: 'ppstat',k: 'Activity Status',                  t: 'sel', w: 150, g: 'Procurement',
-        hint: 'Field 29, renamed from Purchasing Plan Status (Flutter, 13 Oct): To start, In progress, On hold, Completed, Cancelled.' },
+        hint: 'To start, In progress, On hold, Completed, Cancelled.' },
       { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 340, g: 'Procurement',
         rule: 'Suggested by the rules from the entity\'s approval thresholds. Procurement accepts the suggestion or chooses another tier.' },
       { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Procurement' },
       { id: 'aqtr',  k: 'Approval Quarter',                 t: 'txt', w: 130, g: 'Procurement',
-        hint: 'New (Flutter, 13 Oct). Quarter and year, e.g. Q4 2026. Completed by Procurement.' },
+        hint: 'Quarter and year, e.g. Q4 2026. Completed by Procurement.' },
       { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Procurement' },
       { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Procurement' },
       { id: 'qtr2',  k: 'Back-Dated Approval Quarter',      t: 'txt', w: 170, g: 'Procurement',
-        hint: 'Field 34, renamed from Quarter (Flutter, 13 Oct). Quarter and year, e.g. Q4 2026.' },
+        hint: 'Quarter and year, e.g. Q4 2026.' },
       { id: 'rdn',   k: 'Reasons for DN / LT',              t: 'sel', w: 220, g: 'Procurement' },
       { id: 'rlate', k: 'Reasons for Late / Back-dated Contract', t: 'sel', w: 260, g: 'Procurement' },
       { id: 'det',   k: 'Additional Details',               t: 'txt', w: 210, g: 'Procurement' },
@@ -3292,33 +3288,33 @@ function planApp() {
       // Sr. Procurement Director, the Head of Category and the Category Manager.
       { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Contribution' },
       { id: 'pctype',k: 'Procurement Contribution Type',    t: 'sel', w: 260, g: 'Contribution',
-        hint: 'Seventeen methods from Flutter\'s list (13 Oct), editable by the Sr. Procurement Director and Procurement Excellence.' },
+        hint: 'A list editable by the Sr. Procurement Director and Procurement Excellence.' },
       { id: 'base',  k: 'Reference Baseline (K€)',          t: 'num', w: 150, g: 'Contribution' },
       { id: 'cv12',  k: 'Contract Value (12m Opex, Full Capex)', t: 'cmp', w: 220, g: 'Contribution', al: 'r',
         hint: 'Calculated: twelve months of value for Opex, the full value for Capex.' },
       { id: 'sfc',   k: 'Procurement Contribution 12m (with 10% Floor Deduction)', t: 'cmp', w: 230, g: 'Contribution', al: 'r',
-        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' },
+        hint: 'Calculated.' },
       { id: 's12',   k: 'Procurement Contribution 12m (excluding 10% Floor Deduction)', t: 'cmp', w: 240, g: 'Contribution', al: 'r',
-        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' },
+        hint: 'Calculated.' },
       { id: 'spct',  k: 'Procurement Contribution %',       t: 'cmp', w: 150, g: 'Contribution', al: 'r',
-        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' }
+        hint: 'Calculated.' }
     ,
       // ── Ours, not theirs. Six fields, tinted in the grid and marked OURS in Fields.
       // Stage and Next step are what the Tracking screen used to be. Authorization Rung is a
       // formula computed by the rule set, which is what lets Authorization be a filter rather
       // than a screen. Response sits next to their Status, above, because that is where it reads.
       { id: 'stage',   k: 'Stage',                  t: 'sel', w: 170, g: 'Eluvium fields', plat: true, off: true,
-        hint: 'Added by Eluvium. Where the negotiation has got to. Writes your Status column.' },
+        hint: 'Where the negotiation has got to. Writes the Activity Status column.' },
       { id: 'nextstep',k: 'Next Step',              t: 'txt', w: 260, g: 'Eluvium fields', plat: true,
-        hint: 'Added by Eluvium. Typed by the buyer. This is what you keep on a separate list today.' },
+        hint: 'Typed by the buyer.' },
       { id: 'nextdue', k: 'Next Step Due',          t: 'dat', w: 120, g: 'Eluvium fields', plat: true,
-        hint: 'Added by Eluvium.' },
+        hint: '' },
       { id: 'decide',  k: 'Decision Date',          t: 'dat', w: 120, g: 'Eluvium fields', plat: true,
-        hint: 'Added by Eluvium. Proposed from the contract start date, then confirmable.' },
+        hint: 'Proposed from the contract start date, then confirmable.' },
       { id: 'rung',    k: 'Suggested approval level', t: 'cmp', w: 185, g: 'Eluvium fields', plat: true,
-        hint: 'Formula field. From the rules, by value and sourcing method. For Flutter a suggestion only: Procurement records Approval Required (D27, Q30).' },
+        hint: 'Calculated from the rules, by value and sourcing method. A suggestion: Procurement records Approval Required.' },
       { id: 'outcome', k: 'Authorization Outcome',  t: 'sel', w: 300, g: 'Eluvium fields', plat: true, off: true,
-        hint: 'Added by Eluvium. Written by the authorization session, one line at a time.' }
+        hint: 'Written by the authorization session, one line at a time.' }
     ],
 
 
@@ -4319,8 +4315,8 @@ function planApp() {
       { k: 'Sisal Gaming',            note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
       { k: 'TSG Italy',               note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
       { k: 'Sisal Technology Turkey', note: 'STH procurement procedure', set: 'tr' },
-      { k: 'Sisal Albania',           note: 'Local units guide, to confirm', set: 'tr' },
-      { k: 'Sisal Jeux Maroc',        note: 'Local units guide, to confirm', set: 'tr' }
+      { k: 'Sisal Albania',           note: 'Local units guide', set: 'tr' },
+      { k: 'Sisal Jeux Maroc',        note: 'Local units guide', set: 'tr' }
     ],
     trBands: [
       { band: 'Up to € 1,000',        method: 'A quote from a single supplier',     auth: 'Local Procurement Manager', n: '' },
@@ -4358,7 +4354,7 @@ function planApp() {
         prompt: 'For the plan presentation to the CFO: year-to-date expenditure by category, function and project, the main planned negotiations, and the derogations that need authorization with their value bands.',
         spec: ['scope    cycle = current', 'measure  sum(yearly value), count(derogations)', 'group    Product Category', 'show     tiles, table'] },
       // 2026-10-11, RU 4.10.2: the counts the campaign closure needs.
-      { id: 'campaign', k: 'Campaign counts', sub: 'RU 4.10.2 · at closure', kind: 'table', by: 'pg', ver: 1,
+      { id: 'campaign', k: 'Campaign counts', sub: 'At closure', kind: 'table', by: 'pg', ver: 1,
         prompt: 'For the campaign closure: by Purchasing Group, the initiatives entered, submitted, approved by the Requestor, returned, rejected, accepted by Procurement, and still drafts at submission close.',
         spec: ['scope    cycle = current', 'measure  count by Submission and Initiative Status', 'group    Purchasing Group', 'show     tiles, table'] },
       { id: 'progresspg', k: 'Progress by Purchasing Group', sub: 'Who has submitted', kind: 'table', by: 'pg', ver: 1,
@@ -4424,7 +4420,7 @@ function planApp() {
     },
 
     changeTiles: [
-      { k: 'Cancelled',                    n: 63,  sub: 'not reviewed, listed here (D8)' },
+      { k: 'Cancelled',                    n: 63,  sub: 'not reviewed, listed here' },
       { k: 'Added by business units',      n: 24,  sub: 'joined during the cycle' },
       { k: 'Delegated',                    n: 112, sub: 'answered Not mine' },
       { k: 'Value, dates or route changed', n: 289, sub: 'answered Needs changes' }
@@ -4500,7 +4496,7 @@ function planApp() {
 <!-- Sits beside the 470px line drawer when it is open, so it never covers the drawer's controls. -->
 <div :class="selected ? 'right-[486px] bottom-4' : 'right-4 bottom-16'" class="fixed z-[70] rounded-xl bg-slate-900 text-white shadow-2xl ring-1 ring-black/20 px-3 py-2 flex items-center gap-2.5 text-[11px]">
   <span class="text-[9px] font-semibold tracking-widest uppercase text-slate-400 border border-slate-600 rounded px-1 py-px">Mockup</span>
-  <label class="flex items-center gap-2 text-slate-300" title="Roles are configuration (D23). These are Flutter's.">Viewing as
+  <label class="flex items-center gap-2 text-slate-300" >Viewing as
     <select x-model="as" @change="onRole()" class="text-[11.5px] font-medium text-white bg-slate-800 border border-slate-600 rounded-md pl-2 pr-7 py-1">
       <template x-for="r in roles" :key="r.k"><option :value="r.k" :selected="as === r.k" x-text="r.label"></option></template>
     </select>

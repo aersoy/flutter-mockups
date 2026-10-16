@@ -1,5 +1,19 @@
 <!DOCTYPE html>
 <!--
+  2026-10-16, O2 RETIRED: THE RULE SET LIVES IN THE START-OF-CYCLE REVIEW
+    Rules are copied from the previous cycle and edited here, in the Rules step, before the
+        cycle is scheduled; nowhere else. What only O2 had moved here: the source of each
+        table, the values still to confirm, who may edit, and the rule set history. The rules
+        in force for an open or closed cycle are read on that cycle's Rules tab (Plan.html).
+  2026-10-16, BANDS ARE STRUCTURE, NOT ONLY NUMBERS
+    Every amount-banded table in the rule set (sourcing method, minimum notice per strategy,
+        approval tiers) can gain or lose bands: Add and Remove only (no Split, 2026-10-16):
+        "+ Add a band/tier" adds one below the open-ended top band, Remove merges a band into
+        the next one, and every boundary and value is edited in place.
+        Flutter only needs its four tiers, but a rule set fitted to them would not serve the
+        next customer. Approval tiers are the Approval Required options, so adding or removing
+        one changes the field's options for that entity from the next cycle. Boundaries must
+        rise; the confirmation is blocked until they do and every tier is named once.
   2026-10-15, CONTRACT_DATA ONLY AND THE RU V4 TEMPLATE
     Lines step: what carries forward from Cycle 3, every open initiative, not lines picked by
         contract end date. The "Both plans" overlap mark and its reason are gone. Add lines is
@@ -285,7 +299,7 @@
                     </p>
                     <p class="text-[12.5px] text-slate-600 leading-relaxed mt-1.5">
                       Initiatives still waiting on a Requestor or an approval, and any unfinished work, move forward with them. Rejected and Cancelled initiatives, and Completed ones whose contract has ended, stay in Cycle 3.
-                      Each copied initiative has its Procurement team recalculated from the current mappings.
+                      Drafts that were never submitted are deleted when Cycle 4 launches. Copied initiatives keep their status and approvals, and each one has its Procurement team recalculated from the current mappings.
                     </p>
                     <!-- P17, P19: the start-of-cycle check on the copy, and holding flagged lines back. -->
                     <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 flex items-start gap-3">
@@ -600,7 +614,7 @@
                   <template x-if="!cd.uploaded">
                     <div class="mt-2 rounded-lg border-2 border-dashed border-gray-200 px-4 py-6 text-center">
                       <div class="text-[12.5px] text-gray-600">Drop the latest Contract_Data extract here, or choose a file</div>
-                      <div class="text-[11px] text-gray-400 mt-1">The file Procurement keeps on SharePoint. A direct connection comes later, when Flutter IT agrees.</div>
+                      <div class="text-[11px] text-gray-400 mt-1">The file Procurement keeps on SharePoint.</div>
                       <button @click="cd.uploaded = true" class="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Try it with a sample file</button>
                     </div>
                   </template>
@@ -618,7 +632,7 @@
                 <label class="block w-44 shrink-0">
                   <span class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Window</span>
                   <div class="flex items-center gap-2 mt-1"><input type="number" min="1" max="24" x-model.number="cd.months" class="fld !w-16 text-right mono"><span class="text-[12px] text-gray-600">months from launch</span></div>
-                  <span class="block text-[10.5px] text-gray-400 mt-1">A setting. Flutter's is nine.</span>
+                  <span class="block text-[10.5px] text-gray-400 mt-1">A setting.</span>
                 </label>
               </div>
             </div>
@@ -662,7 +676,7 @@
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                   <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
                     <span class="text-[12px] font-semibold text-gray-800">Fixes applied while reading</span>
-                    <span class="text-[11px] text-gray-400">to agree with Flutter &middot; each fix is logged on the row</span>
+                    <span class="text-[11px] text-gray-400">each fix is logged on the row</span>
                   </div>
                   <div class="divide-y divide-gray-50">
                     <template x-for="x in cd.fixes" :key="x.k">
@@ -701,9 +715,8 @@
                   <div class="px-4 py-2.5 bg-gray-50 border-t border-gray-100">
                     <div class="text-[11px] text-gray-500">Showing 6 of 123 Purchasing Groups. Each list holds every contract expiring in the window, including any already in the plan. Starters and Requestors come from the Purchasing Group mapping (V2.0).</div>
                     <div class="text-[11px] text-gray-500 mt-1.5 flex flex-wrap items-center gap-1">
-                      <span class="font-medium text-gray-600 mr-1">Columns in the attachment, proposed:</span>
+                      <span class="font-medium text-gray-600 mr-1">Columns in the attachment:</span>
                       <template x-for="c in cd.cols" :key="c"><span class="mono text-[10.5px] px-1.5 py-0.5 rounded bg-white border border-gray-200 text-gray-600" x-text="c"></span></template>
-                      <span class="text-amber-700 ml-1">To confirm with Flutter: the rules file lists filters, not columns.</span>
                     </div>
                   </div>
                 </div>
@@ -748,6 +761,7 @@
                 <div class="min-w-0 flex-1">
                   <h2 class="text-[15px] font-semibold text-gray-900" x-text="ent().k"></h2>
                   <p class="text-[11.5px] text-gray-500" x-text="ent().lines + ' lines in Cycle 4 · ' + ent().src"></p>
+                  <p class="text-[10.5px] text-gray-400 mt-0.5">Copied from Cycle 3. Procurement Excellence and the Sr. Procurement Director can edit it until the cycle is scheduled; everyone else in Procurement sees it read-only.</p>
                 </div>
                 <label class="text-[11.5px] text-gray-500 flex items-center gap-1.5 shrink-0">Copy values from
                   <select @change="copyFrom($event.target.value); $event.target.value = ''" class="text-[11.5px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-700">
@@ -761,32 +775,52 @@
                 <div class="rounded-xl border px-4 py-4" :class="ent().known ? 'border-gray-200 bg-white' : 'border-amber-200 bg-amber-50'">
                   <div class="text-[12.5px] font-semibold" :class="ent().known ? 'text-gray-800' : 'text-amber-900'" x-text="ent().known ? 'Uses the group set' : 'Uses the group set, unconfirmed'"></div>
                   <p class="text-[12px] mt-1 leading-relaxed" :class="ent().known ? 'text-gray-600' : 'text-amber-900'"
-                     x-text="ent().known ? ent().k + ' has no override. Its lines are judged against the group set, and it is confirmed when the group set is.' : 'We have not seen ' + ent().k + '\'s procedure. Its lines run on the group set and are flagged as unconfirmed, and the consequence sentence is off for it. Add an override when its rules are known.'"></p>
+                     x-text="ent().known ? ent().k + ' has no override. Its lines are judged against the group set, and it is confirmed when the group set is.' : ent().k + ' has no confirmed rules yet. Its lines run on the group set and are flagged as unconfirmed, and the consequence sentence is off for it. Add an override when its rules are set.'"></p>
                   <button @click="addOverride()" class="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Add an override for this entity</button>
                 </div>
               </template>
               <div x-show="ent().kind !== 'inherit'" class="space-y-4">
               <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Sourcing method by purchase amount</div>
+                <div class="px-4 py-2.5 border-b border-gray-100 flex items-baseline gap-2"><span class="text-[12px] font-semibold text-gray-800">Sourcing method by purchase amount</span></div>
                 <table class="w-full text-[12px]">
                   <thead><tr class="text-left text-gray-500 border-b border-gray-100">
-                    <th class="px-4 py-2 font-medium">Up to (&euro;)</th><th class="px-4 py-2 font-medium">Required method</th>
+                    <th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Up to (&euro;)</th><th class="px-4 py-2 font-medium">Required method</th>
                     <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium"></th>
                   </tr></thead>
                   <tbody>
-                    <template x-for="(bd, i) in ent().bands" :key="i">
+                    <template x-for="(bd, i) in ent().bands" :key="bd.id">
                       <tr class="border-b border-gray-50 last:border-0" :class="bdChanged(bd) ? 'bg-amber-50/60' : ''">
-                        <td class="px-4 py-1.5 w-40">
+                        <td class="px-4 py-2 text-[11.5px] text-gray-600 whitespace-nowrap mono" x-text="bandLabel(ent().bands, i, 0)"></td>
+                        <td class="px-4 py-1.5 w-36">
                           <template x-if="bd.to !== null"><input type="number" step="1000" x-model.number="bd.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
-                          <template x-if="bd.to === null"><span class="text-gray-500">Above</span></template>
+                          <template x-if="bd.to === null"><span class="text-gray-400 text-[11.5px]">and above</span></template>
                         </td>
-                        <td class="px-4 py-1.5"><input type="text" x-model="bd.method" @input="ent().confirmed = false" class="fld"></td>
-                        <td class="px-4 py-2 text-right mono text-gray-500 whitespace-nowrap" x-text="bd.prevTo === null ? 'Above' : eur(bd.prevTo)"></td>
-                        <td class="px-4 py-2 text-[11px] text-amber-700 whitespace-nowrap" x-text="bdChanged(bd) ? 'Changed' : ''"></td>
+                        <td class="px-4 py-1.5">
+                          <template x-if="!bd.newMethod">
+                            <select :value="bd.method" @change="pickMethod(bd, $event.target.value)" class="fld">
+                              <template x-for="o in methodOpts" :key="o"><option :value="o" :selected="o === bd.method" x-text="o"></option></template>
+                              <option value="__new">+ New method&hellip;</option>
+                            </select>
+                          </template>
+                          <template x-if="bd.newMethod">
+                            <div class="flex items-center gap-1.5">
+                              <input type="text" x-model="bd.method" x-init="$nextTick(() => $el.focus())" @keydown.enter="addMethod(bd)" @keydown.escape="bd.method = bd.oldMethod; bd.newMethod = false" placeholder="Name the method" class="fld">
+                              <button @click="addMethod(bd)" class="text-[11px] font-medium text-indigo-600 shrink-0">Add</button>
+                            </div>
+                          </template>
+                        </td>
+                        <td class="px-4 py-2 text-right mono text-gray-500 whitespace-nowrap text-[11.5px]" x-text="bd.isNew ? 'new band' : (bd.prevTo === null ? 'and above' : eur(bd.prevTo))"></td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap text-[11px]">
+                          <button x-show="ent().bands.length > 1" @click="removeRow(ent(), ent().bands, i)" class="font-medium text-gray-400 hover:text-rose-600">Remove</button>
+                        </td>
                       </tr>
                     </template>
                   </tbody>
                 </table>
+                <div class="px-4 py-2 border-t border-gray-100 flex items-center gap-3 text-[11.5px]">
+                  <button @click="splitRow(ent(), ent().bands, ent().bands.length - 1, 0, '')" class="font-medium text-indigo-600 hover:text-indigo-800">+ Add a band</button>
+                  <span class="text-gray-400" x-text="pl(ent().bands.length, 'band') + '. A new band is added below the top one; removing a band merges its range into the next one.'"></span>
+                </div>
               </div>
 
               <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -796,42 +830,68 @@
                 </div>
                 <table class="w-full text-[12px]">
                   <thead><tr class="text-left text-gray-500 border-b border-gray-100">
-                    <th class="px-4 py-2 font-medium">Sourcing strategy</th><th class="px-4 py-2 font-medium">Amount</th>
-                    <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium text-right w-28">Cycle 4</th><th class="px-4 py-2 font-medium"></th>
+                    <th class="px-4 py-2 font-medium">Sourcing strategy</th><th class="px-4 py-2 font-medium">Amount</th><th class="px-4 py-2 font-medium">Up to (&euro;)</th>
+                    <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium text-right w-24">Cycle 4</th><th class="px-4 py-2 font-medium"></th><th class="px-3 py-2 font-medium"></th>
                   </tr></thead>
-                  <tbody>
-                    <template x-for="n in ent().notice" :key="n.strat + n.amt">
-                      <tr class="border-b border-gray-50 last:border-0" :class="n.days != n.prev ? 'bg-amber-50/60' : ''">
-                        <td class="px-4 py-2 text-gray-800" x-text="n.strat"></td>
-                        <td class="px-4 py-2 text-gray-600" x-text="n.amt"></td>
-                        <td class="px-4 py-2 text-right mono text-gray-500" x-text="n.prev === null ? 'none' : n.prev"></td>
-                        <td class="px-4 py-1.5 text-right"><input type="number" x-model.number="n.days" @input="ent().confirmed = false" class="fld !w-20 text-right mono"></td>
-                        <td class="px-4 py-2 text-[11px] text-amber-700" x-text="n.prev === null ? 'New for this entity' : (n.days != n.prev ? 'Changed · ' + n.lines + ' lines get a new decision date' : '')"></td>
-                      </tr>
-                    </template>
-                  </tbody>
+                  <template x-for="g in ent().notice" :key="g.id">
+                    <tbody class="border-b border-gray-100 last:border-0">
+                      <template x-for="(n, i) in g.rows" :key="n.id">
+                        <tr :class="ntChanged(n) ? 'bg-amber-50/60' : ''">
+                          <td class="px-4 py-2 text-gray-800 align-top">
+                            <div x-show="i === 0" x-text="g.strat"></div>
+                            <button x-show="i === g.rows.length - 1" @click="splitRow(ent(), g.rows, g.rows.length - 1, g.from, '')" class="text-[11px] font-medium text-indigo-600 hover:text-indigo-800" :class="i === 0 ? 'mt-0.5' : ''">+ Add a band</button>
+                          </td>
+                          <td class="px-4 py-2 text-gray-600 text-[11.5px] mono whitespace-nowrap" x-text="bandLabel(g.rows, i, g.from)"></td>
+                          <td class="px-4 py-1.5 w-32">
+                            <template x-if="n.to !== null"><input type="number" step="1000" x-model.number="n.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
+                          </td>
+                          <td class="px-4 py-2 text-right mono text-gray-500" x-text="n.isNew ? 'new' : (n.prev === null ? 'none' : n.prev)"></td>
+                          <td class="px-4 py-1.5 text-right"><input type="number" x-model.number="n.days" @input="ent().confirmed = false" class="fld !w-20 text-right mono"></td>
+                          <td class="px-4 py-2 text-[11px] text-amber-700" x-text="n.isNew ? 'New band' : (n.prev === null ? 'New for this entity' : (n.days != n.prev ? 'Changed · ' + n.lines + ' lines get a new decision date' : (n.to !== n.prevTo ? 'Boundary changed' : '')))"></td>
+                          <td class="px-3 py-2 text-right whitespace-nowrap text-[11px]">
+                            <button x-show="g.rows.length > 1" @click="removeRow(ent(), g.rows, i)" class="font-medium text-gray-400 hover:text-rose-600">Remove</button>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </template>
                 </table>
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-4">
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                   <div class="px-4 py-2.5 border-b border-gray-100">
                     <div class="text-[12px] font-semibold text-gray-800">Approval thresholds</div>
                     <div class="text-[10.5px] text-gray-400 mt-0.5">The tiers are this entity's Approval Required options. The platform suggests one per line; Procurement confirms it or chooses another.</div>
                   </div>
                   <table class="w-full text-[12px]">
+                    <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                      <th class="px-4 py-2 font-medium w-8">#</th><th class="px-4 py-2 font-medium">Tier (an Approval Required option)</th><th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Up to (&euro;)</th>
+                      <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-3 py-2 font-medium"></th>
+                    </tr></thead>
                     <tbody>
-                      <template x-for="(l, i) in ent().ladder" :key="l.rung">
-                        <tr class="border-b border-gray-50 last:border-0" :class="l.to !== l.prevTo ? 'bg-amber-50/60' : ''">
-                          <td class="px-4 py-2 text-gray-800" x-text="l.rung"></td>
-                          <td class="px-4 py-1.5 text-right whitespace-nowrap">
-                            <template x-if="l.to !== null"><span class="text-gray-500 text-[11px]">up to &euro; <input type="number" step="1000" x-model.number="l.to" @input="ent().confirmed = false" class="fld !w-24 text-right mono inline-block"></span></template>
-                            <template x-if="l.to === null"><span class="text-gray-500 text-[11px]">above</span></template>
+                      <template x-for="(l, i) in ent().ladder" :key="l.id">
+                        <tr class="border-b border-gray-50 last:border-0" :class="ladChanged(l) ? 'bg-amber-50/60' : ''">
+                          <td class="px-4 py-2 text-gray-400 mono" x-text="i + 1"></td>
+                          <td class="px-4 py-1.5 w-64"><input type="text" list="tier-opts" x-model="l.rung" @input="ent().confirmed = false" placeholder="Name the tier" class="fld min-w-[12.5rem]"></td>
+                          <td class="px-4 py-2 text-[11.5px] text-gray-600 mono whitespace-nowrap" x-text="bandLabel(ent().ladder, i, 0)"></td>
+                          <td class="px-4 py-1.5 w-36">
+                            <template x-if="l.to !== null"><input type="number" step="1000" x-model.number="l.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
+                            <template x-if="l.to === null"><span class="text-gray-400 text-[11.5px]">and above</span></template>
+                          </td>
+                          <td class="px-4 py-2 text-right text-gray-500 text-[11.5px] whitespace-nowrap" x-text="l.isNew ? 'new tier' : ((l.rung !== l.prevRung ? l.prevRung + ', ' : '') + (l.prevTo === null ? 'and above' : eur(l.prevTo)))"></td>
+                          <td class="px-3 py-2 text-right whitespace-nowrap text-[11px]">
+                            <button x-show="ent().ladder.length > 1" @click="removeRow(ent(), ent().ladder, i)" class="font-medium text-gray-400 hover:text-rose-600">Remove</button>
                           </td>
                         </tr>
                       </template>
                     </tbody>
                   </table>
+                  <datalist id="tier-opts"><template x-for="o in tierOpts" :key="o"><option :value="o"></option></template></datalist>
+                  <div class="px-4 py-2 border-t border-gray-100 flex items-start gap-3 text-[11.5px]">
+                    <button @click="splitRow(ent(), ent().ladder, ent().ladder.length - 1, 0, 'rung')" class="font-medium text-indigo-600 hover:text-indigo-800 shrink-0">+ Add a tier</button>
+                    <span class="text-gray-400 leading-relaxed">Adding or removing a tier adds or removes an Approval Required option for this entity from Cycle 4. A new tier needs its approvers mapped in the People tab. Initiatives carried forward keep the approval already recorded on them.</span>
+                  </div>
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                   <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Derogation floor and validity</div>
@@ -852,9 +912,13 @@
                 </div>
               </div>
 
-              <label class="rounded-xl border px-4 py-3 flex items-start gap-3 cursor-pointer"
-                     :class="ent().confirmed ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-200 bg-white'">
-                <input type="checkbox" x-model="ent().confirmed" class="accent-indigo-600 w-4 h-4 mt-0.5">
+              <div x-show="errorsOf(ent()).length" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[12px] text-rose-800">
+                <div class="font-semibold">Fix these before confirming</div>
+                <template x-for="m in errorsOf(ent())" :key="m"><div class="mt-0.5" x-text="m"></div></template>
+              </div>
+              <label class="rounded-xl border px-4 py-3 flex items-start gap-3"
+                     :class="errorsOf(ent()).length ? 'border-gray-200 bg-gray-50 opacity-60 cursor-default' : (ent().confirmed ? 'border-emerald-200 bg-emerald-50 cursor-pointer' : 'border-indigo-200 bg-white cursor-pointer')">
+                <input type="checkbox" x-model="ent().confirmed" :disabled="errorsOf(ent()).length > 0" class="accent-indigo-600 w-4 h-4 mt-0.5">
                 <span class="text-[12.5px] text-gray-800 leading-relaxed">
                   <strong x-text="ent().kind === 'group' ? 'I confirm the group rule set for Cycle 4.' : 'I confirm ' + ent().k + '\'s override for Cycle 4.'"></strong>
                   <span class="text-gray-600" x-text="entChanges(ent()) ? entChanges(ent()) + (entChanges(ent()) === 1 ? ' value differs' : ' values differ') + ' from Cycle 3, and the change is audited.' : 'No value differs from Cycle 3.'"></span>
@@ -863,6 +927,33 @@
               </label>
               </div>
               <p class="text-[11.5px] text-gray-500 leading-relaxed">An initiative naming several entities adds their amounts together. If one of them is Italian, Italy's thresholds apply; otherwise the highest thresholds among them. Other rules use the strictest value among the entities. Procurement team mappings are not part of this rule set: they stay live until an initiative is submitted, and are edited in the cycle's People tab.</p>
+
+              <!-- From the retired O2: the rule set's history across cycles. Earlier cycles'
+                   rules open read-only on that cycle's Rules tab in Plan.html. -->
+              <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                <button @click="histOpen = !histOpen" class="w-full px-4 py-2.5 flex items-center gap-2 text-left hover:bg-gray-50">
+                  <span class="text-[12px] font-semibold text-gray-800">Rule set history</span>
+                  <span class="text-[11px] text-gray-400" x-text="ruleHistory.length + ' entries · one version per cycle, every version kept'"></span>
+                  <div class="flex-1"></div>
+                  <span class="text-[11px] text-indigo-600" x-text="histOpen ? 'Hide' : 'Show'"></span>
+                </button>
+                <table x-show="histOpen" x-cloak class="w-full text-[12px] border-t border-gray-100">
+                  <thead><tr class="text-left text-gray-500 border-b border-gray-100">
+                    <th class="px-4 py-2 font-medium">Cycle</th><th class="px-4 py-2 font-medium">What changed</th><th class="px-4 py-2 font-medium">Entity</th><th class="px-4 py-2 font-medium">Confirmed by</th><th class="px-4 py-2 font-medium"></th>
+                  </tr></thead>
+                  <tbody>
+                    <template x-for="h in ruleHistory" :key="h.i">
+                      <tr class="border-b border-gray-50 last:border-0">
+                        <td class="px-4 py-2 text-gray-900 font-medium whitespace-nowrap" x-text="h.cycle"></td>
+                        <td class="px-4 py-2 text-gray-700" x-text="h.what"></td>
+                        <td class="px-4 py-2 text-gray-600" x-text="h.entity"></td>
+                        <td class="px-4 py-2 text-gray-600" x-text="h.by"></td>
+                        <td class="px-4 py-2 text-right whitespace-nowrap"><a href="Plan.html" class="text-[11px] font-medium text-indigo-600 hover:text-indigo-800">Open that cycle's rules</a></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -1006,7 +1097,7 @@ function review() {
     filter: 'all',
     holdBack: true,     // P17
     // D6, D21: one rule set per legal entity, copied from Cycle 3, configured independently.
-    entSel: 'Sisal Italia',
+    entSel: 'Group set',
     ruleEnts: [],
     get rulesOk() { const g = this.ruleEnts.find(e => e.kind === 'group'); return !!(g && g.confirmed); },
     entOk(e) { return e.kind === 'inherit' ? (e.known && this.rulesOk) : e.confirmed; },
@@ -1017,31 +1108,105 @@ function review() {
     },
     addOverride() {
       const e = this.ent(); const g = this.ruleEnts.find(x => x.kind === 'group'); if (!e || !g) return;
-      e.bands = g.bands.map(b => Object.assign({}, b)); e.notice = g.notice.map(n => Object.assign({}, n));
-      e.ladder = g.ladder.map(l => Object.assign({}, l)); e.floor = g.floor; e.pct = g.pct; e.abs = g.abs;
+      e.bands = this.cloneRows(g.bands); e.notice = g.notice.map(x => Object.assign({}, x, { id: ++this.uid, rows: this.cloneRows(x.rows) }));
+      e.ladder = this.cloneRows(g.ladder); e.removed = 0; e.floor = g.floor; e.pct = g.pct; e.abs = g.abs;
       e.kind = 'override'; e.known = true; e.confirmed = false; e.src = 'Override, copied from the group set';
     },
     confirmedCount() { return this.ruleEnts.filter(e => e.confirmed).length; },
     ent() { return this.ruleEnts.find(e => e.k === this.entSel) || this.ruleEnts[0]; },
-    bdChanged(b) { return b.to !== b.prevTo || b.method !== b.prevMethod; },
+    bdChanged(b) { return !!b.isNew || b.to !== b.prevTo || b.method !== b.prevMethod; },
+    ntChanged(n) { return !!n.isNew || n.days != n.prev || n.to !== n.prevTo; },
+    ladChanged(l) { return !!l.isNew || l.to !== l.prevTo || l.rung !== l.prevRung; },
+    // 2026-10-16: bands are structure, not only numbers. Any table of amount bands (sourcing
+    // method, minimum notice per strategy, approval tiers) can gain or lose bands, so the rule
+    // set is not fitted to Flutter's four tiers. A band runs from the previous band's upper
+    // bound (or the table's start) to its own; only the last band may be open-ended.
+    uid: 0,
+    histOpen: false,
+    // Required method is a list, not free text. The list is part of the rule set and grows
+    // when someone adds a method; it is shared by every entity.
+    methodOpts: ['A quote from a single supplier', 'At least two quotes', 'At least three quotes',
+                 'Structured competitive comparison, three suppliers', 'Tender, three suppliers'],
+    pickMethod(bd, v) {
+      if (v === '__new') { bd.oldMethod = bd.method; bd.method = ''; bd.newMethod = true; return; }
+      bd.method = v; this.ent().confirmed = false;
+    },
+    addMethod(bd) {
+      const v = (bd.method || '').trim(); if (!v) return;
+      if (!this.methodOpts.includes(v)) this.methodOpts.push(v);
+      bd.method = v; bd.newMethod = false; this.ent().confirmed = false;
+    },
+    // Moved from the retired O2 (2026-10-16): the history of the rule set.
+    ruleHistory: [
+      { i: 1, cycle: 'Cycle 1', what: 'Group rule set created', entity: 'Group set', by: 'Procurement, before the first campaign' },
+      { i: 2, cycle: 'Cycle 1', what: 'Override created with its own tiers and bands', entity: 'Sisal Technology Turkey', by: 'Procurement, before the first campaign' },
+      { i: 3, cycle: 'Cycle 2', what: 'No change from Cycle 1', entity: 'All', by: 'Sara Lombardi' },
+      { i: 4, cycle: 'Cycle 3', what: 'No change from Cycle 2', entity: 'All', by: 'Sara Lombardi' }
+    ],
+    tierOpts: ['No Approval Required', 'Local Procurement Manager', 'Head of Category', 'Sr. Procurement Director', 'CFO'],
+    cloneRows(rows) { return rows.map(r => Object.assign({}, r, { id: ++this.uid })); },
+    lowerOf(rows, i, from) { return i > 0 ? rows[i - 1].to : (from || 0); },
+    bandLabel(rows, i, from) {
+      const lo = this.lowerOf(rows, i, from), hi = rows[i].to;
+      if (hi === null) return lo ? 'Above ' + this.eur(lo) : 'Any amount';
+      return lo ? this.eur(lo) + ' – ' + this.eur(hi) : 'Up to ' + this.eur(hi);
+    },
+    nice(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); return Math.round(x / p) * p; },
+    splitRow(e, rows, i, from, blank) {
+      const lo = this.lowerOf(rows, i, from), hi = rows[i].to;
+      let t = hi === null ? (lo ? lo * 2 : 100000) : this.nice((lo + hi) / 2);
+      if (!(t > lo) || (hi !== null && !(t < hi))) t = Math.round((lo + (hi === null ? lo * 2 : hi)) / 2);
+      const add = Object.assign({}, rows[i], { id: ++this.uid, to: t, isNew: true });
+      if (blank) add[blank] = '';
+      rows.splice(i, 0, add); e.confirmed = false;
+      this.flash('New band up to ' + this.eur(t) + '. Set its boundary and value.');
+    },
+    removeRow(e, rows, i) {
+      if (rows.length < 2) return;
+      if (i === rows.length - 1) rows[i - 1].to = rows[i].to;
+      if (!rows[i].isNew) e.removed = (e.removed || 0) + 1;
+      rows.splice(i, 1); e.confirmed = false;
+    },
+    errorsOf(e) {
+      if (!e || e.kind === 'inherit') return [];
+      const out = [];
+      const chk = (name, rows, from, field, what) => rows.forEach((r, i) => {
+        const lo = this.lowerOf(rows, i, from);
+        if (r.to !== null && !(typeof r.to === 'number' && r.to > lo)) out.push(name + ', band ' + (i + 1) + ': the upper bound must be above ' + this.eur(lo) + '.');
+        if (field && !String(r[field] || '').trim()) out.push(name + ', band ' + (i + 1) + ': ' + what + '.');
+      });
+      chk('Sourcing method', e.bands, 0, 'method', 'name the required method');
+      e.notice.forEach(g => chk('Minimum notice, ' + g.strat, g.rows, g.from, null, ''));
+      chk('Approval thresholds', e.ladder, 0, 'rung', 'name the tier');
+      const names = e.ladder.map(l => (l.rung || '').trim()).filter(Boolean);
+      names.filter((n, i) => names.indexOf(n) !== i).forEach(n => out.push('Approval thresholds: ' + n + ' appears twice. Each tier is a separate Approval Required option.'));
+      return out;
+    },
     entChanges(e) {
       if (!e) return 0;
-      return e.bands.filter(b => this.bdChanged(b)).length + e.notice.filter(n => n.days != n.prev).length
-        + e.ladder.filter(l => l.to !== l.prevTo).length
+      return e.bands.filter(b => this.bdChanged(b)).length
+        + e.notice.reduce((a, g) => a + g.rows.filter(n => this.ntChanged(n)).length, 0)
+        + e.ladder.filter(l => this.ladChanged(l)).length + (e.removed || 0)
         + (e.floor !== e.prevFloor ? 1 : 0) + (e.pct !== e.prevPct ? 1 : 0) + (e.abs !== e.prevAbs ? 1 : 0);
     },
     ruleChanges() { return this.ruleEnts.reduce((a, e) => a + this.entChanges(e), 0); },
     copyFrom(k) {
       const src = this.ruleEnts.find(e => e.k === k); if (!src) return;
       const t = this.ent();
-      t.bands = src.bands.map((b, i) => Object.assign({}, b, { prevTo: (t.bands[i] || {}).prevTo ?? null, prevMethod: (t.bands[i] || {}).prevMethod || '' }));
-      // Notice rows are matched by strategy and amount, not position: entities can have
-      // different methods. A row the target did not have before is marked new.
-      t.notice = src.notice.map(n => {
-        const old = t.notice.find(o => o.strat === n.strat && o.amt === n.amt);
-        return Object.assign({}, n, { prev: old ? old.prev : null, lines: old ? old.lines : null });
+      // Cycle 3 values are kept by position; a band the target did not have before is new.
+      const keep = (to, from, fields) => from.map((r, i) => {
+        const old = to[i]; const x = Object.assign({}, r, { id: ++this.uid, isNew: !old || !!old.isNew });
+        fields.forEach(f => { x[f] = old ? old[f] : null; }); return x;
       });
-      t.ladder = src.ladder.map((l, i) => Object.assign({}, l, { prevTo: (t.ladder[i] || {}).prevTo ?? l.to }));
+      t.bands = keep(t.bands, src.bands, ['prevTo', 'prevMethod']);
+      // Notice is matched by strategy: entities can have different methods. A strategy the
+      // target did not have before is marked new for this entity.
+      t.notice = src.notice.map(g => {
+        const old = t.notice.find(o => o.strat === g.strat);
+        return Object.assign({}, g, { id: ++this.uid, rows: old ? keep(old.rows, g.rows, ['prev', 'prevTo', 'lines'])
+          : g.rows.map(r => Object.assign({}, r, { id: ++this.uid, prev: null, prevTo: null, lines: null })) });
+      });
+      t.ladder = keep(t.ladder, src.ladder, ['prevTo', 'prevRung']); t.removed = 0;
       t.floor = src.floor; t.pct = src.pct; t.abs = src.abs; t.confirmed = false;
       this.flash('Copied ' + k + '\'s values into ' + t.k + '. Review and confirm.');
     },
@@ -1050,39 +1215,40 @@ function review() {
       const it = () => ({
         bands: [ { to: 10000, method: 'A quote from a single supplier' }, { to: 50000, method: 'At least two quotes' },
                  { to: 100000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender, three suppliers' } ],
-        notice: [ { strat: 'Direct Negotiation', amt: 'Below € 100,000', days: 30, lines: 214 }, { strat: 'Direct Negotiation', amt: '€ 100,000 – € 1,000,000', days: 40, lines: 131 },
-                  { strat: 'Direct Negotiation', amt: 'Above € 1,000,000', days: 60, lines: 22 }, { strat: 'Light Tender', amt: 'Any', days: 40, lines: 188 },
-                  { strat: 'Full Tender', amt: 'Any', days: 60, lines: 96 } ],
+        notice: [ { strat: 'Direct Negotiation', from: 0, rows: [ { to: 100000, days: 30, lines: 214 }, { to: 1000000, days: 40, lines: 131 }, { to: null, days: 60, lines: 22 } ] },
+                  { strat: 'Light Tender', from: 0, rows: [ { to: null, days: 40, lines: 188 } ] },
+                  { strat: 'Full Tender', from: 0, rows: [ { to: null, days: 60, lines: 96 } ] } ],
         ladder: [ { rung: 'No Approval Required', to: 10000 }, { rung: 'Head of Category', to: 50000 },
                   { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
         floor: 10000, pct: 10, abs: 50000 });
       const tr = () => ({
         bands: [ { to: 1000, method: 'A quote from a single supplier' }, { to: 10000, method: 'At least three quotes' },
-                 { to: 50000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender' } ],
-        notice: [ { strat: 'Direct Negotiation', amt: 'Up to € 50,000', days: 25, lines: 18 }, { strat: 'Direct Negotiation', amt: '€ 50,000 – € 1,000,000', days: 40, lines: 9 },
-                  { strat: 'Direct Negotiation', amt: 'Above € 1,000,000', days: 60, lines: 1 }, { strat: 'Quote comparison', amt: '€ 1,000 – € 10,000', days: 30, lines: 7 },
-                  { strat: 'Structured comparison', amt: '€ 10,000 – € 50,000', days: 40, lines: 6 }, { strat: 'Tender', amt: 'Above € 50,000', days: 60, lines: 4 } ],
+                 { to: 50000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender, three suppliers' } ],
+        notice: [ { strat: 'Direct Negotiation', from: 0, rows: [ { to: 50000, days: 25, lines: 18 }, { to: 1000000, days: 40, lines: 9 }, { to: null, days: 60, lines: 1 } ] },
+                  { strat: 'Quote comparison', from: 1000, rows: [ { to: 10000, days: 30, lines: 7 } ] },
+                  { strat: 'Structured comparison', from: 10000, rows: [ { to: 50000, days: 40, lines: 6 } ] },
+                  { strat: 'Tender', from: 50000, rows: [ { to: null, days: 60, lines: 4 } ] } ],
         ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Category', to: 50000 },
                   { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
         floor: 1000, pct: 10, abs: 50000 });
       // D21: the group set, then entities. kind: group, override, inherit (no override).
       // known: we have seen the entity's procedure, so inheriting is a confirmed choice.
       const list = [
-        { k: 'Group set',               kind: 'group',    known: true,  lines: 4215, src: 'RU 4.9, the FSEA user guide and the plan\'s RFE deadline formula', f: it },
+        { k: 'Group set',               kind: 'group',    known: true,  lines: 4215, src: 'Group set', f: it },
         { k: 'Sisal Italia',            kind: 'inherit',  known: true,  lines: 2249, src: 'Group set', f: it },
         { k: 'Snaitech',                kind: 'inherit',  known: true,  lines: 544, src: 'Group set', f: it },
         { k: 'Sisal Gaming',            kind: 'inherit',  known: true,  lines: 353, src: 'Group set', f: it },
         { k: 'TSG Italy',               kind: 'inherit',  known: true,  lines: 151, src: 'Group set', f: it },
-        { k: 'Sisal Technology Turkey', kind: 'override', known: true,  lines: 140, src: 'Override from the STH procurement procedure', f: tr },
-        { k: 'Sisal Albania',           kind: 'inherit',  known: false, lines: 191, src: 'Group set, procedure not seen', f: it },
-        { k: 'Sisal Jeux Maroc',        kind: 'inherit',  known: false, lines: 169, src: 'Group set, procedure not seen', f: it }
+        { k: 'Sisal Technology Turkey', kind: 'override', known: true,  lines: 140, src: 'Override', f: tr },
+        { k: 'Sisal Albania',           kind: 'inherit',  known: false, lines: 191, src: 'Group set, unconfirmed', f: it },
+        { k: 'Sisal Jeux Maroc',        kind: 'inherit',  known: false, lines: 169, src: 'Group set, unconfirmed', f: it }
       ];
       this.ruleEnts = list.map(x => {
         const v = x.f();
         return { k: x.k, kind: x.kind, known: x.known, lines: x.lines, src: x.src, confirmed: false,
-          bands: v.bands.map(b => Object.assign({}, b, { prevTo: b.to, prevMethod: b.method })),
-          notice: v.notice.map(n => Object.assign({}, n, { prev: n.days })),
-          ladder: v.ladder.map(l => Object.assign({}, l, { prevTo: l.to })),
+          bands: v.bands.map(b => Object.assign({}, b, { id: ++this.uid, prevTo: b.to, prevMethod: b.method })),
+          notice: v.notice.map(g => Object.assign({}, g, { id: ++this.uid, rows: g.rows.map(n => Object.assign({}, n, { id: ++this.uid, prev: n.days, prevTo: n.to })) })),
+          ladder: v.ladder.map(l => Object.assign({}, l, { id: ++this.uid, prevTo: l.to, prevRung: l.rung })), removed: 0,
           floor: v.floor, prevFloor: v.floor, pct: v.pct, prevPct: v.pct, abs: v.abs, prevAbs: v.abs };
       });
     },
@@ -1091,7 +1257,7 @@ function review() {
     // Group names and counts are real; Requestor names stay illustrative.
     cd: { uploaded: false, months: 9,
       steps: [
-        { n: 1,  col: 'E · Societa',             rule: 'Keep only the companies in RU 1.3',                                     rem: '14,343', left: '30,685' },
+        { n: 1,  col: 'E · Societa',             rule: 'Keep only the group\'s legal entities',                                     rem: '14,343', left: '30,685' },
         { n: 2,  col: 'AC · Intercompany',       rule: 'Remove intercompany contracts (Si)',                                    rem: '141',    left: '30,544' },
         { n: 3,  col: 'B · Nome_fornitore',      rule: 'Remove group companies, street addresses and three banks as supplier', rem: '168',    left: '30,376' },
         { n: 4,  col: 'Z · Stato_avanzamento',   rule: 'Remove rescinded and cancelled contracts',                              rem: '3,268',  left: '27,108' },
@@ -1104,8 +1270,8 @@ function review() {
         { n: 11, col: 'O · Data_scadenza',       rule: 'Keep contracts expiring in the nine months after launch',               rem: '23,203', left: '2,515' }
       ],
       fixes: [
-        { k: 'Company names mapped to RU 1.3',       n: '27 → 14', d: 'Appian spells every company differently (Sisal Italia S.p.A. with a trailing space, TSG  Italy  S.r.l.). 13 Appian companies are outside RU 1.3, among them SisalPay and Sisal Lottery Italia.' },
-        { k: 'Supplier exclusions as a list',         n: '3', warn: true, d: 'Kept, pending Flutter\'s list: STREET WEB SRL, CORSO GENOVA 11 SRL and VIA GOITO SRL look like addresses but are companies.' },
+        { k: 'Company names mapped to legal entities',       n: '27 → 14', d: 'Appian spells every company differently (Sisal Italia S.p.A. with a trailing space, TSG  Italy  S.r.l.). 13 Appian companies are outside RU 1.3, among them SisalPay and Sisal Lottery Italia.' },
+        { k: 'Supplier exclusions as a list',         n: '3', warn: true, d: 'Kept: STREET WEB SRL, CORSO GENOVA 11 SRL and VIA GOITO SRL look like addresses but are companies.' },
         { k: 'Vendor code removed from supplier',     n: '2,515', d: '0001102175 - IBM ITALIA SPA reads IBM ITALIA SPA. Turkish suppliers carry an M code.' },
         { k: 'Amendments shown under their contract', n: '142', d: 'An amendment whose base contract also expires is listed once, under the base contract.' },
         { k: 'Amount in euro',                        n: '330', d: 'Turkey, Morocco and Albania hold local currency in Importo_totale; the euro column is used.' },
@@ -1254,25 +1420,25 @@ function review() {
       // The 28 Sep export's other columns are gone: nothing is imported from it.
       // Fields Starters and Requestors complete (4.3.1)
       { id: 'cat',   k: 'Product Category',                 t: 'sel', w: 160, g: 'Requesting function',
-        hint: 'RU 4.3.1, field 2. Dropdown from the Italian team mapping; it decides the line\'s Procurement team.' },
+        hint: 'Dropdown. It decides the line\'s Procurement team.' },
       { id: 'sub',   k: 'Sub-category, if applicable',      t: 'sel', w: 150, g: 'Requesting function' },
       { id: 'proj',  k: 'Project',                          t: 'txt', w: 160, g: 'Requesting function' },
       { id: 'act',   k: 'Detailed Activities',              t: 'txt', w: 250, g: 'Requesting function' },
       { id: 'istat', k: 'Initiative Status',                t: 'sel', w: 140, g: 'Requesting function',
-        hint: 'RU 4.3.1, field 7: Proposal, Entered, Pending approval, To be reviewed, Rejected, Approved. Set by the workflow up to Entered, then selected by authorized Procurement users.' },
+        hint: 'Proposal, Entered, Pending approval, To be reviewed, Rejected, Approved. Set by the workflow up to Entered, then selected by authorized Procurement users.' },
       { id: 'ent',   k: 'Legal Entity',                     t: 'sel', w: 130, g: 'Requesting function',
-        hint: 'Multi-select. RU 1.3\'s companies.' },
+        hint: 'Multi-select. The group\'s legal entities.' },
       { id: 'brand', k: 'Brand / Multi-brand',              t: 'sel', w: 130, g: 'Requesting function',
         hint: 'Multi-select: Sisal, Snaitech, PokerStars Italy, SEU.' },
       { id: 'owner', k: 'Business Owner',                   t: 'per', w: 160, g: 'Requesting function' },
       { id: 'bu',    k: 'Business Unit',                    t: 'sel', w: 160, g: 'Requesting function',
-        hint: 'Dropdown. The list RU V4 refers to has not been received yet.' },
+        hint: 'Dropdown.' },
       { id: 'opx',   k: 'Opex / Capex',                     t: 'sel', w: 110, g: 'Requesting function' },
       { id: 'svc',   k: 'Service Type',                     t: 'txt', w: 150, g: 'Requesting function' },
       { id: 'sup',   k: 'Potential Supplier',               t: 'txt', w: 200, g: 'Requesting function' },
       { id: 'inc',   k: 'Incumbent Supplier',               t: 'txt', w: 200, g: 'Requesting function' },
       { id: 'fopp',  k: 'Flutter Opportunity',              t: 'chk', w: 120, g: 'Requesting function',
-        hint: 'Completed by Procurement only. Starters and Requestors see it read-only (Flutter, 13 Oct).' },
+        hint: 'Completed by Procurement only. Starters and Requestors see it read-only.' },
       { id: 'strat', k: 'Sourcing Strategy',                t: 'sel', w: 140, g: 'Requesting function',
         rule: 'Checked by the rules: the sourcing method must fit the value band for the line\'s legal entity.' },
       { id: 'ratio', k: 'Strategy Rationals',               t: 'txt', w: 290, g: 'Requesting function',
@@ -1284,28 +1450,28 @@ function review() {
       { id: 'dur',   k: 'Duration',                         t: 'cmp', w: 100, g: 'Requesting function', al: 'r',
         hint: 'Calculated from the contract start and end dates.' },
       { id: 'tot',   k: 'Total Contract Value (K€)',        t: 'num', w: 130, g: 'Requesting function',
-        hint: 'Who completes it is still to be confirmed in RU V4.' },
+        hint: '' },
       { id: 'yr',    k: 'Yearly Contract Value (K€)',       t: 'cmp', w: 130, g: 'Requesting function', al: 'r',
         hint: 'Proposed as total contract value divided by duration.' },
       { id: 'notes', k: 'Additional Notes',                 t: 'txt', w: 170, g: 'Requesting function' },
       { id: 'rfeid', k: 'RFE ID',                           t: 'txt', w: 100, g: 'Requesting function',
-        hint: 'Completed by Procurement only. Starters and Requestors see it read-only (Flutter, 13 Oct).' },
+        hint: 'Completed by Procurement only. Starters and Requestors see it read-only.' },
       // Fields Procurement completes (4.3.2)
       { id: 'assignee', k: 'Procurement Assignee',          t: 'per', w: 170, g: 'Procurement',
-        hint: 'RU 4.7. Defaults to the line\'s Buyer, or its Head of Category where there is no Buyer (Flutter, 13 Oct). Changeable within the line\'s team.' },
+        hint: 'Defaults to the line\'s Buyer, or its Head of Category where there is no Buyer. Changeable within the line\'s team.' },
       { id: 'nastat',k: 'Approval Process',                 t: 'sel', w: 280, g: 'Procurement',
-        hint: 'RU 4.3.2, field 28 (Negotiation Approval Status in RU 4.9). Recorded by Procurement.' },
+        hint: 'Recorded by Procurement.' },
       { id: 'ppstat',k: 'Activity Status',                  t: 'sel', w: 150, g: 'Procurement',
-        hint: 'Field 29, renamed from Purchasing Plan Status (Flutter, 13 Oct): To start, In progress, On hold, Completed, Cancelled.' },
+        hint: 'To start, In progress, On hold, Completed, Cancelled.' },
       { id: 'appr',  k: 'Approval Required',                t: 'sel', w: 250, g: 'Procurement',
         rule: 'Suggested by the rules from the entity\'s approval thresholds. Procurement accepts the suggestion or chooses another tier.' },
       { id: 'sapp',  k: 'Sourcing Approved',                t: 'chk', w: 110, g: 'Procurement' },
       { id: 'aqtr',  k: 'Approval Quarter',                 t: 'txt', w: 130, g: 'Procurement',
-        hint: 'New (Flutter, 13 Oct). Quarter and year, e.g. Q4 2026. Completed by Procurement.' },
+        hint: 'Quarter and year, e.g. Q4 2026. Completed by Procurement.' },
       { id: 'bdreq', k: 'Back-dated Approval Required',     t: 'chk', w: 140, g: 'Procurement' },
       { id: 'bdapp', k: 'Back-dated Approved',              t: 'chk', w: 120, g: 'Procurement' },
       { id: 'qtr2',  k: 'Back-Dated Approval Quarter',      t: 'txt', w: 170, g: 'Procurement',
-        hint: 'Field 34, renamed from Quarter (Flutter, 13 Oct). Quarter and year, e.g. Q4 2026.' },
+        hint: 'Quarter and year, e.g. Q4 2026.' },
       { id: 'rdn',   k: 'Reasons for DN / LT',              t: 'sel', w: 220, g: 'Procurement' },
       { id: 'rlate', k: 'Reasons for Late / Back-dated Contract', t: 'sel', w: 260, g: 'Procurement' },
       { id: 'det',   k: 'Additional Details',               t: 'txt', w: 210, g: 'Procurement' },
@@ -1315,24 +1481,24 @@ function review() {
       // Sr. Procurement Director, the Head of Category and the Category Manager.
       { id: 'bud',   k: 'Budget (K€)',                      t: 'num', w: 100, g: 'Contribution' },
       { id: 'pctype',k: 'Procurement Contribution Type',    t: 'sel', w: 260, g: 'Contribution',
-        hint: 'Seventeen methods from Flutter\'s list (13 Oct), editable by the Sr. Procurement Director and Procurement Excellence.' },
+        hint: 'A list editable by the Sr. Procurement Director and Procurement Excellence.' },
       { id: 'base',  k: 'Reference Baseline (K€)',          t: 'num', w: 150, g: 'Contribution' },
       { id: 'cv12',  k: 'Contract Value (12m Opex, Full Capex)', t: 'cmp', w: 220, g: 'Contribution', al: 'r',
         hint: 'Calculated: twelve months of value for Opex, the full value for Capex.' },
       { id: 'sfc',   k: 'Procurement Contribution 12m (with 10% Floor Deduction)', t: 'cmp', w: 230, g: 'Contribution', al: 'r',
-        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' },
+        hint: 'Calculated.' },
       { id: 's12',   k: 'Procurement Contribution 12m (excluding 10% Floor Deduction)', t: 'cmp', w: 240, g: 'Contribution', al: 'r',
-        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' },
+        hint: 'Calculated.' },
       { id: 'spct',  k: 'Procurement Contribution %',       t: 'cmp', w: 150, g: 'Contribution', al: 'r',
-        hint: 'A formula. Its exact definition is still to be confirmed with Flutter.' }
+        hint: 'Calculated.' }
     ,
       // ── Ours. A draft plan carries different fields of ours than a live one: there is no
       // Response, Stage or Authorization Outcome until the cycle runs, and there is an
       // In plan, because on a draft the question is whether the line is in at all.
       { id: 'inplan', k: 'In Plan',  t: 'sel', w: 110, g: 'Eluvium fields', plat: true,
-        hint: 'Added by Eluvium. Removing a line is a value in a field, which is why it survives into the plan with who changed it and when.' },
+        hint: 'Whether the line stays in the plan. Who changed it and when is kept.' },
       { id: 'reason', k: 'Reason If Removed', t: 'txt', w: 200, g: 'Eluvium fields', plat: true,
-        hint: 'Added by Eluvium, and optional. Ellie fills it in where the data already says why.' }
+        hint: 'Optional. Ellie fills it in where the data already says why.' }
     ],
 
     // A view owns the order of its fields as well as the set. On a draft the working
@@ -1509,6 +1675,10 @@ function review() {
 
     init() {
       this.buildEntities();
+      // Links from a cycle's Rules tab open the Rules step, optionally on one entity.
+      const q = new URLSearchParams(location.search);
+      if (q.get('step')) this.step = +q.get('step');
+      if (q.get('ent') && this.ruleEnts.find(e => e.k === q.get('ent'))) this.entSel = q.get('ent');
       this.seed.forEach(s => this.rows.push({ id: 'C' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'contract', kind: 'contract', removed: false, reason: '' }));
       this.needSeed.forEach(s => this.rows.push({ id: 'N' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'need', kind: 'need', removed: false, reason: '' }));
       // Every draft line becomes a plan record, validated against the rule set before

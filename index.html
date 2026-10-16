@@ -2,7 +2,7 @@
 <!--
   00 · Index · Flutter Purchase Planning Agent, Phase 1 mockups
   ==============================================================
-  Navigation only. Opens each file in a new tab.
+  Navigation only. Opens each file in the same tab.
 
   Session 22: rewritten as plain navigation. The demo guidance that used to sit here (the
   configurability line, the collapses worth knowing, what is still open) lives in
@@ -49,7 +49,7 @@
       </div>
       <div class="grid grid-cols-2 gap-3">
         <template x-for="s in g.screens" :key="s.file">
-          <a :href="s.file" target="_blank"
+          <a :href="s.file"
              class="group rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-indigo-300 hover:shadow-sm transition-all block">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
@@ -77,9 +77,9 @@ function index() {
         sub: 'in the platform',
         screens: [
           { code: 'P0',  file: 'P0 Purchasing Plans.html',          title: 'Cycles',                    desc: 'Every cycle and its phase, one open at a time. The next campaign is launched by hand, by an authorized role.' },
-          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Start-of-cycle review',     desc: 'What carries forward, the Contract_Data upload with Flutter\u2019s extraction rules, the rule set with approval thresholds per entity, and the phase dates.' },
-          { code: '\u2605', file: 'Plan.html',                      title: 'The cycle',                 desc: 'Initiatives on the RU V4 template, seen as any role: Starters submit, Requestors approve, Procurement accepts and confirms the suggested approval. Each line\u2019s linked contracts, stream and chat.' },
-          { code: 'O2',  file: 'O2 Rules Configuration.html',       title: 'Procurement rules',         desc: 'Approval thresholds per legal entity, including Turkey\u2019s own tiers, and the multi-entity rule. The suggestion they produce is confirmed by hand. Only the next cycle\u2019s draft can be edited.' }
+          { code: 'P0b', file: 'P0b Review Before Scheduling.html', title: 'Start-of-cycle review',     desc: 'What carries forward, the Contract_Data upload with Flutter\u2019s extraction rules, the rule set copied from the last cycle and edited here (bands, approval tiers per entity, Turkey\u2019s own), and the phase dates.' },
+          { code: '\u2605', file: 'Plan.html',                      title: 'The cycle',                 desc: 'Initiatives on the RU V4 template, seen as any role: Starters submit, Requestors approve, Procurement accepts and confirms the suggested approval. Each line\u2019s linked contracts, stream and chat.' }
+          // O2 Rules Configuration retired 2026-10-16: the rule set is copied and edited in P0b's Rules step.
         ]
       },
       {
