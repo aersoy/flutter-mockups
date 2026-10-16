@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <!--
+  2026-10-16, ONE RULES SHEET BY AMOUNT
+    The three rule tables (method, notice, approval) are one sheet, built on the plan's sheet.
+        Rows are amount bands; columns are the same for every entity: Required method,
+        Standard strategy (field 17's vocabulary), Approval Required for a derogation (and a
+        back-dated contract), and minimum notice by the strategy actually used. From RU 4.9
+        (strategy is an input), the Italian guide (slides 9, 11, 26) and the STH procedure
+        (4.1, whose notice table is already this shape; 4.2.2). Method-to-strategy mapping is
+        our reading and needs Flutter's confirmation. Turkey's 25 vs 30 days for an already
+        approved direct negotiation up to 50K is kept as 25 only up to 1K.
   2026-10-16, O2 RETIRED: THE RULE SET LIVES IN THE START-OF-CYCLE REVIEW
     Rules are copied from the previous cycle and edited here, in the Rules step, before the
         cycle is scheduled; nowhere else. What only O2 had moved here: the source of each
@@ -214,6 +223,13 @@
     border-width: 0 6px 6px 0; border-style: solid; border-color: transparent #f97316 transparent transparent; }
   .cellrel { position: relative; }
 
+  /* The rules sheet: the same sheet, edited in the cell. */
+  .cin { display: block; width: 100%; height: 35px; padding: 0 10px; border: 0; background: transparent; font: inherit; color: inherit; }
+  .cin:focus { outline: none; background: #fff; box-shadow: inset 0 0 0 2px #818cf8; }
+  select.cin { cursor: pointer; }
+  .cin::placeholder { color: #c4c7cf; }
+  table.sheet td.chg { background: #fffbeb; }
+  table.sheet td.newrow { box-shadow: inset 3px 0 0 #f59e0b; }
   .gwrap::-webkit-scrollbar { width: 11px; height: 11px; }
   .gwrap::-webkit-scrollbar-thumb { background: #c8cad1; border-radius: 8px; border: 2px solid #fff; }
   .gwrap::-webkit-scrollbar-track { background: #f6f7f9; }
@@ -736,7 +752,7 @@
           <div x-show="step === 3" class="flex gap-4 items-start">
 
             <!-- Entities -->
-            <div class="w-60 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden sticky top-0">
+            <div class="w-48 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden sticky top-0">
               <div class="px-3.5 py-2.5 border-b border-gray-100">
                 <div class="text-[10.5px] font-semibold uppercase tracking-wide text-gray-500">Legal entities</div>
                 <div class="text-[11.5px] mt-0.5" :class="rulesOk ? 'text-emerald-700' : 'text-gray-500'"
@@ -780,135 +796,119 @@
                 </div>
               </template>
               <div x-show="ent().kind !== 'inherit'" class="space-y-4">
+              <!-- 2026-10-16: one sheet for the rules by amount. Rows are amount bands; the columns are
+                   the same for every entity. Approval Required applies to a derogation: a line whose
+                   Sourcing Strategy is below its row's standard (RU 4.9, the Italian guide's slide 11,
+                   STH 4.2.2), and to back-dated contracts. Notice is by the strategy actually used,
+                   as in STH 4.1's own table. -->
               <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                <div class="px-4 py-2.5 border-b border-gray-100 flex items-baseline gap-2"><span class="text-[12px] font-semibold text-gray-800">Sourcing method by purchase amount</span></div>
-                <table class="w-full text-[12px]">
-                  <thead><tr class="text-left text-gray-500 border-b border-gray-100">
-                    <th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Up to (&euro;)</th><th class="px-4 py-2 font-medium">Required method</th>
-                    <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium"></th>
-                  </tr></thead>
-                  <tbody>
-                    <template x-for="(bd, i) in ent().bands" :key="bd.id">
-                      <tr class="border-b border-gray-50 last:border-0" :class="bdChanged(bd) ? 'bg-amber-50/60' : ''">
-                        <td class="px-4 py-2 text-[11.5px] text-gray-600 whitespace-nowrap mono" x-text="bandLabel(ent().bands, i, 0)"></td>
-                        <td class="px-4 py-1.5 w-36">
-                          <template x-if="bd.to !== null"><input type="number" step="1000" x-model.number="bd.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
-                          <template x-if="bd.to === null"><span class="text-gray-400 text-[11.5px]">and above</span></template>
-                        </td>
-                        <td class="px-4 py-1.5">
-                          <template x-if="!bd.newMethod">
-                            <select :value="bd.method" @change="pickMethod(bd, $event.target.value)" class="fld">
-                              <template x-for="o in methodOpts" :key="o"><option :value="o" :selected="o === bd.method" x-text="o"></option></template>
-                              <option value="__new">+ New method&hellip;</option>
-                            </select>
-                          </template>
-                          <template x-if="bd.newMethod">
-                            <div class="flex items-center gap-1.5">
-                              <input type="text" x-model="bd.method" x-init="$nextTick(() => $el.focus())" @keydown.enter="addMethod(bd)" @keydown.escape="bd.method = bd.oldMethod; bd.newMethod = false" placeholder="Name the method" class="fld">
-                              <button @click="addMethod(bd)" class="text-[11px] font-medium text-indigo-600 shrink-0">Add</button>
+                <div class="px-4 py-2.5 border-b border-gray-100">
+                  <div class="text-[12px] font-semibold text-gray-800">Rules by purchase amount</div>
+                  <div class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">A line's amount picks its row. Approval Required applies when the line's Sourcing Strategy is below the row's standard, and to back-dated contracts. Minimum notice follows the strategy the line actually uses; an empty cell sets none.</div>
+                </div>
+                <div class="overflow-x-auto gwrap">
+                  <table class="sheet text-[12px]" style="width: 100%; min-width: 900px">
+                    <colgroup>
+                      <col style="width:36px"><col style="width:190px"><col><col style="width:132px"><col style="width:184px">
+                      <col style="width:86px"><col style="width:76px"><col style="width:76px">
+                    </colgroup>
+                    <thead>
+                      <tr class="hg">
+                        <th colspan="2" class="gh" style="border-left:0">Amount band</th>
+                        <th colspan="2" class="gh">Standard process</th>
+                        <th class="gh">Derogation</th>
+                        <th colspan="3" class="gh">Minimum notice, working days</th>
+                      </tr>
+                      <tr class="hc text-[11.5px] font-semibold text-gray-600">
+                        <th class="px-1 text-center text-[10px] text-gray-400">#</th>
+                        <th class="px-2.5 text-left">Purchase amount (&euro;)</th>
+                        <th class="px-2.5 text-left gs">Required method</th>
+                        <th class="px-2.5 text-left" title="The Sourcing Strategy a line of this amount is expected to use. A line below it is a derogation.">Standard strategy</th>
+                        <th class="px-2.5 text-left gs" title="Applies to a derogation and to a back-dated contract. The tiers in this column are this entity's Approval Required options.">Approval Required</th>
+                        <th class="px-2.5 text-right gs"><span class="hn">Direct Negotiation</span></th>
+                        <th class="px-2.5 text-right"><span class="hn">Light Tender</span></th>
+                        <th class="px-2.5 text-right"><span class="hn">Full Tender</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template x-for="(r, i) in ent().rows" :key="r.id">
+                        <tr class="group">
+                          <td class="px-1 text-center text-[10.5px] text-gray-400" :class="r.isNew ? 'newrow' : ''">
+                            <span :class="ent().rows.length > 1 ? 'group-hover:hidden' : ''" x-text="i + 1"></span>
+                            <button x-show="ent().rows.length > 1" @click="removeRow(ent(), ent().rows, i)" title="Remove this band. Its range merges into the next one."
+                                    class="hidden group-hover:inline text-[14px] leading-none text-gray-400 hover:text-rose-600">&times;</button>
+                          </td>
+                          <td class="p-0 cellrel" :class="cc(r, i, 'to')" :title="ct(r, 'to')">
+                            <div class="flex items-center">
+                              <span class="pl-2.5 shrink-0 mono text-[11px] text-gray-500 whitespace-nowrap"
+                                    x-text="r.to === null ? (lowerOf(ent().rows, i, 0) ? 'Above ' + lowerOf(ent().rows, i, 0).toLocaleString('en-GB') : 'Any amount') : (i === 0 ? 'Up to' : lowerOf(ent().rows, i, 0).toLocaleString('en-GB') + ' –')"></span>
+                              <template x-if="r.to !== null"><input type="number" step="1000" x-model.number="r.to" @input="ent().confirmed = false" class="cin text-right mono min-w-0 flex-1"></template>
                             </div>
+                          </td>
+                          <td class="p-0 cellrel gs" :class="cc(r, i, 'method')" :title="ct(r, 'method')">
+                            <template x-if="!r.new_method">
+                              <select :value="r.method" :title="r.method" @change="pickOpt(r, 'method', $event.target.value, 'methodOpts')" class="cin">
+                                <template x-for="o in methodOpts" :key="o"><option :value="o" :selected="o === r.method" x-text="o"></option></template>
+                                <option value="__new">+ New method&hellip;</option>
+                              </select>
+                            </template>
+                            <template x-if="r.new_method">
+                              <input type="text" x-model="r.method" x-init="$nextTick(() => $el.focus())" @keydown.enter="addOpt(r, 'method', 'methodOpts')" @blur="addOpt(r, 'method', 'methodOpts')" placeholder="Name the method, then Enter" class="cin">
+                            </template>
+                          </td>
+                          <td class="p-0 cellrel" :class="cc(r, i, 'std')" :title="ct(r, 'std')">
+                            <select :value="r.std" @change="r.std = $event.target.value; ent().confirmed = false" class="cin">
+                              <template x-for="o in stratOpts" :key="o"><option :value="o" :selected="o === r.std" x-text="o"></option></template>
+                            </select>
+                          </td>
+                          <td class="p-0 cellrel gs" :class="cc(r, i, 'appr')" :title="ct(r, 'appr')">
+                            <template x-if="!r.new_appr">
+                              <select :value="r.appr" @change="pickOpt(r, 'appr', $event.target.value, 'tierOpts')" class="cin">
+                                <template x-for="o in tierOpts" :key="o"><option :value="o" :selected="o === r.appr" x-text="o"></option></template>
+                                <option value="__new">+ New tier&hellip;</option>
+                              </select>
+                            </template>
+                            <template x-if="r.new_appr">
+                              <input type="text" x-model="r.appr" x-init="$nextTick(() => $el.focus())" @keydown.enter="addOpt(r, 'appr', 'tierOpts')" @blur="addOpt(r, 'appr', 'tierOpts')" placeholder="Name the tier, then Enter" class="cin">
+                            </template>
+                          </td>
+                          <template x-for="k in ['dn', 'lt', 'ft']" :key="k">
+                            <td class="p-0 cellrel" :class="[cc(r, i, k), k === 'dn' ? 'gs' : '']" :title="ct(r, k)">
+                              <input type="number" min="0" :value="r[k] ?? ''" @input="r[k] = $event.target.value === '' ? null : +$event.target.value; ent().confirmed = false" placeholder="&mdash;" class="cin text-right mono">
+                            </td>
                           </template>
-                        </td>
-                        <td class="px-4 py-2 text-right mono text-gray-500 whitespace-nowrap text-[11.5px]" x-text="bd.isNew ? 'new band' : (bd.prevTo === null ? 'and above' : eur(bd.prevTo))"></td>
-                        <td class="px-3 py-2 text-right whitespace-nowrap text-[11px]">
-                          <button x-show="ent().bands.length > 1" @click="removeRow(ent(), ent().bands, i)" class="font-medium text-gray-400 hover:text-rose-600">Remove</button>
+                        </tr>
+                      </template>
+                      <tr>
+                        <td></td>
+                        <td colspan="7" class="px-2.5">
+                          <div class="flex items-center gap-3 text-[11.5px]">
+                            <button @click="splitRow(ent(), ent().rows, ent().rows.length - 1, 0, '')" class="font-medium text-indigo-600 hover:text-indigo-800">+ Add a band</button>
+                            <span class="text-gray-400">Added below the top band. Hover a row number to remove a band; its range merges into the next one.</span>
+                          </div>
                         </td>
                       </tr>
-                    </template>
-                  </tbody>
-                </table>
-                <div class="px-4 py-2 border-t border-gray-100 flex items-center gap-3 text-[11.5px]">
-                  <button @click="splitRow(ent(), ent().bands, ent().bands.length - 1, 0, '')" class="font-medium text-indigo-600 hover:text-indigo-800">+ Add a band</button>
-                  <span class="text-gray-400" x-text="pl(ent().bands.length, 'band') + '. A new band is added below the top one; removing a band merges its range into the next one.'"></span>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="px-4 py-2.5 border-t border-gray-100 text-[11.5px] text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span><span class="text-gray-400">Approval Required options for this entity:</span> <span class="font-medium text-gray-800" x-text="tiersOf(ent()).join(', ')"></span></span>
+                  <span x-show="derogFloor(ent()) !== null"><span class="text-gray-400">A Direct Negotiation is a derogation above</span> <span class="font-medium text-gray-800 mono" x-text="eur(derogFloor(ent()))"></span></span>
                 </div>
               </div>
 
               <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                  <span class="text-[12px] font-semibold text-gray-800">Minimum notice</span>
-                  <span class="text-[11px] text-gray-400">working days</span>
-                </div>
-                <table class="w-full text-[12px]">
-                  <thead><tr class="text-left text-gray-500 border-b border-gray-100">
-                    <th class="px-4 py-2 font-medium">Sourcing strategy</th><th class="px-4 py-2 font-medium">Amount</th><th class="px-4 py-2 font-medium">Up to (&euro;)</th>
-                    <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-4 py-2 font-medium text-right w-24">Cycle 4</th><th class="px-4 py-2 font-medium"></th><th class="px-3 py-2 font-medium"></th>
-                  </tr></thead>
-                  <template x-for="g in ent().notice" :key="g.id">
-                    <tbody class="border-b border-gray-100 last:border-0">
-                      <template x-for="(n, i) in g.rows" :key="n.id">
-                        <tr :class="ntChanged(n) ? 'bg-amber-50/60' : ''">
-                          <td class="px-4 py-2 text-gray-800 align-top">
-                            <div x-show="i === 0" x-text="g.strat"></div>
-                            <button x-show="i === g.rows.length - 1" @click="splitRow(ent(), g.rows, g.rows.length - 1, g.from, '')" class="text-[11px] font-medium text-indigo-600 hover:text-indigo-800" :class="i === 0 ? 'mt-0.5' : ''">+ Add a band</button>
-                          </td>
-                          <td class="px-4 py-2 text-gray-600 text-[11.5px] mono whitespace-nowrap" x-text="bandLabel(g.rows, i, g.from)"></td>
-                          <td class="px-4 py-1.5 w-32">
-                            <template x-if="n.to !== null"><input type="number" step="1000" x-model.number="n.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
-                          </td>
-                          <td class="px-4 py-2 text-right mono text-gray-500" x-text="n.isNew ? 'new' : (n.prev === null ? 'none' : n.prev)"></td>
-                          <td class="px-4 py-1.5 text-right"><input type="number" x-model.number="n.days" @input="ent().confirmed = false" class="fld !w-20 text-right mono"></td>
-                          <td class="px-4 py-2 text-[11px] text-amber-700" x-text="n.isNew ? 'New band' : (n.prev === null ? 'New for this entity' : (n.days != n.prev ? 'Changed · ' + n.lines + ' lines get a new decision date' : (n.to !== n.prevTo ? 'Boundary changed' : '')))"></td>
-                          <td class="px-3 py-2 text-right whitespace-nowrap text-[11px]">
-                            <button x-show="g.rows.length > 1" @click="removeRow(ent(), g.rows, i)" class="font-medium text-gray-400 hover:text-rose-600">Remove</button>
-                          </td>
-                        </tr>
-                      </template>
-                    </tbody>
-                  </template>
-                </table>
-              </div>
-
-              <div class="space-y-4">
-                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <div class="px-4 py-2.5 border-b border-gray-100">
-                    <div class="text-[12px] font-semibold text-gray-800">Approval thresholds</div>
-                    <div class="text-[10.5px] text-gray-400 mt-0.5">The tiers are this entity's Approval Required options. The platform suggests one per line; Procurement confirms it or chooses another.</div>
-                  </div>
-                  <table class="w-full text-[12px]">
-                    <thead><tr class="text-left text-gray-500 border-b border-gray-100">
-                      <th class="px-4 py-2 font-medium w-8">#</th><th class="px-4 py-2 font-medium">Tier (an Approval Required option)</th><th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Up to (&euro;)</th>
-                      <th class="px-4 py-2 font-medium text-right">Cycle 3</th><th class="px-3 py-2 font-medium"></th>
-                    </tr></thead>
-                    <tbody>
-                      <template x-for="(l, i) in ent().ladder" :key="l.id">
-                        <tr class="border-b border-gray-50 last:border-0" :class="ladChanged(l) ? 'bg-amber-50/60' : ''">
-                          <td class="px-4 py-2 text-gray-400 mono" x-text="i + 1"></td>
-                          <td class="px-4 py-1.5 w-64"><input type="text" list="tier-opts" x-model="l.rung" @input="ent().confirmed = false" placeholder="Name the tier" class="fld min-w-[12.5rem]"></td>
-                          <td class="px-4 py-2 text-[11.5px] text-gray-600 mono whitespace-nowrap" x-text="bandLabel(ent().ladder, i, 0)"></td>
-                          <td class="px-4 py-1.5 w-36">
-                            <template x-if="l.to !== null"><input type="number" step="1000" x-model.number="l.to" @input="ent().confirmed = false" class="fld !w-28 text-right mono"></template>
-                            <template x-if="l.to === null"><span class="text-gray-400 text-[11.5px]">and above</span></template>
-                          </td>
-                          <td class="px-4 py-2 text-right text-gray-500 text-[11.5px] whitespace-nowrap" x-text="l.isNew ? 'new tier' : ((l.rung !== l.prevRung ? l.prevRung + ', ' : '') + (l.prevTo === null ? 'and above' : eur(l.prevTo)))"></td>
-                          <td class="px-3 py-2 text-right whitespace-nowrap text-[11px]">
-                            <button x-show="ent().ladder.length > 1" @click="removeRow(ent(), ent().ladder, i)" class="font-medium text-gray-400 hover:text-rose-600">Remove</button>
-                          </td>
-                        </tr>
-                      </template>
-                    </tbody>
-                  </table>
-                  <datalist id="tier-opts"><template x-for="o in tierOpts" :key="o"><option :value="o"></option></template></datalist>
-                  <div class="px-4 py-2 border-t border-gray-100 flex items-start gap-3 text-[11.5px]">
-                    <button @click="splitRow(ent(), ent().ladder, ent().ladder.length - 1, 0, 'rung')" class="font-medium text-indigo-600 hover:text-indigo-800 shrink-0">+ Add a tier</button>
-                    <span class="text-gray-400 leading-relaxed">Adding or removing a tier adds or removes an Approval Required option for this entity from Cycle 4. A new tier needs its approvers mapped in the People tab. Initiatives carried forward keep the approval already recorded on them.</span>
-                  </div>
-                </div>
-                <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Derogation floor and validity</div>
-                  <div class="px-4 py-3 space-y-2.5 text-[12px] text-gray-700">
-                    <label class="flex items-center gap-2" :class="ent().floor !== ent().prevFloor ? 'text-amber-800' : ''">
-                      <span class="flex-1">A direct negotiation is a derogation above &euro;</span>
-                      <input type="number" step="1000" x-model.number="ent().floor" @input="ent().confirmed = false" class="fld !w-24 text-right mono">
-                    </label>
-                    <label class="flex items-center gap-2" :class="ent().pct !== ent().prevPct ? 'text-amber-800' : ''">
-                      <span class="flex-1">An authorization lapses if the amount exceeds it by more than %</span>
-                      <input type="number" x-model.number="ent().pct" @input="ent().confirmed = false" class="fld !w-16 text-right mono">
-                    </label>
-                    <label class="flex items-center gap-2" :class="ent().abs !== ent().prevAbs ? 'text-amber-800' : ''">
-                      <span class="flex-1">or by more than &euro;</span>
-                      <input type="number" step="1000" x-model.number="ent().abs" @input="ent().confirmed = false" class="fld !w-24 text-right mono">
-                    </label>
-                  </div>
+                <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">When an authorization lapses</div>
+                <div class="px-4 py-3 space-y-2.5 text-[12px] text-gray-700">
+                  <label class="flex items-center gap-2" :class="ent().pct !== ent().prevPct ? 'text-amber-800' : ''">
+                    <span class="flex-1">If the final amount exceeds the authorized amount by more than %</span>
+                    <input type="number" x-model.number="ent().pct" @input="ent().confirmed = false" class="fld !w-16 text-right mono">
+                  </label>
+                  <label class="flex items-center gap-2" :class="ent().abs !== ent().prevAbs ? 'text-amber-800' : ''">
+                    <span class="flex-1">or by more than &euro;</span>
+                    <input type="number" step="1000" x-model.number="ent().abs" @input="ent().confirmed = false" class="fld !w-24 text-right mono">
+                  </label>
+                  <p class="text-[11px] text-gray-400">It also lapses if the final amount crosses into a higher Approval Required tier.</p>
                 </div>
               </div>
 
@@ -1108,15 +1108,43 @@ function review() {
     },
     addOverride() {
       const e = this.ent(); const g = this.ruleEnts.find(x => x.kind === 'group'); if (!e || !g) return;
-      e.bands = this.cloneRows(g.bands); e.notice = g.notice.map(x => Object.assign({}, x, { id: ++this.uid, rows: this.cloneRows(x.rows) }));
-      e.ladder = this.cloneRows(g.ladder); e.removed = 0; e.floor = g.floor; e.pct = g.pct; e.abs = g.abs;
+      e.rows = this.cloneRows(g.rows); e.removed = 0; e.pct = g.pct; e.abs = g.abs;
       e.kind = 'override'; e.known = true; e.confirmed = false; e.src = 'Override, copied from the group set';
     },
     confirmedCount() { return this.ruleEnts.filter(e => e.confirmed).length; },
     ent() { return this.ruleEnts.find(e => e.k === this.entSel) || this.ruleEnts[0]; },
-    bdChanged(b) { return !!b.isNew || b.to !== b.prevTo || b.method !== b.prevMethod; },
-    ntChanged(n) { return !!n.isNew || n.days != n.prev || n.to !== n.prevTo; },
-    ladChanged(l) { return !!l.isNew || l.to !== l.prevTo || l.rung !== l.prevRung; },
+    RK: ['to', 'method', 'std', 'appr', 'dn', 'lt', 'ft'],
+    cellChanged(r, k) { return !!r.isNew || !r.prev || r.prev[k] !== r[k]; },
+    cellBad(r, i, k) {
+      const rows = this.ent().rows;
+      if (k === 'to') return r.to !== null && !(typeof r.to === 'number' && r.to > this.lowerOf(rows, i, 0));
+      if (['method', 'std', 'appr'].includes(k)) return !String(r[k] || '').trim();
+      return false;
+    },
+    cc(r, i, k) { return this.cellBad(r, i, k) ? 'badcell' : (this.cellChanged(r, k) ? 'chg' : ''); },
+    ct(r, k) {
+      if (r.isNew) return 'New band';
+      if (!r.prev || r.prev[k] === r[k]) return '';
+      const p = r.prev[k];
+      return 'Cycle 3: ' + (p === null || p === '' ? (k === 'to' ? 'and above' : 'none') : (k === 'to' ? this.eur(p) : p));
+    },
+    tiersOf(e) { const out = []; (e.rows || []).forEach(r => { if (r.appr && !out.includes(r.appr)) out.push(r.appr); }); return out; },
+    derogFloor(e) {
+      const rows = e.rows || []; const i = rows.findIndex(r => r.std && r.std !== 'Direct Negotiation');
+      return i < 0 ? null : this.lowerOf(rows, i, 0);
+    },
+    stratOpts: ['Direct Negotiation', 'Light Tender', 'Full Tender'],
+    pickOpt(r, k, v, list) {
+      if (v === '__new') { r['old_' + k] = r[k]; r[k] = ''; r['new_' + k] = true; return; }
+      r[k] = v; this.ent().confirmed = false;
+    },
+    addOpt(r, k, list) {
+      if (!r['new_' + k]) return;
+      const v = (r[k] || '').trim();
+      if (!v) { r[k] = r['old_' + k] || ''; r['new_' + k] = false; return; }
+      if (!this[list].includes(v)) this[list].push(v);
+      r[k] = v; r['new_' + k] = false; this.ent().confirmed = false;
+    },
     // 2026-10-16: bands are structure, not only numbers. Any table of amount bands (sourcing
     // method, minimum notice per strategy, approval tiers) can gain or lose bands, so the rule
     // set is not fitted to Flutter's four tiers. A band runs from the previous band's upper
@@ -1127,15 +1155,6 @@ function review() {
     // when someone adds a method; it is shared by every entity.
     methodOpts: ['A quote from a single supplier', 'At least two quotes', 'At least three quotes',
                  'Structured competitive comparison, three suppliers', 'Tender, three suppliers'],
-    pickMethod(bd, v) {
-      if (v === '__new') { bd.oldMethod = bd.method; bd.method = ''; bd.newMethod = true; return; }
-      bd.method = v; this.ent().confirmed = false;
-    },
-    addMethod(bd) {
-      const v = (bd.method || '').trim(); if (!v) return;
-      if (!this.methodOpts.includes(v)) this.methodOpts.push(v);
-      bd.method = v; bd.newMethod = false; this.ent().confirmed = false;
-    },
     // Moved from the retired O2 (2026-10-16): the history of the rule set.
     ruleHistory: [
       { i: 1, cycle: 'Cycle 1', what: 'Group rule set created', entity: 'Group set', by: 'Procurement, before the first campaign' },
@@ -1144,7 +1163,7 @@ function review() {
       { i: 4, cycle: 'Cycle 3', what: 'No change from Cycle 2', entity: 'All', by: 'Sara Lombardi' }
     ],
     tierOpts: ['No Approval Required', 'Local Procurement Manager', 'Head of Category', 'Sr. Procurement Director', 'CFO'],
-    cloneRows(rows) { return rows.map(r => Object.assign({}, r, { id: ++this.uid })); },
+    cloneRows(rows) { return rows.map(r => Object.assign({}, r, { id: ++this.uid, prev: r.prev ? Object.assign({}, r.prev) : null })); },
     lowerOf(rows, i, from) { return i > 0 ? rows[i - 1].to : (from || 0); },
     bandLabel(rows, i, from) {
       const lo = this.lowerOf(rows, i, from), hi = rows[i].to;
@@ -1170,67 +1189,56 @@ function review() {
     errorsOf(e) {
       if (!e || e.kind === 'inherit') return [];
       const out = [];
-      const chk = (name, rows, from, field, what) => rows.forEach((r, i) => {
-        const lo = this.lowerOf(rows, i, from);
-        if (r.to !== null && !(typeof r.to === 'number' && r.to > lo)) out.push(name + ', band ' + (i + 1) + ': the upper bound must be above ' + this.eur(lo) + '.');
-        if (field && !String(r[field] || '').trim()) out.push(name + ', band ' + (i + 1) + ': ' + what + '.');
+      e.rows.forEach((r, i) => {
+        const lo = this.lowerOf(e.rows, i, 0);
+        if (r.to !== null && !(typeof r.to === 'number' && r.to > lo)) out.push('Band ' + (i + 1) + ': the upper bound must be above ' + this.eur(lo) + '.');
+        if (!String(r.method || '').trim()) out.push('Band ' + (i + 1) + ': choose the required method.');
+        if (!String(r.appr || '').trim()) out.push('Band ' + (i + 1) + ': choose the Approval Required tier.');
       });
-      chk('Sourcing method', e.bands, 0, 'method', 'name the required method');
-      e.notice.forEach(g => chk('Minimum notice, ' + g.strat, g.rows, g.from, null, ''));
-      chk('Approval thresholds', e.ladder, 0, 'rung', 'name the tier');
-      const names = e.ladder.map(l => (l.rung || '').trim()).filter(Boolean);
-      names.filter((n, i) => names.indexOf(n) !== i).forEach(n => out.push('Approval thresholds: ' + n + ' appears twice. Each tier is a separate Approval Required option.'));
       return out;
     },
     entChanges(e) {
-      if (!e) return 0;
-      return e.bands.filter(b => this.bdChanged(b)).length
-        + e.notice.reduce((a, g) => a + g.rows.filter(n => this.ntChanged(n)).length, 0)
-        + e.ladder.filter(l => this.ladChanged(l)).length + (e.removed || 0)
-        + (e.floor !== e.prevFloor ? 1 : 0) + (e.pct !== e.prevPct ? 1 : 0) + (e.abs !== e.prevAbs ? 1 : 0);
+      if (!e || !e.rows) return 0;
+      return e.rows.reduce((a, r) => a + (r.isNew ? 1 : this.RK.filter(k => this.cellChanged(r, k)).length), 0) + (e.removed || 0)
+        + (e.pct !== e.prevPct ? 1 : 0) + (e.abs !== e.prevAbs ? 1 : 0);
     },
     ruleChanges() { return this.ruleEnts.reduce((a, e) => a + this.entChanges(e), 0); },
     copyFrom(k) {
       const src = this.ruleEnts.find(e => e.k === k); if (!src) return;
       const t = this.ent();
       // Cycle 3 values are kept by position; a band the target did not have before is new.
-      const keep = (to, from, fields) => from.map((r, i) => {
-        const old = to[i]; const x = Object.assign({}, r, { id: ++this.uid, isNew: !old || !!old.isNew });
-        fields.forEach(f => { x[f] = old ? old[f] : null; }); return x;
+      t.rows = src.rows.map((r, i) => {
+        const old = t.rows[i];
+        return Object.assign({}, r, { id: ++this.uid, prev: old && old.prev ? Object.assign({}, old.prev) : null, isNew: !old || !!old.isNew });
       });
-      t.bands = keep(t.bands, src.bands, ['prevTo', 'prevMethod']);
-      // Notice is matched by strategy: entities can have different methods. A strategy the
-      // target did not have before is marked new for this entity.
-      t.notice = src.notice.map(g => {
-        const old = t.notice.find(o => o.strat === g.strat);
-        return Object.assign({}, g, { id: ++this.uid, rows: old ? keep(old.rows, g.rows, ['prev', 'prevTo', 'lines'])
-          : g.rows.map(r => Object.assign({}, r, { id: ++this.uid, prev: null, prevTo: null, lines: null })) });
-      });
-      t.ladder = keep(t.ladder, src.ladder, ['prevTo', 'prevRung']); t.removed = 0;
-      t.floor = src.floor; t.pct = src.pct; t.abs = src.abs; t.confirmed = false;
+      t.removed = 0;
+      t.pct = src.pct; t.abs = src.abs; t.confirmed = false;
       this.flash('Copied ' + k + '\'s values into ' + t.k + '. Review and confirm.');
     },
     eur(n) { return n === null ? '' : '€ ' + Number(n).toLocaleString('en-GB'); },
     buildEntities() {
+      // One row per amount band: required method, standard Sourcing Strategy, the Approval
+      // Required tier for a derogation, and minimum notice by the strategy actually used.
+      // Group set: the Italian guide (slides 9, 11, 26) and the plan's RFE deadline formula.
       const it = () => ({
-        bands: [ { to: 10000, method: 'A quote from a single supplier' }, { to: 50000, method: 'At least two quotes' },
-                 { to: 100000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender, three suppliers' } ],
-        notice: [ { strat: 'Direct Negotiation', from: 0, rows: [ { to: 100000, days: 30, lines: 214 }, { to: 1000000, days: 40, lines: 131 }, { to: null, days: 60, lines: 22 } ] },
-                  { strat: 'Light Tender', from: 0, rows: [ { to: null, days: 40, lines: 188 } ] },
-                  { strat: 'Full Tender', from: 0, rows: [ { to: null, days: 60, lines: 96 } ] } ],
-        ladder: [ { rung: 'No Approval Required', to: 10000 }, { rung: 'Head of Category', to: 50000 },
-                  { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
-        floor: 10000, pct: 10, abs: 50000 });
+        rows: [
+          { to: 10000,   method: 'A quote from a single supplier',                    std: 'Direct Negotiation', appr: 'No Approval Required',     dn: 30, lt: 40, ft: 60 },
+          { to: 50000,   method: 'At least two quotes',                               std: 'Light Tender',       appr: 'Head of Category',         dn: 30, lt: 40, ft: 60 },
+          { to: 100000,  method: 'Structured competitive comparison, three suppliers', std: 'Light Tender',       appr: 'Sr. Procurement Director', dn: 30, lt: 40, ft: 60 },
+          { to: 500000,  method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'Sr. Procurement Director', dn: 40, lt: 40, ft: 60 },
+          { to: 1000000, method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                      dn: 40, lt: 40, ft: 60 },
+          { to: null,    method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                      dn: 60, lt: 40, ft: 60 } ],
+        pct: 10, abs: 50000 });
+      // Sisal Technology Turkey: the STH procedure, 4.1 (minimum notice) and 4.2.2 (derogations).
       const tr = () => ({
-        bands: [ { to: 1000, method: 'A quote from a single supplier' }, { to: 10000, method: 'At least three quotes' },
-                 { to: 50000, method: 'Structured competitive comparison, three suppliers' }, { to: null, method: 'Tender, three suppliers' } ],
-        notice: [ { strat: 'Direct Negotiation', from: 0, rows: [ { to: 50000, days: 25, lines: 18 }, { to: 1000000, days: 40, lines: 9 }, { to: null, days: 60, lines: 1 } ] },
-                  { strat: 'Quote comparison', from: 1000, rows: [ { to: 10000, days: 30, lines: 7 } ] },
-                  { strat: 'Structured comparison', from: 10000, rows: [ { to: 50000, days: 40, lines: 6 } ] },
-                  { strat: 'Tender', from: 50000, rows: [ { to: null, days: 60, lines: 4 } ] } ],
-        ladder: [ { rung: 'Local Procurement Manager', to: 10000 }, { rung: 'Head of Category', to: 50000 },
-                  { rung: 'Sr. Procurement Director', to: 500000 }, { rung: 'CFO', to: null } ],
-        floor: 1000, pct: 10, abs: 50000 });
+        rows: [
+          { to: 1000,    method: 'A quote from a single supplier',                    std: 'Direct Negotiation', appr: 'No Approval Required',      dn: 25, lt: null, ft: null },
+          { to: 10000,   method: 'At least three quotes',                             std: 'Light Tender',       appr: 'Local Procurement Manager', dn: 30, lt: 30,   ft: null },
+          { to: 50000,   method: 'Structured competitive comparison, three suppliers', std: 'Light Tender',       appr: 'Head of Category',          dn: 30, lt: 40,   ft: null },
+          { to: 500000,  method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'Sr. Procurement Director',  dn: 40, lt: null, ft: 60 },
+          { to: 1000000, method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                       dn: 40, lt: null, ft: 60 },
+          { to: null,    method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                       dn: 60, lt: null, ft: 60 } ],
+        pct: 10, abs: 50000 });
       // D21: the group set, then entities. kind: group, override, inherit (no override).
       // known: we have seen the entity's procedure, so inheriting is a confirmed choice.
       const list = [
@@ -1246,10 +1254,8 @@ function review() {
       this.ruleEnts = list.map(x => {
         const v = x.f();
         return { k: x.k, kind: x.kind, known: x.known, lines: x.lines, src: x.src, confirmed: false,
-          bands: v.bands.map(b => Object.assign({}, b, { id: ++this.uid, prevTo: b.to, prevMethod: b.method })),
-          notice: v.notice.map(g => Object.assign({}, g, { id: ++this.uid, rows: g.rows.map(n => Object.assign({}, n, { id: ++this.uid, prev: n.days, prevTo: n.to })) })),
-          ladder: v.ladder.map(l => Object.assign({}, l, { id: ++this.uid, prevTo: l.to, prevRung: l.rung })), removed: 0,
-          floor: v.floor, prevFloor: v.floor, pct: v.pct, prevPct: v.pct, abs: v.abs, prevAbs: v.abs };
+          rows: v.rows.map(r => Object.assign({}, r, { id: ++this.uid, prev: Object.assign({}, r) })), removed: 0,
+          pct: v.pct, prevPct: v.pct, abs: v.abs, prevAbs: v.abs };
       });
     },
     // D29: the Contract_Data step (RU 4.2.1, Option 1: filter and attach, no matching). Illustrative counts.

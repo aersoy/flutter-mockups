@@ -1,4 +1,11 @@
 <!--
+  2026-10-16, ONE RULES SHEET BY AMOUNT
+    The Rules tab and the Review strip show the rules by amount as one sheet (same shape as
+        P0b's Rules step). Suggested Approval Required now comes from it: the line's amount
+        picks its row, and a Sourcing Strategy below the row's standard is a derogation that
+        takes the row's tier. Albania and Morocco run on the group set, as in P0b.
+-->
+<!--
   ═══════════════════════════════════════════════════════════════════════════════════════
   Plan.html · One cycle's workspace
 
@@ -666,45 +673,42 @@
         <div class="bg-gray-50 px-3 py-1.5 text-[10.5px] text-gray-500 border-b border-gray-200">
           Fixed for this cycle when it opened, Mon 21 Sep 2026. The group set. Entity overrides are on the Rules tab.
         </div>
-        <div class="grid grid-cols-2 divide-x divide-gray-200">
-          <table class="w-full text-[11.5px]">
-            <thead><tr class="text-left text-gray-500 bg-white border-b border-gray-100">
-              <th class="px-3 py-1.5 font-medium">Purchase amount</th>
-              <th class="px-3 py-1.5 font-medium">Required method</th>
-              <th class="px-3 py-1.5 font-medium">Approval Required, suggested</th>
-              <th class="px-3 py-1.5 font-medium text-right">Lines</th>
-            </tr></thead>
+        <div class="overflow-x-auto">
+          <table class="sheet text-[12px]" style="width:100%; min-width: 860px">
+            <colgroup><col style="width:190px"><col><col style="width:132px"><col style="width:184px"><col style="width:86px"><col style="width:76px"><col style="width:76px"></colgroup>
+            <thead>
+              <tr class="hg">
+                <th class="gh" style="border-left:0">Amount band</th><th colspan="2" class="gh">Standard process</th>
+                <th class="gh">Derogation</th><th colspan="3" class="gh">Minimum notice, working days</th>
+              </tr>
+              <tr class="hc text-[11.5px] font-semibold text-gray-600">
+                <th class="px-2.5 text-left">Purchase amount (&euro;)</th>
+                <th class="px-2.5 text-left gs">Required method</th>
+                <th class="px-2.5 text-left" title="The Sourcing Strategy a line of this amount is expected to use. A line below it is a derogation.">Standard strategy</th>
+                <th class="px-2.5 text-left gs" title="Applies to a derogation and to a back-dated contract.">Approval Required</th>
+                <th class="px-2.5 text-right gs"><span class="hn">Direct Negotiation</span></th>
+                <th class="px-2.5 text-right"><span class="hn">Light Tender</span></th>
+                <th class="px-2.5 text-right"><span class="hn">Full Tender</span></th>
+              </tr>
+            </thead>
             <tbody>
-              <template x-for="r in frozenBands" :key="r.band">
-                <tr class="border-b border-gray-50 last:border-0">
-                  <td class="px-3 py-1.5 text-gray-800" x-text="r.band"></td>
-                  <td class="px-3 py-1.5 text-gray-600" x-text="r.method"></td>
-                  <td class="px-3 py-1.5 text-gray-600" x-text="r.auth"></td>
-                  <td class="px-3 py-1.5 text-gray-600 text-right mono" x-text="r.n"></td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-          <table class="w-full text-[11.5px]">
-            <thead><tr class="text-left text-gray-500 bg-white border-b border-gray-100">
-              <th class="px-3 py-1.5 font-medium">Sourcing strategy</th>
-              <th class="px-3 py-1.5 font-medium">Amount</th>
-              <th class="px-3 py-1.5 font-medium text-right">Minimum notice</th>
-            </tr></thead>
-            <tbody>
-              <template x-for="n in frozenNotice" :key="n.strat + n.amt">
-                <tr class="border-b border-gray-50 last:border-0">
-                  <td class="px-3 py-1.5 text-gray-800" x-text="n.strat"></td>
-                  <td class="px-3 py-1.5 text-gray-600" x-text="n.amt"></td>
-                  <td class="px-3 py-1.5 text-gray-600 text-right" x-text="n.days + ' working days'"></td>
+              <template x-for="(r, i) in ruleSets.it" :key="i">
+                <tr>
+                  <td class="px-2.5 mono text-[11px] text-gray-700" x-text="bandText(ruleSets.it, i)"></td>
+                  <td class="px-2.5 gs text-gray-700" :title="r.method" x-text="r.method"></td>
+                  <td class="px-2.5 text-gray-700" x-text="r.std"></td>
+                  <td class="px-2.5 gs text-gray-800" x-text="r.appr"></td>
+                  <td class="px-2.5 gs text-right mono text-gray-700" x-text="r.dn ?? '—'"></td>
+                  <td class="px-2.5 text-right mono text-gray-700" x-text="r.lt ?? '—'"></td>
+                  <td class="px-2.5 text-right mono text-gray-700" x-text="r.ft ?? '—'"></td>
                 </tr>
               </template>
             </tbody>
           </table>
         </div>
         <div class="bg-gray-50 border-t border-gray-200 px-3 py-1.5 text-[10.5px] text-gray-500">
-          A direct negotiation above &euro; 10,000 is a derogation and needs authorization. An authorization lapses
-          if the final amount exceeds it by more than 10% or &euro; 50,000, or crosses the authorizer's threshold.
+          Approval Required applies when a line's Sourcing Strategy is below its row's standard, and to back-dated contracts. An authorization lapses
+          if the final amount exceeds it by more than 10% or &euro; 50,000, or crosses into a higher tier.
         </div>
       </div>
     </div>
@@ -1671,47 +1675,51 @@
           <span class="text-[11px] text-gray-400" x-text="(ruleEntities.find(e => e.k === ruleEnt) || {}).note"></span>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Sourcing method and authorizer, by purchase amount</div>
-          <table class="w-full text-[12px]">
-            <thead><tr class="text-left text-gray-500 border-b border-gray-100">
-              <th class="px-4 py-2 font-medium">Purchase amount</th><th class="px-4 py-2 font-medium">Required method</th>
-              <th class="px-4 py-2 font-medium">Approval Required, suggested</th><th class="px-4 py-2 font-medium text-right">Lines this cycle</th>
-            </tr></thead>
+          <div class="px-4 py-2.5 border-b border-gray-100">
+            <div class="text-[12px] font-semibold text-gray-800">Rules by purchase amount</div>
+            <div class="text-[11px] text-gray-500 mt-0.5">A line's amount picks its row. Approval Required applies when the line's Sourcing Strategy is below the row's standard, and to back-dated contracts. Minimum notice follows the strategy the line actually uses.</div>
+          </div>
+          <div class="overflow-x-auto">
+          <table class="sheet text-[12px]" style="width:100%; min-width: 860px">
+            <colgroup><col style="width:190px"><col><col style="width:132px"><col style="width:184px"><col style="width:86px"><col style="width:76px"><col style="width:76px"></colgroup>
+            <thead>
+              <tr class="hg">
+                <th class="gh" style="border-left:0">Amount band</th><th colspan="2" class="gh">Standard process</th>
+                <th class="gh">Derogation</th><th colspan="3" class="gh">Minimum notice, working days</th>
+              </tr>
+              <tr class="hc text-[11.5px] font-semibold text-gray-600">
+                <th class="px-2.5 text-left">Purchase amount (&euro;)</th>
+                <th class="px-2.5 text-left gs">Required method</th>
+                <th class="px-2.5 text-left" title="The Sourcing Strategy a line of this amount is expected to use. A line below it is a derogation.">Standard strategy</th>
+                <th class="px-2.5 text-left gs" title="Applies to a derogation and to a back-dated contract.">Approval Required</th>
+                <th class="px-2.5 text-right gs"><span class="hn">Direct Negotiation</span></th>
+                <th class="px-2.5 text-right"><span class="hn">Light Tender</span></th>
+                <th class="px-2.5 text-right"><span class="hn">Full Tender</span></th>
+              </tr>
+            </thead>
             <tbody>
-              <template x-for="r in rulesFor().bands" :key="r.band">
-                <tr class="border-b border-gray-50 last:border-0">
-                  <td class="px-4 py-2 text-gray-800" x-text="r.band"></td>
-                  <td class="px-4 py-2 text-gray-600" x-text="r.method"></td>
-                  <td class="px-4 py-2 text-gray-600" x-text="r.auth"></td>
-                  <td class="px-4 py-2 text-gray-600 text-right mono" x-text="r.n || ''"></td>
+              <template x-for="(r, i) in rulesFor().rows" :key="i">
+                <tr>
+                  <td class="px-2.5 mono text-[11px] text-gray-700" x-text="bandText(rulesFor().rows, i)"></td>
+                  <td class="px-2.5 gs text-gray-700" :title="r.method" x-text="r.method"></td>
+                  <td class="px-2.5 text-gray-700" x-text="r.std"></td>
+                  <td class="px-2.5 gs text-gray-800" x-text="r.appr"></td>
+                  <td class="px-2.5 gs text-right mono text-gray-700" x-text="r.dn ?? '—'"></td>
+                  <td class="px-2.5 text-right mono text-gray-700" x-text="r.lt ?? '—'"></td>
+                  <td class="px-2.5 text-right mono text-gray-700" x-text="r.ft ?? '—'"></td>
                 </tr>
               </template>
             </tbody>
           </table>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Minimum notice</div>
-            <table class="w-full text-[12px]">
-              <tbody>
-                <template x-for="n in rulesFor().notice" :key="n.strat + n.amt">
-                  <tr class="border-b border-gray-50 last:border-0">
-                    <td class="px-4 py-2 text-gray-800" x-text="n.strat"></td>
-                    <td class="px-4 py-2 text-gray-600" x-text="n.amt"></td>
-                    <td class="px-4 py-2 text-gray-600 text-right" x-text="n.days + ' working days'"></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
           </div>
-          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Derogations and validity</div>
-            <div class="px-4 py-3 text-[12px] text-gray-700 leading-relaxed space-y-2">
-              <p x-text="'A direct negotiation above € ' + rulesFor().floor.toLocaleString('en-GB') + ' is a derogation and needs authorization at the rung its value reaches.'"></p>
-              <p>An authorization lapses if the final amount, addenda included, exceeds it by more than 10% or &euro; 50,000, or crosses the authorizer's threshold.</p>
-              <p>A line naming several entities adds their amounts. With an Italian entity in it, Italy's thresholds apply; otherwise the highest thresholds among the entities. The result is a suggestion: Procurement accepts it or chooses another tier.</p>
-              <p class="text-gray-500" x-text="'Public holidays: ' + ruleCountry() + ' 2026 and 2027, confirmed by Procurement on 14 Sep 2026.'"></p>
-            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-gray-100 text-[12px] font-semibold text-gray-800">Derogations and validity</div>
+          <div class="px-4 py-3 text-[12px] text-gray-700 leading-relaxed space-y-2">
+            <p x-text="'A Direct Negotiation above € ' + rulesFor().floor.toLocaleString('en-GB') + ' is a derogation, and so is any strategy below its row\'s standard. Approval Required for the row applies.'"></p>
+            <p>An authorization lapses if the final amount, addenda included, exceeds it by more than 10% or &euro; 50,000, or crosses into a higher tier.</p>
+            <p>A line naming several entities adds their amounts. With an Italian entity in it, Italy's thresholds apply; otherwise the highest thresholds among the entities. The result is a suggestion: Procurement accepts it or chooses another tier.</p>
+            <p class="text-gray-500" x-text="'Public holidays: ' + ruleCountry() + ' 2026 and 2027, confirmed by Procurement on 14 Sep 2026.'"></p>
           </div>
         </div>
       </div>
@@ -3192,16 +3200,25 @@ function planApp() {
       return r.tot / dur;                                   // K€
     },
     isDirect(r) { return /^direct/i.test(String(r.strat || '')); },
-    needsAuth(r) {
-      const v = (typeof r.tot === 'number' ? r.tot : 0) * 1000;
-      return this.isDirect(r) && v > 10000;
+    // 2026-10-16: from the rules by amount. The line's amount picks its row; a strategy
+    // below the row's standard is a derogation and takes the row's Approval Required.
+    // Several entities: amounts added; Italy's rows if an Italian entity is in it.
+    stratRank(x) { return ({ 'Direct Negotiation': 0, 'Light Tender': 1, 'Full Tender': 2 })[x] ?? null; },
+    ruleSetOf(r) {
+      const ents = String(r.ent || '');
+      if (/Italia|Snaitech|Gaming|TSG Italy/.test(ents)) return this.ruleSets.it;
+      return /Turkey/.test(ents) ? this.ruleSets.tr : this.ruleSets.it;
     },
+    ruleRowOf(r) {
+      const v = (typeof r.tot === 'number' ? r.tot : 0) * 1000, rows = this.ruleSetOf(r);
+      return rows.find(x => x.to === null || v <= x.to) || rows[rows.length - 1];
+    },
+    needsAuth(r) { return !!this.rungOf(r); },
     rungOf(r) {
-      if (!this.needsAuth(r)) return '';
-      const v = r.tot * 1000;
-      let out = '';
-      this.ladder.forEach(l => { if (v > l.min) out = l.rung; });
-      return out;
+      const have = this.stratRank(r.strat); if (have === null || typeof r.tot !== 'number') return '';
+      const row = this.ruleRowOf(r);
+      if (have >= this.stratRank(row.std) || row.appr === 'No Approval Required') return '';
+      return row.appr;
     },
     envelope(r) { const y = this.yearly(r); return y + Math.min(y * 0.10, 50); },   // K€
 
@@ -3975,20 +3992,30 @@ function planApp() {
     ],
     // The rule set saved with this plan at the freeze (Session 23). Same values as THE RULE
     // SET above and as O2; the lines column counts are illustrative plan-scale numbers.
-    frozenBands: [
-      { band: 'Up to € 10,000',       method: 'A quote from a single supplier',        auth: 'No Approval Required',      n: '290' },
-      { band: '€ 10,000 – € 50,000',  method: 'At least two quotes',                   auth: 'Head of Category',          n: '313' },
-      { band: '€ 50,000 – € 100,000', method: 'Structured competitive comparison',     auth: 'Sr. Procurement Director',  n: '167' },
-      { band: '€ 100,000 – € 500,000',method: 'Tender',                                auth: 'Sr. Procurement Director',  n: '316' },
-      { band: 'Above € 500,000',      method: 'Tender',                                auth: 'CFO',                       n: '222' }
-    ],
-    frozenNotice: [
-      { strat: 'Direct Negotiation',  amt: 'Below € 100,000',         days: 30 },
-      { strat: 'Direct Negotiation',  amt: '€ 100,000 – € 1,000,000', days: 40 },
-      { strat: 'Direct Negotiation',  amt: 'Above € 1,000,000',       days: 60 },
-      { strat: 'Light Tender', amt: 'Any',                     days: 40 },
-      { strat: 'Full Tender',  amt: 'Any',                     days: 60 }
-    ],
+    // 2026-10-16: the rules by amount, one row per band (same shape as P0b's Rules step).
+    // it: the group set (Italian guide, slides 9, 11, 26, and the plan's RFE deadline formula).
+    // tr: Sisal Technology Turkey (STH procedure 4.1 and 4.2.2).
+    ruleSets: {
+      it: [
+        { to: 10000,   method: 'A quote from a single supplier',                    std: 'Direct Negotiation', appr: 'No Approval Required',     dn: 30, lt: 40, ft: 60 },
+        { to: 50000,   method: 'At least two quotes',                               std: 'Light Tender',       appr: 'Head of Category',         dn: 30, lt: 40, ft: 60 },
+        { to: 100000,  method: 'Structured competitive comparison, three suppliers', std: 'Light Tender',       appr: 'Sr. Procurement Director', dn: 30, lt: 40, ft: 60 },
+        { to: 500000,  method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'Sr. Procurement Director', dn: 40, lt: 40, ft: 60 },
+        { to: 1000000, method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                      dn: 40, lt: 40, ft: 60 },
+        { to: null,    method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                      dn: 60, lt: 40, ft: 60 } ],
+      tr: [
+        { to: 1000,    method: 'A quote from a single supplier',                    std: 'Direct Negotiation', appr: 'No Approval Required',      dn: 25, lt: null, ft: null },
+        { to: 10000,   method: 'At least three quotes',                             std: 'Light Tender',       appr: 'Local Procurement Manager', dn: 30, lt: 30,   ft: null },
+        { to: 50000,   method: 'Structured competitive comparison, three suppliers', std: 'Light Tender',       appr: 'Head of Category',          dn: 30, lt: 40,   ft: null },
+        { to: 500000,  method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'Sr. Procurement Director',  dn: 40, lt: null, ft: 60 },
+        { to: 1000000, method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                       dn: 40, lt: null, ft: 60 },
+        { to: null,    method: 'Tender, three suppliers',                           std: 'Full Tender',        appr: 'CFO',                       dn: 60, lt: null, ft: 60 } ]
+    },
+    bandText(rows, i) {
+      const lo = i > 0 ? rows[i - 1].to : 0, hi = rows[i].to, f = n => n.toLocaleString('en-GB');
+      if (hi === null) return lo ? 'Above ' + f(lo) : 'Any amount';
+      return lo ? f(lo) + ' – ' + f(hi) : 'Up to ' + f(hi);
+    },
     outcomeMix: [
       { k: 'Confirmed', n: 806 }, { k: 'Needs changes', n: 289 },
       { k: 'Canceled', n: 63 }, { k: 'Not mine, reassigned', n: 112 }, { k: 'Frozen unanswered', n: 38 }
@@ -4315,29 +4342,15 @@ function planApp() {
       { k: 'Sisal Gaming',            note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
       { k: 'TSG Italy',               note: 'FSEA user guide and the plan\'s RFE deadline formula', set: 'it' },
       { k: 'Sisal Technology Turkey', note: 'STH procurement procedure', set: 'tr' },
-      { k: 'Sisal Albania',           note: 'Local units guide', set: 'tr' },
-      { k: 'Sisal Jeux Maroc',        note: 'Local units guide', set: 'tr' }
-    ],
-    trBands: [
-      { band: 'Up to € 1,000',        method: 'A quote from a single supplier',     auth: 'Local Procurement Manager', n: '' },
-      { band: '€ 1,000 – € 10,000',   method: 'At least three quotes',              auth: 'Local Procurement Manager', n: '' },
-      { band: '€ 10,000 – € 50,000',  method: 'Structured competitive comparison',  auth: 'Head of Procurement',       n: '' },
-      { band: '€ 50,000 – € 500,000', method: 'Tender',                             auth: 'Sr Procurement Director',   n: '' },
-      { band: 'Above € 500,000',      method: 'Tender',                             auth: 'FSEA CFO',                  n: '' }
-    ],
-    trNotice: [
-      { strat: 'Direct Negotiation',           amt: 'Up to € 50,000',          days: 25 },
-      { strat: 'Direct Negotiation',           amt: '€ 50,000 – € 1,000,000',  days: 40 },
-      { strat: 'Direct Negotiation',           amt: 'Above € 1,000,000',       days: 60 },
-      { strat: 'Quote comparison',      amt: '€ 1,000 – € 10,000',      days: 30 },
-      { strat: 'Structured comparison', amt: '€ 10,000 – € 50,000',     days: 40 },
-      { strat: 'Tender',                amt: 'Above € 50,000',          days: 60 }
+      { k: 'Sisal Albania',           note: 'Group set, unconfirmed', set: 'it' },
+      { k: 'Sisal Jeux Maroc',        note: 'Group set, unconfirmed', set: 'it' }
     ],
     ruleCountry() { return ({ 'Sisal Technology Turkey': 'Turkey', 'Sisal Albania': 'Albania', 'Sisal Jeux Maroc': 'Morocco' })[this.ruleEnt] || 'Italy'; },
     rulesFor() {
       const e = this.ruleEntities.find(x => x.k === this.ruleEnt) || this.ruleEntities[0];
-      return e.set === 'tr' ? { bands: this.trBands, notice: this.trNotice, floor: 1000 }
-                            : { bands: this.frozenBands, notice: this.frozenNotice, floor: 10000 };
+      const rows = this.ruleSets[e.set] || this.ruleSets.it;
+      const i = rows.findIndex(r => r.std !== 'Direct Negotiation');
+      return { rows, floor: i > 0 ? rows[i - 1].to : 0 };
     },
 
     // ══ IA BRIEF: SAVED REPORTS (D3, D9, P9 to P14) ═════════════════════════════════════
