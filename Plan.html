@@ -1,4 +1,11 @@
 <!--
+  2026-10-16, ROLES BY RU 3.1
+    Head of Category opens on Mine (their categories' lines). Procurement Excellence opens on All
+        and holds no role on lines, so Accept, the assignee, Accept suggestion, the approval
+        outcome, Request update, Set Initiative Status and Hand off are read-only for it (onTeam).
+        People tab administration stays with Procurement Excellence.
+-->
+<!--
   2026-10-16, ONE RULES SHEET BY AMOUNT
     The Rules tab and the Review strip show the rules by amount as one sheet (same shape as
         P0b's Rules step). Suggested Approval Required now comes from it: the line's amount
@@ -921,7 +928,7 @@
                                    only when Procurement accepts it; choosing another tier is an override. -->
                               <span x-show="c.id === 'appr' && rungOf(r) && rungOf(r) !== r.appr" class="flex items-center gap-1 whitespace-nowrap">
                                 <span class="text-[10px] text-indigo-600" x-text="'suggested: ' + rungOf(r)"></span>
-                                <button x-show="!readOnly && !bizRole()" @click.stop="acceptSuggestion(r)"
+                                <button x-show="!readOnly && onTeam(r)" @click.stop="acceptSuggestion(r)"
                                         class="text-[10px] font-medium px-1.5 py-px rounded border border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50">Accept</button>
                               </span>
                             </span>
@@ -1661,7 +1668,6 @@
             <span x-text="cyc().name"></span> is judged against the group set, with its entity's override where there is one.
             Changes are made at the start of the next cycle. Team mappings are not part of this: they stay live until a line is submitted (People tab).
           </div>
-          <a href="P0b%20Review%20Before%20Scheduling.html?step=3" class="text-[11.5px] font-medium text-indigo-700 hover:underline shrink-0">Rules for the next cycle</a>
         </div>
         <div class="flex items-center gap-2">
           <span class="text-[11px] text-gray-500">Legal entity</span>
@@ -1995,20 +2001,22 @@
                   <span class="text-gray-500 w-36 shrink-0">Acceptance</span>
                   <span x-show="row().accepted" class="text-emerald-700" x-text="'Accepted by ' + row().acceptedBy + ', ' + row().acceptedAt"></span>
                   <span x-show="!row().accepted && canAccept(row())" class="text-amber-700">Approved by the Requestor, waiting for you</span>
-                  <span x-show="!row().accepted && !canAccept(row())" class="text-gray-400" x-text="row().bstat === 'Rejected by Requestor' ? 'Rejected by the Requestor, cannot be accepted' : 'Not yet approved by the Requestor'"></span>
+                  <span x-show="!row().accepted && !canAccept(row()) && row().bstat === 'Approved by Requestor'" class="text-gray-500">Approved by the Requestor, waiting for the line's team</span>
+                  <span x-show="!row().accepted && !canAccept(row()) && row().bstat !== 'Approved by Requestor'" class="text-gray-400" x-text="row().bstat === 'Rejected by Requestor' ? 'Rejected by the Requestor, cannot be accepted' : 'Not yet approved by the Requestor'"></span>
                   <div class="flex-1"></div>
                   <button x-show="!row().accepted && canAccept(row()) && !readOnly" @click="accept(row())"
                           class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Accept</button>
                 </div>
                 <div class="flex items-center gap-2 text-[11.5px]">
                   <span class="text-gray-500 w-36 shrink-0">Procurement Assignee</span>
-                  <select :disabled="!row().accepted || readOnly" @change="askAssign(row(), $event.target.value); $event.target.value = row().assignee"
+                  <select :disabled="!row().accepted || readOnly || !onTeam(row())" @change="askAssign(row(), $event.target.value); $event.target.value = row().assignee"
                           class="text-[11.5px] border border-gray-200 rounded-md px-1.5 py-0.5 bg-white disabled:bg-gray-50 disabled:text-gray-400">
                     <option value="" :selected="!row().assignee">Not assigned</option>
                     <template x-for="m in assignOpts(row())" :key="m.name"><option :value="m.name" :selected="row().assignee === m.name" x-text="m.name + ' · ' + m.role"></option></template>
                   </select>
                 </div>
                 <p class="text-[10.5px] text-gray-400 leading-relaxed">Options are the line's Head of Category, Category Manager and Buyers. The Buyer is the default, or the Head of Category without one.</p>
+                <p x-show="!onTeam(row())" class="text-[10.5px] text-gray-500 leading-relaxed">You hold no role in this line's team, so its statuses, Approval Required, approval outcome and assignee are read-only for you.</p>
               </div>
             </div>
 
@@ -2225,7 +2233,7 @@
         </template>
 
         <div class="px-5 py-3 border-t border-gray-200 flex items-center gap-2 shrink-0">
-          <button x-show="!readOnly && !bizRole()" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Set Initiative Status</button>
+          <button x-show="!readOnly && onTeam(row())" class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Set Initiative Status</button>
           <!-- 2026-10-16: RU 4.8.1 Request update, and confirming the changes that follow (RU 4.8.2). -->
           <button x-show="!readOnly && !bizRole() && canRequestUpdate(row())" @click="openUpdReq(row())"
                   class="text-[11.5px] font-medium px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-800 hover:bg-amber-50">Request update</button>
@@ -2241,7 +2249,7 @@
             </span>
           </template>
           <div class="flex-1"></div>
-          <button x-show="!readOnly && !bizRole()" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
+          <button x-show="!readOnly && onTeam(row())" class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Hand off to RFE</button>
           <span x-show="readOnly" class="text-[11px] text-gray-400">Read-only in a closed cycle</span>
         </div>
       </aside>
@@ -2631,7 +2639,8 @@ function planApp() {
     onRole() {
       this.area = 'lines'; this.selected = null; this.subMsg = ''; this.reqConfirm = false;
       this.reqBulkAct = ''; this.reqBulkNote = ''; this.def = false; this.menu = false;
-      if (this.as === 'excellence') this.mine = false;
+      // Head of Category opens on their categories' lines; Procurement Excellence on every line.
+      this.mine = this.as === 'hoc';
       // 2026-10-16: a business role gets its own fixed Grid view; Procurement returns to All Items.
       if (this.bizRole()) this.go(this.as);
       else if (this.v().biz) this.go('table');
@@ -2652,7 +2661,7 @@ function planApp() {
       if (this.bizRole()) return [{ k: 'lines', label: 'To approve', note: '' }];
       return this.areas.concat([{ k: 'people', label: 'People', note: '' }]);
     },
-    mine: false,
+    mine: true,      // Head of Category opens on the lines of their categories
     mineCount() { return this.rowsAll.filter(r => r.cycle && (r.team || []).some(m => m.name === this.viewerName())).length; },
 
     // ── Starter (D26, RU 4.4) ──
@@ -2744,7 +2753,7 @@ function planApp() {
     },
     // RU 4.8.1: Procurement's Request update, after the Requestor's approval.
     updOpen: false, upd: { fields: [], note: '', due: '' },
-    canRequestUpdate(r) { return ['Entered', 'Pending approval'].includes(r.istat); },
+    canRequestUpdate(r) { return ['Entered', 'Pending approval'].includes(r.istat) && this.onTeam(r); },
     openUpdReq(r) { this.upd = { fields: [], note: '', due: '' }; this.updOpen = true; },
     sendUpdReq() {
       const r = this.row();
@@ -2819,7 +2828,11 @@ function planApp() {
 
     // ── Acceptance and assignee (D33, RU 4.7) ──
     assignConfirm: null,
-    canAccept(r) { return r.bstat === 'Approved by Requestor' && !r.accepted && !this.bizRole(); },
+    canAccept(r) { return r.bstat === 'Approved by Requestor' && !r.accepted && this.onTeam(r); },
+    // RU 3.1, 4.9: statuses, Approval Required, the approval outcome and the assignee are
+    // changed only by people holding a role in the line's Procurement team. Procurement
+    // Excellence has every line in view but holds no role on them, so it sees these read-only.
+    onTeam(r) { return !this.bizRole() && (this.as !== 'excellence' || this.teamOf(r).some(m => m.name === this.viewerName())); },
     accept(r) { r.accepted = true; r.acceptedBy = this.viewerName(); r.acceptedAt = '11 Oct 2026, 10:50'; },
     teamOf(r) { return r.team || []; },
     // RU 4.3.2, field 27: Head of Category, Category Manager or Buyer, and the local roles abroad.
@@ -4285,7 +4298,7 @@ function planApp() {
     curApprover() { return this.approvers.find(a => a.name === this.authApprover) || this.approvers[2]; },
     isOutcomeCell(c) { return this.viewId === 'auth' && c.id === 'nastat'; },
     // P38: recording under a different tier warns; it does not block.
-    canRecord(r) { return !this.readOnly && !this.bizRole(); },
+    canRecord(r) { return !this.readOnly && this.onTeam(r); },
     noteMismatch(r) {
       const m = /^Approved by (.*)$/.exec(r.nastat || '');
       const tier = m ? m[1].replace('Senior', 'Sr.') : '';

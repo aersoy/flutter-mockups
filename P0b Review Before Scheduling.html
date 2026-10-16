@@ -229,6 +229,8 @@
   select.cin { cursor: pointer; }
   .cin::placeholder { color: #c4c7cf; }
   table.sheet td.chg { background: #fffbeb; }
+  .cin:disabled { color: inherit; opacity: 1; cursor: default; }
+  select.cin:disabled { -webkit-appearance: none; appearance: none; }
   table.sheet td.newrow { box-shadow: inset 3px 0 0 #f59e0b; }
   .gwrap::-webkit-scrollbar { width: 11px; height: 11px; }
   .gwrap::-webkit-scrollbar-thumb { background: #c8cad1; border-radius: 8px; border: 2px solid #fff; }
@@ -780,7 +782,7 @@
                   <p class="text-[10.5px] text-gray-400 mt-0.5">Copied from Cycle 3. Procurement Excellence and the Sr. Procurement Director can edit it until the cycle is scheduled; everyone else in Procurement sees it read-only.</p>
                 </div>
                 <label class="text-[11.5px] text-gray-500 flex items-center gap-1.5 shrink-0">Copy values from
-                  <select @change="copyFrom($event.target.value); $event.target.value = ''" class="text-[11.5px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-700">
+                  <select :disabled="!canEditRules" @change="copyFrom($event.target.value); $event.target.value = ''" class="disabled:bg-gray-50 disabled:text-gray-400 text-[11.5px] border border-gray-200 rounded-md px-1.5 py-1 text-gray-700">
                     <option value="">another entity</option>
                     <template x-for="o in ruleEnts.filter(x => x.k !== entSel)" :key="o.k"><option :value="o.k" x-text="o.k"></option></template>
                   </select>
@@ -792,10 +794,13 @@
                   <div class="text-[12.5px] font-semibold" :class="ent().known ? 'text-gray-800' : 'text-amber-900'" x-text="ent().known ? 'Uses the group set' : 'Uses the group set, unconfirmed'"></div>
                   <p class="text-[12px] mt-1 leading-relaxed" :class="ent().known ? 'text-gray-600' : 'text-amber-900'"
                      x-text="ent().known ? ent().k + ' has no override. Its lines are judged against the group set, and it is confirmed when the group set is.' : ent().k + ' has no confirmed rules yet. Its lines run on the group set and are flagged as unconfirmed, and the consequence sentence is off for it. Add an override when its rules are set.'"></p>
-                  <button @click="addOverride()" class="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Add an override for this entity</button>
+                  <button x-show="canEditRules" @click="addOverride()" class="mt-3 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50">Add an override for this entity</button>
                 </div>
               </template>
-              <div x-show="ent().kind !== 'inherit'" class="space-y-4">
+              <div x-show="!canEditRules" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[12px] text-slate-700">
+                <strong>View only.</strong> The rule set is edited and confirmed by Procurement Excellence and the Sr. Procurement Director. You can set the dates and launch once the group set is confirmed.
+              </div>
+              <fieldset x-show="ent().kind !== 'inherit'" :disabled="!canEditRules" class="space-y-4 min-w-0">
               <!-- 2026-10-16: one sheet for the rules by amount. Rows are amount bands; the columns are
                    the same for every entity. Approval Required applies to a derogation: a line whose
                    Sourcing Strategy is below its row's standard (RU 4.9, the Italian guide's slide 11,
@@ -834,8 +839,8 @@
                       <template x-for="(r, i) in ent().rows" :key="r.id">
                         <tr class="group">
                           <td class="px-1 text-center text-[10.5px] text-gray-400" :class="r.isNew ? 'newrow' : ''">
-                            <span :class="ent().rows.length > 1 ? 'group-hover:hidden' : ''" x-text="i + 1"></span>
-                            <button x-show="ent().rows.length > 1" @click="removeRow(ent(), ent().rows, i)" title="Remove this band. Its range merges into the next one."
+                            <span :class="canEditRules && ent().rows.length > 1 ? 'group-hover:hidden' : ''" x-text="i + 1"></span>
+                            <button x-show="canEditRules && ent().rows.length > 1" @click="removeRow(ent(), ent().rows, i)" title="Remove this band. Its range merges into the next one."
                                     class="hidden group-hover:inline text-[14px] leading-none text-gray-400 hover:text-rose-600">&times;</button>
                           </td>
                           <td class="p-0 cellrel" :class="cc(r, i, 'to')" :title="ct(r, 'to')">
@@ -879,7 +884,7 @@
                           </template>
                         </tr>
                       </template>
-                      <tr>
+                      <tr x-show="canEditRules">
                         <td></td>
                         <td colspan="7" class="px-2.5">
                           <div class="flex items-center gap-3 text-[11.5px]">
@@ -925,7 +930,7 @@
                   It cannot change again until Cycle 5 starts.
                 </span>
               </label>
-              </div>
+              </fieldset>
               <p class="text-[11.5px] text-gray-500 leading-relaxed">An initiative naming several entities adds their amounts together. If one of them is Italian, Italy's thresholds apply; otherwise the highest thresholds among them. Other rules use the strictest value among the entities. Procurement team mappings are not part of this rule set: they stay live until an initiative is submitted, and are edited in the cycle's People tab.</p>
 
               <!-- From the retired O2: the rule set's history across cycles. Earlier cycles'
@@ -1098,6 +1103,12 @@ function review() {
     holdBack: true,     // P17
     // D6, D21: one rule set per legal entity, copied from Cycle 3, configured independently.
     entSel: 'Group set',
+    // 2026-10-16: who is viewing (mockup control). The rule set is edited and confirmed only by
+    // Procurement Excellence and the Sr. Procurement Director (RU 3.3); a Head of Category, who
+    // can launch the campaign (RU 3.4), sees it read-only.
+    as: 'excellence',
+    viewers: [ { k: 'hoc', label: 'Sara Lombardi · Head of Category' }, { k: 'excellence', label: 'Giulia Rossi · Procurement Excellence' } ],
+    get canEditRules() { return this.as === 'excellence'; },
     ruleEnts: [],
     get rulesOk() { const g = this.ruleEnts.find(e => e.kind === 'group'); return !!(g && g.confirmed); },
     entOk(e) { return e.kind === 'inherit' ? (e.known && this.rulesOk) : e.confirmed; },
@@ -1684,6 +1695,7 @@ function review() {
       // Links from a cycle's Rules tab open the Rules step, optionally on one entity.
       const q = new URLSearchParams(location.search);
       if (q.get('step')) this.step = +q.get('step');
+      if (this.viewers.some(v => v.k === q.get('as'))) this.as = q.get('as');
       if (q.get('ent') && this.ruleEnts.find(e => e.k === q.get('ent'))) this.entSel = q.get('ent');
       this.seed.forEach(s => this.rows.push({ id: 'C' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'contract', kind: 'contract', removed: false, reason: '' }));
       this.needSeed.forEach(s => this.rows.push({ id: 'N' + (++this.seq), cat: s[0], contract: s[1], supplier: s[2], owner: s[3], ends: s[4], value: s[5], src: 'need', kind: 'need', removed: false, reason: '' }));
@@ -1968,5 +1980,14 @@ function review() {
   };
 }
 </script>
+<!-- Mockup controls float outside the page, so they are not read as part of the product. -->
+<div class="fixed right-4 bottom-16 z-[70] rounded-xl bg-slate-900 text-white shadow-2xl ring-1 ring-black/20 px-3 py-2 flex items-center gap-2.5 text-[11px]">
+  <span class="text-[9px] font-semibold tracking-widest uppercase text-slate-400 border border-slate-600 rounded px-1 py-px">Mockup</span>
+  <label class="flex items-center gap-2 text-slate-300">Viewing as
+    <select x-model="as" class="text-[11.5px] font-medium text-white bg-slate-800 border border-slate-600 rounded-md pl-2 pr-7 py-1">
+      <template x-for="v in viewers" :key="v.k"><option :value="v.k" :selected="as === v.k" x-text="v.label"></option></template>
+    </select>
+  </label>
+</div>
 </body>
 </html>
