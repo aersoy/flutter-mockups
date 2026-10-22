@@ -324,8 +324,8 @@
                       <div class="text-[12.5px] text-amber-900 leading-relaxed flex-1">
                         <strong>Start-of-cycle check:</strong> 212 of these initiatives fail the rule set.
                         97 direct negotiations with no justification, 74 with no sourcing strategy, 41 with no owner.
-                        <span x-show="holdBack">They are held back from the first send until Procurement fixes them, so owners are not asked about data errors that are ours to fix.</span>
-                        <span x-show="!holdBack">They will be sent as they are, and owners will be challenged on them.</span>
+                        <span x-show="holdBack">They are held back from the first send until Procurement fixes them, so Starters are not asked about data errors that are ours to fix.</span>
+                        <span x-show="!holdBack">They will be sent as they are, and Starters will be asked about them.</span>
                       </div>
                       <label class="flex items-center gap-1.5 text-[11.5px] text-amber-900 font-medium shrink-0 mt-0.5">
                         <input type="checkbox" x-model="holdBack" class="accent-amber-600 w-3.5 h-3.5"> Hold back flagged lines
@@ -1107,8 +1107,8 @@ function review() {
     // Procurement Excellence and the Sr. Procurement Director (RU 3.3); a Head of Category, who
     // can launch the campaign (RU 3.4), sees it read-only.
     as: 'excellence',
-    viewers: [ { k: 'hoc', label: 'Sara Lombardi · Head of Category' }, { k: 'excellence', label: 'Giulia Rossi · Procurement Excellence' } ],
-    get canEditRules() { return this.as === 'excellence'; },
+    viewers: [ { k: 'srpd', label: 'Lorenzo De Santis · Sr. Procurement Director' }, { k: 'hoc', label: 'Sara Lombardi · Head of Category' }, { k: 'excellence', label: 'Giulia Rossi · Procurement Excellence' } ],
+    get canEditRules() { return this.as === 'excellence' || this.as === 'srpd'; },
     ruleEnts: [],
     get rulesOk() { const g = this.ruleEnts.find(e => e.kind === 'group'); return !!(g && g.confirmed); },
     entOk(e) { return e.kind === 'inherit' ? (e.known && this.rulesOk) : e.confirmed; },
@@ -1170,8 +1170,8 @@ function review() {
     ruleHistory: [
       { i: 1, cycle: 'Cycle 1', what: 'Group rule set created', entity: 'Group set', by: 'Procurement, before the first campaign' },
       { i: 2, cycle: 'Cycle 1', what: 'Override created with its own tiers and bands', entity: 'Sisal Technology Turkey', by: 'Procurement, before the first campaign' },
-      { i: 3, cycle: 'Cycle 2', what: 'No change from Cycle 1', entity: 'All', by: 'Sara Lombardi' },
-      { i: 4, cycle: 'Cycle 3', what: 'No change from Cycle 2', entity: 'All', by: 'Sara Lombardi' }
+      { i: 3, cycle: 'Cycle 2', what: 'No change from Cycle 1', entity: 'All', by: 'Lorenzo De Santis' },
+      { i: 4, cycle: 'Cycle 3', what: 'No change from Cycle 2', entity: 'All', by: 'Lorenzo De Santis' }
     ],
     tierOpts: ['No Approval Required', 'Local Procurement Manager', 'Head of Category', 'Sr. Procurement Director', 'CFO'],
     cloneRows(rows) { return rows.map(r => Object.assign({}, r, { id: ++this.uid, prev: r.prev ? Object.assign({}, r.prev) : null })); },

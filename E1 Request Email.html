@@ -97,35 +97,11 @@
 
   <div class="flex items-start justify-between mb-4">
     <div>
-      <h1 class="text-lg font-semibold text-slate-900">E1 · The request email</h1>
+      <h1 class="text-lg font-semibold text-slate-900">E1 · The launch email</h1>
     </div>
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
-        <span class="text-[10px] text-slate-400 px-1.5">Email</span>
-        <template x-for="k in ['To an owner', 'Launch, to a Purchasing Group']" :key="k">
-          <button @click="kind = k" class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
-                  :class="kind === k ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'" x-text="k"></button>
-        </template>
-      </div>
-      <div x-show="kind === 'To an owner'" class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
-        <span class="text-[10px] text-slate-400 px-1.5">Owner set size</span>
-        <button @click="setSize('small')"
-                class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
-                :class="size === 'small' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">4 lines</button>
-        <button @click="setSize('large')"
-                class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
-                :class="size === 'large' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'">63 lines</button>
-      </div>
-      <div x-show="kind === 'To an owner'" class="flex items-center gap-1.5 bg-white rounded-lg border border-slate-200 p-1">
-        <span class="text-[10px] text-slate-400 px-1.5">View</span>
-        <template x-for="v in ['Request', 'Workbook', 'On return']" :key="v">
-          <button @click="setView(v)"
-                  class="text-xs px-2.5 py-1 rounded-md font-medium transition-colors"
-                  :class="view === v ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'"
-                  x-text="v"></button>
-        </template>
-      </div>
-    </div>
+    <!-- 2026-10-22: one email only. Under RU V4 mail goes to the Starters and Requestor of a
+         Purchasing Group; Business Owner is a field, not a recipient. The owner email, its
+         workbook and its return view are retired (kept below, unreachable). -->
   </div>
 
   <!-- ══════════════════════════ LAUNCH VARIANT (RU 4.2, D29) ══════════════════════════ -->
@@ -133,54 +109,58 @@
     <div class="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
       <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center gap-3">
         <div class="flex gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span></div>
-        <span class="text-[11px] text-slate-500">Outlook · Inbox · Luca Moretti</span>
+        <span class="text-[11px] text-slate-500">Outlook · Inbox · Elena Carbone</span>
       </div>
       <div class="px-6 pt-5 pb-4 border-b border-slate-100">
-        <h2 class="text-[17px] font-semibold text-slate-900 mailfont">Purchasing plan Q1-Q2 2027 is open · M01 Technology</h2>
+        <h2 class="text-[17px] font-semibold text-slate-900 mailfont">Purchasing plan Q1-Q2 2027 is open · M05 Digital Operations</h2>
         <div class="flex items-start gap-3 mt-3">
           <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">PP</div>
           <div class="min-w-0 text-[12px] leading-relaxed">
-            <div class="text-slate-800"><span class="font-semibold">Purchase Planning</span> <span class="mono text-slate-500">&lt;plan+m01@procurement.flutter.com&gt;</span></div>
-            <div class="text-slate-500">To: <span class="mono">the 9 Starters of M01 Technology</span> &nbsp;·&nbsp; Cc: <span class="mono">Requestor, Barbara Neri</span></div>
+            <div class="text-slate-800"><span class="font-semibold">Purchase Planning</span> <span class="mono text-slate-500">&lt;plan+m05@procurement.flutter.com&gt;</span></div>
+            <div class="text-slate-500">To: <span class="mono">Elena Carbone, Marco Ferretti</span> (Starters, M05) &nbsp;·&nbsp; Cc: <span class="mono">Silvia Marchetti</span> (Requestor)</div>
             <div class="text-slate-400 text-[11px] mt-0.5">Mon 21 Sep 2026, 08:00 · sent when Sara Lombardi launched the campaign</div>
           </div>
         </div>
       </div>
       <div class="scroll px-6 py-6 mailfont text-[13.5px] leading-[1.65] text-slate-800 max-h-[640px] overflow-y-auto">
         <p>Buongiorno,</p>
-        <p class="mt-3">The purchasing plan campaign for <strong>Q1&ndash;Q2 2027</strong> is open. It covers the purchases <strong>M01 Technology</strong> expects to start or renew between January and June 2027.</p>
-        <p class="mt-3">Please enter your initiatives in Purchase Planning and submit them to Barbara by <strong>Friday 16 October</strong>. You do not have to finish everything at once: select the initiatives that are complete and submit them, and submit the rest later. Each submitted initiative goes to Barbara for approval, then to Procurement.</p>
+        <p class="mt-3">The purchasing plan campaign for <strong>Q1&ndash;Q2 2027</strong> is open. Please review the initiatives of
+          <strong>M05 Digital Operations</strong> in Purchase Planning, update what has changed, add what is missing, and submit them to
+          Silvia by <strong>Friday 16 October</strong>. You do not have to do it all at once: submit the complete ones, and the rest when they are ready.</p>
+
+        <table class="mt-4 w-full border border-slate-200 rounded-lg text-[12.5px]" style="border-collapse: separate; border-spacing: 0">
+          <tr>
+            <td class="px-4 py-3 border-r border-slate-200 w-1/3 align-top">
+              <div class="text-[20px] font-semibold text-slate-900">62</div>
+              <div class="text-slate-500">initiatives already in the plan</div>
+            </td>
+            <td class="px-4 py-3 border-r border-slate-200 w-1/3 align-top">
+              <div class="text-[20px] font-semibold text-slate-900">€ 9.4M</div>
+              <div class="text-slate-500">contract value</div>
+            </td>
+            <td class="px-4 py-3 w-1/3 align-top">
+              <div class="text-[20px] font-semibold text-amber-700">7</div>
+              <div class="text-slate-500">need a decision by January</div>
+            </td>
+          </tr>
+        </table>
+
         <div class="mt-4">
-          <a href="Plan.html?as=starter" class="inline-block text-[13px] font-semibold text-indigo-700 underline underline-offset-2">Open M01 Technology in Purchase Planning</a>
+          <a href="Plan.html?as=starter" class="inline-block text-[13px] font-semibold text-indigo-700 underline underline-offset-2">Open M05 Digital Operations in Purchase Planning</a>
           <div class="text-[11.5px] text-slate-500 mt-1">Sign in once with your Microsoft work account, or with a code we email you.</div>
         </div>
+
         <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-3">
           <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
           <div class="min-w-0">
-            <div class="text-[12.5px] font-semibold text-slate-800">Expiring contracts · M01 Technology · to 20 Jun 2027.xlsx</div>
-            <div class="text-[11px] text-slate-500">75 contracts expiring in the nine months after launch · from Contract_Data, read at launch on 21 Sep 2026</div>
+            <div class="text-[12.5px] font-semibold text-slate-800">Expiring contracts · M05 Digital Operations · to 20 Jun 2027.xlsx</div>
+            <div class="text-[11px] text-slate-500">10 contracts expiring in the nine months after launch · from Contract_Data, read at launch on 21 Sep 2026</div>
           </div>
         </div>
-        <p class="mt-3 text-[12.5px] text-slate-600">The attachment is for information. It lists every M01 Technology contract ending in the next nine months, including those already in the plan. If one of them will be renewed, renegotiated or replaced and is not yet an initiative, enter it in Purchase Planning.</p>
-        <div class="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[12px]">
-          <div class="flex items-center gap-3 px-3.5 py-1.5 border-b border-slate-200 bg-slate-50 text-[10.5px] font-semibold text-slate-500 uppercase tracking-wide">
-            <span class="w-[58px] shrink-0">ID</span><span class="flex-1 min-w-0">Oggetto</span><span class="w-[118px] shrink-0">Fornitore</span><span class="w-[86px] shrink-0">Societa</span><span class="w-[76px] shrink-0 text-right">EUR</span><span class="w-[78px] shrink-0 text-right">Scadenza</span>
-          </div>
-          <template x-for="c in expiring" :key="c.n">
-            <div class="flex items-center gap-3 px-3.5 py-1.5 border-b border-slate-100 last:border-0">
-              <span class="mono text-[11px] text-slate-500 w-[58px] shrink-0" x-text="c.n"></span>
-              <span class="flex-1 min-w-0 truncate" x-text="c.what"></span>
-              <span class="text-slate-500 w-[118px] shrink-0 truncate" x-text="c.sup"></span>
-              <span class="text-slate-500 w-[86px] shrink-0 truncate" x-text="c.co"></span>
-              <span class="mono text-[11px] text-slate-600 w-[76px] shrink-0 text-right" x-text="c.eur"></span>
-              <span class="w-[78px] shrink-0 text-right font-medium text-slate-700" x-text="c.ends"></span>
-            </div>
-          </template>
-          <div class="px-3.5 py-1.5 text-[11px] text-slate-400 bg-slate-50">... 69 more in the attachment, with the contract type, goods group, requester, start date and Opex / Capex</div>
-        </div>
+        <p class="mt-3 text-[12.5px] text-slate-600">The attachment is for information. It lists every M05 Digital Operations contract ending in the next nine months, including those already in the plan. If one will be renewed, renegotiated or replaced and is not in the plan yet, add it as an initiative.</p>
         <p class="mt-4">Questions about an initiative can go in its chat in Purchase Planning, where the Procurement contacts for it will see them.</p>
         <p class="mt-4 text-slate-600">Grazie,<br>Ellie · Purchase Planning Agent<br><span class="text-[12px] text-slate-500">on behalf of Procurement Italia · Flutter Southern Europe &amp; Africa</span></p>
-        <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">You are receiving this because you are a Starter for Purchasing Group M01 Technology. One email per Purchasing Group per campaign.</p>
+        <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">You are receiving this because you are a Starter for Purchasing Group M05 Digital Operations; the Requestor is copied. One email per Purchasing Group per campaign.</p>
       </div>
     </div>
   </template>
@@ -227,99 +207,47 @@
 
         <p x-text="'Ciao ' + owner().split(' ')[0] + ','"></p>
 
+        <!-- 2026-10-22: a summary and one link to Purchase Planning. No per-line answer links, no
+             workbook, no answering by reply: the owner reviews and answers in the platform. -->
         <p class="mt-3">
           We are putting together the purchasing plan for <strong>Q1&ndash;Q2 2027</strong>.
-          You are the business owner for <strong x-text="lineCount() + ' contracts'"></strong> that expire in that window.
-          Please tell us what happens to each one before submissions close on <strong>Friday 16 October</strong>.
-          Once you answer, each line goes to your Requestor, Silvia Marchetti, for approval.
+          You are the business owner for <strong x-text="lineCount() + ' initiatives'"></strong> in it.
+          Please review them in Purchase Planning before submissions close on <strong>Friday 16 October</strong>:
+          confirm what goes ahead, change what has moved, and tell us what is not yours.
+          Once you have, they go to your Requestor, Silvia Marchetti, for approval.
         </p>
 
-        <p class="mt-3" x-show="size === 'small'">
-          Answer each line with the links under it. Each one opens Purchase Planning, where you sign in
-          once with your Microsoft work account, or with a code we email you. If it is easier, reply to this email in your own words,
-          or fill in the attached workbook and send it back, and I will read it.
-        </p>
+        <table class="mt-4 w-full border border-slate-200 rounded-lg text-[12.5px]" style="border-collapse: separate; border-spacing: 0">
+          <tr>
+            <td class="px-4 py-3 border-r border-slate-200 w-1/3 align-top">
+              <div class="text-[20px] font-semibold text-slate-900" x-text="summary().n"></div>
+              <div class="text-slate-500">initiatives to review</div>
+            </td>
+            <td class="px-4 py-3 border-r border-slate-200 w-1/3 align-top">
+              <div class="text-[20px] font-semibold text-slate-900" x-text="summary().value"></div>
+              <div class="text-slate-500">contract value</div>
+            </td>
+            <td class="px-4 py-3 w-1/3 align-top">
+              <div class="text-[20px] font-semibold text-amber-700" x-text="summary().soon"></div>
+              <div class="text-slate-500">need a decision by January</div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" class="px-4 py-2.5 border-t border-slate-200 bg-slate-50 text-[12px] text-slate-600">
+              First decision due: <strong class="text-slate-800" x-text="summary().first"></strong>
+            </td>
+          </tr>
+        </table>
 
-        <!-- Large-set variant: the body stops working past a handful of lines, so
-             the message carries the summary and the workbook carries the detail. -->
-        <p class="mt-3" x-show="size === 'large'">
-          Because your set is large, I have attached a workbook with all 63 lines. Fill it in and
-          send it back to this message, or open the same set in Purchase Planning and work through it
-          there. The five lines closest to their deadline are listed below with their links.
-        </p>
-
-        <template x-if="true">
-          <div @click="setView('Workbook')" title="Open the workbook"
-               class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 flex items-center gap-3 cursor-pointer hover:border-emerald-300">
-            <span class="w-9 h-9 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">XLSX</span>
-            <div class="min-w-0">
-              <div class="text-[12.5px] font-semibold text-slate-800" x-text="wbName()"></div>
-              <div class="text-[11px] text-slate-500" x-text="lineCount() + ' lines · ' + (size === 'small' ? '38 KB' : '184 KB') + ' · answer columns open, line details locked'"></div>
-            </div>
-          </div>
-        </template>
-
-
-        <!-- ══════════ Per-line blocks ══════════
-             One block per line. Each shows the four things an owner needs in order
-             to answer without looking anything up: what it is, who supplies it,
-             what it is worth, and when a decision is actually needed.
-             The decision date is the derived one, not the contract end date, because
-             that is the number the notice period makes binding. -->
-        <div class="mt-5 space-y-4">
-          <template x-for="(l, i) in shownLines()" :key="l.id">
-            <table class="w-full border border-slate-200 rounded-lg" style="border-collapse: separate; border-spacing: 0">
-              <tr>
-                <td class="px-4 pt-3 pb-2">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <div class="text-[13px] font-semibold text-slate-900" x-text="l.title"></div>
-                      <div class="text-[11.5px] text-slate-500 mt-0.5">
-                        <span x-text="l.supplier"></span> ·
-                        <span x-text="l.entity"></span> ·
-                        <span class="mono" x-text="l.ref"></span>
-                      </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                      <div class="text-[13px] font-semibold text-slate-900" x-text="l.value"></div>
-                      <div class="text-[11px] text-slate-500" x-text="l.method"></div>
-                    </div>
-                  </div>
-
-                  <!-- The derived decision date. Computed from the rules, which are not cited here. -->
-                  <div class="mt-2.5 text-[11.5px] rounded px-2.5 py-1.5"
-                       :class="l.urgent ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-50 text-slate-600 border border-slate-200'">
-                    Contract ends <strong x-text="l.ends"></strong>.
-                    Decision needed by <strong x-text="l.decide"></strong>.
-                  </div>
-                  <!-- The four answers, each a deep link through the one-click sign-in to
-                       this line in E2 with the answer preselected. Session 27: plain text links
-                       separated by middots, not buttons, so the message reads as internal mail and
-                       survives Outlook without any bulletproof-button markup. -->
-                  <div class="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] font-medium">
-                    <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Confirm as planned</a>
-                    <span class="text-slate-300">&middot;</span>
-                    <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Needs changes</a>
-                    <span class="text-slate-300">&middot;</span>
-                    <a href="E2%20Response%20Page.html" class="text-indigo-700 underline underline-offset-2">Not mine</a>
-                    <span class="text-slate-300">&middot;</span>
-                    <a href="E2%20Response%20Page.html" class="text-rose-700 underline underline-offset-2">Cancel</a>
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </template>
+        <div class="mt-4">
+          <a href="E2%20Response%20Page.html" class="inline-block text-[13px] font-semibold text-indigo-700 underline underline-offset-2"
+             x-text="'Review your ' + lineCount() + ' initiatives in Purchase Planning'"></a>
+          <div class="text-[11.5px] text-slate-500 mt-1">Sign in once with your Microsoft work account, or with a code we email you.</div>
         </div>
 
-        <p class="mt-4 text-[12.5px] text-slate-600" x-show="size === 'large'">
-          The other 58 lines are in the workbook and in
-          <a href="E2%20Response%20Page.html" class="text-indigo-700 underline">Purchase Planning</a>.
-        </p>
-
-
         <p class="mt-5">
-          If one of these is not yours, choose Not mine and tell me who to pass it to. You can also forward
-          this email to whoever knows the answer; they sign in with their own account.
+          If an initiative is not yours, mark it Not mine there and tell us who to pass it to.
+          You can also forward this email to whoever knows the answer; they sign in with their own account.
         </p>
 
         <!-- Borrowed from Procurement's own plan-update request (attachments/PP_Email_template.docx):
@@ -338,8 +266,7 @@
 
         <p class="mt-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed">
           You are receiving this because you are recorded as business owner for these contracts in the
-          FSEA purchasing plan. Replies to this message go to Procurement Italia and are attached to the
-          lines above.
+          FSEA purchasing plan. Replies to this message go to Procurement Italia.
         </p>
       </div>
     </div>
@@ -635,7 +562,7 @@ function requestEmail() {
   return {
     size: 'small',
     view: 'Request',
-    kind: 'To an owner',
+    kind: 'Launch, to a Purchasing Group',
     // The Contract_Data extract for M01: every contract ending in the window (D29, RU 4.2.1).
     // Not compared with the plan, so it includes contracts that already have a line (the first two here).
     expiring: [
@@ -675,9 +602,15 @@ function requestEmail() {
         value: '€ 54,200',  method: 'Light Tender',       ends: '31 May 2027', decide: '16 Apr 2027', urgent: false }
     ],
     owner() { return this.size === 'small' ? 'Marco Ferretti' : 'Alessandro Conti'; },
+    // 2026-10-22: the summary the owner email carries instead of the lines.
+    summary() {
+      return this.size === 'small'
+        ? { n: 4,  value: '€ 1.53M', soon: 2,  first: 'Penetration testing, annual programme · Yarix Srl · 2 Jan 2027' }
+        : { n: 63, value: '€ 6.8M',  soon: 11, first: 'Observability platform · Grafana Labs · 2 Jan 2027' };
+    },
     email() { return this.size === 'small' ? 'marco.ferretti@sisal.it' : 'alessandro.conti@sisalgaming.com'; },
     setSize(s) { this.size = s; },
-    setView(v) { this.view = v; },
+    setView(v) { this.view = 'Request'; },
     wbName() { return 'Purchase Plan Q1-Q2 2027 · ' + (this.size === 'small' ? 'Ferretti' : 'Conti') + ' · v1.xlsx'; },
     thread() { return this.size === 'small' ? '7c41' : 'a7f2'; },
     wbRows() { return this.size === 'small' ? this.smallRows : this.rows; },
@@ -702,8 +635,8 @@ function requestEmail() {
     shownLines() { return this.size === 'small' ? this.lines.slice(0, 4) : this.largeLines; },
     subject() {
       return this.size === 'small'
-        ? 'Purchasing plan Q1-Q2 2027 · 4 contracts to confirm by 16 October'
-        : 'Purchasing plan Q1-Q2 2027 · 63 contracts to confirm by 16 October';
+        ? 'Purchasing plan Q1-Q2 2027 · 4 initiatives to review by 16 October'
+        : 'Purchasing plan Q1-Q2 2027 · 63 initiatives to review by 16 October';
     },
 
     // ── Workbook and On return (merged from E1b in Session 24) ──

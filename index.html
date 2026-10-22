@@ -84,11 +84,11 @@ function index() {
       },
       {
         title: 'Business side',
-        sub: 'email, and the page an email link opens',
+        sub: 'emails from Purchase Planning',
         screens: [
-          { code: 'E1',  file: 'E1 Request Email.html',          title: 'The request emails and workbook', desc: 'The launch email to a Purchasing Group\u2019s Starters, and an owner\u2019s lines with a link for each answer; the workbook for large sets and Ellie\u2019s reply when it comes back.' },
-          { code: 'E2',  file: 'E2 Response Page.html',          title: 'The response page',        desc: 'Sign in with Microsoft or an email code, then the owner\u2019s whole set, answered in place and submitted for approval.' },
-          { code: 'E3',  file: 'E3 Consequence Reminder.html',   title: 'The consequence reminder', desc: 'The same line at three distances from its decision date, and the reminder to a Requestor with lines waiting.' },
+          { code: 'E1',  file: 'E1 Request Email.html',          title: 'The launch email', desc: 'One per Purchasing Group, to its Starters with the Requestor copied: a summary of the group\u2019s initiatives, one link to Purchase Planning, and the expiring contracts attached.' },
+          // E2 retired 2026-10-22: under RU V4 no owner is emailed, so there is no owner response page.
+          { code: 'E3',  file: 'E3 Consequence Reminder.html',   title: 'The Requestor reminder', desc: 'To a Requestor with submitted initiatives waiting for their approval.' },
           // B2 retired by the IA change brief (D17): owners never see a line's stream.
           // { code: '\u2192', file: 'Email Journey Walkthrough.html', title: 'The email journey',     desc: 'One cycle, one owner, one thread, step by step.' }
         ]

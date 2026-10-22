@@ -81,8 +81,9 @@
 <div class="max-w-[960px] mx-auto px-5 py-5">
 
   <div class="mb-4 flex items-center justify-between gap-4">
-    <h1 class="text-lg font-semibold text-slate-900">E3 · The reminder that states the consequence</h1>
-    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
+    <h1 class="text-lg font-semibold text-slate-900">E3 · The Requestor reminder</h1>
+    <!-- 2026-10-22: the owner reminder is retired (no owner emails under RU V4). Switch hidden. -->
+    <div x-show="false" class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
       <template x-for="w in ['Owner or Starter', 'Requestor']" :key="w">
         <button @click="who = w" class="text-[11.5px] px-2.5 py-1 rounded-md"
                 :class="who === w ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-500 hover:bg-slate-50'" x-text="w"></button>
@@ -118,10 +119,8 @@
           <div class="text-[11px] font-semibold uppercase tracking-wide mb-1.5 text-amber-900">Why these first</div>
           <div class="text-[13px] leading-relaxed">Two of them reach their notice date within 10 working days. While a line waits for your approval, Procurement cannot start on it, so the time it waits comes out of the notice period. Submissions for this campaign close on Friday 16 October.</div>
         </div>
-        <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium">
-          <a href="Plan.html?as=requestor" class="text-indigo-700 underline underline-offset-2">Review and approve all 6</a>
-          <span class="text-slate-300">&middot;</span>
-          <a href="Plan.html?as=requestor" class="text-indigo-700 underline underline-offset-2">Open the two closest first</a>
+        <div class="mt-4 text-[13px] font-medium">
+          <a href="Plan.html?as=requestor" class="text-indigo-700 underline underline-offset-2">Open your initiatives to approve in Purchase Planning</a>
         </div>
         <p class="mt-2 text-[11.5px] text-slate-500">You can approve them together, ask a Starter for changes, or reject one with a reason. Sign in once with your Microsoft work account, or with a code we email you.</p>
         <p class="mt-4 text-slate-600">Grazie,<br>Ellie · Purchase Planning Agent<br><span class="text-[12px] text-slate-500">on behalf of Procurement Italia</span></p>
@@ -234,7 +233,7 @@
 function reminder() {
   return {
     stage: 'early',
-    who: 'Owner or Starter',
+    who: 'Requestor',
     waiting: [
       { id: 'PP-2027-1311', what: 'Tax advisory retainer, transfer pricing', by: 'Giorgia Villa', decide: '23 Oct', soon: true },
       { id: 'PP-2027-1312', what: 'Regulatory reporting tool licences',       by: 'Davide Greco', decide: '27 Oct', soon: true },
